@@ -6,3 +6,7 @@ firebase-admin
 dependency-injector
 openpyxl
 jsonschema
+pytest
+pytest-django
+pytest-cov
+pytest-mock
