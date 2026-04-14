@@ -1,38 +1,40 @@
-from typing import Dict, Any, Type, TypeVar
-import threading
+from dependency_injector import containers, providers
+from infrastructure.persistence.firebase.connection import FirebaseConnection
+from infrastructure.persistence.firebase.firebase_etudiant_repository import FirebaseEtudiantRepository
+from infrastructure.persistence.firebase.firebase_evaluation_repository import FirebaseEvaluationRepository
+from domain.services.calculateurs.calculateur_matiere import CalculateurMatiere
+from domain.services.calculateurs.calculateur_ue import CalculateurUE
+from domain.services.calculateurs.calculateur_semestre import CalculateurSemestre
+from domain.services.orchestre_calcul import OrchestreCalcul
 
-T = TypeVar("T")
+class Container(containers.DeclarativeContainer):
+    """Container d'injection de dépendances principal."""
 
-class DIContainer:
-    """Conteneur d'injection de dépendances (Simple Container Pattern)."""
-    _instance = None
-    _lock = threading.Lock()
-    _services: Dict[Type, Any] = {}
+    config = providers.Configuration()
 
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super(DIContainer, cls).__new__(cls)
-        return cls._instance
+    # Persistence (Singletons)
+    firebase_connection = providers.Singleton(FirebaseConnection)
 
-    @classmethod
-    def register(cls, interface: Type[T], implementation: Any):
-        """Enregistre une implémentation pour une interface donnée."""
-        cls._services[interface] = implementation
+    # Repositories (Factories)
+    etudiant_repository = providers.Factory(
+        FirebaseEtudiantRepository,
+        connection=firebase_connection
+    )
 
-    @classmethod
-    def resolve(cls, interface: Type[T]) -> T:
-        """Résout et retourne l'instance d'une interface."""
-        implementation = cls._services.get(interface)
-        if not implementation:
-            raise Exception(f"Service non enregistré pour l'interface : {interface.__name__}")
-        
-        # Si c'est une classe, on l'instancie (Simple Singleton behavior for dependencies)
-        if isinstance(implementation, type):
-            cls._services[interface] = implementation()
-            return cls._services[interface]
-            
-        return implementation
+    evaluation_repository = providers.Factory(
+        FirebaseEvaluationRepository,
+        connection=firebase_connection
+    )
 
-# Instance globale pour un accès facile (Facultatif, dépend du design souhaité)
-container = DIContainer()
+    # Services Domaine (Calculateurs)
+    calculateur_matiere = providers.Factory(CalculateurMatiere)
+    calculateur_ue = providers.Factory(CalculateurUE)
+    calculateur_semestre = providers.Factory(CalculateurSemestre)
+
+    # Orchestration
+    orchestre_calcul = providers.Factory(
+        OrchestreCalcul,
+        calc_matiere=calculateur_matiere,
+        calc_ue=calculateur_ue,
+        calc_semestre=calculateur_semestre
+    )

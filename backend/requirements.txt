@@ -1,0 +1,8 @@
+django==5.0.4
+djangorestframework
+django-cors-headers
+python-dotenv
+firebase-admin
+dependency-injector
+openpyxl
+jsonschema
