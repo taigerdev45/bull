@@ -1,12 +1,11 @@
-from abc import ABC
-from datetime import datetime
+from abc import ABC, abstractmethod
 import uuid
-from typing import Optional
+from datetime import datetime
 
 class BaseEntity(ABC):
     """Classe de base abstraite pour toutes les entités du domaine."""
     
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self, id: str = None):
         self._id = id or str(uuid.uuid4())
         self._created_at = datetime.now()
         self._updated_at = datetime.now()
@@ -26,6 +25,11 @@ class BaseEntity(ABC):
     def update_timestamp(self):
         """Met à jour le timestamp de modification."""
         self._updated_at = datetime.now()
+
+    @abstractmethod
+    def valider(self):
+        """Méthode de validation à implémenter par les entités concrètes."""
+        pass
 
     def __eq__(self, other):
         if not isinstance(other, BaseEntity):
