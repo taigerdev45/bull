@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Fonction utilitaire pour vérifier le rôle
+    function hasRole(role) {
+      return request.auth != null && request.auth.token.role == role;
+    }
+
+    // Étudiants: Lecture pour tous authentifiés, écriture pour Admin/Secrétariat
+    match /etudiants/{etudiantId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('admin') || hasRole('secretariat');
+    }
+
+    // Évaluations: Lecture pour tous authentifiés, écriture pour Enseignant/Admin
+    match /evaluations/{evalId} {
+      allow read: if request.auth != null;
+      allow write: if hasRole('admin') || hasRole('enseignant');
+    }
+
+    // Résultats: Lecture seule (calculés par le backend)
+    match /resultats_ue/{resId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Uniquement via le Service Account du backend
+    }
+  }
+}
