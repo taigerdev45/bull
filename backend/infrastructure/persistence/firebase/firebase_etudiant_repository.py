@@ -38,6 +38,12 @@ class FirebaseEtudiantRepository(IEtudiantRepository):
             return self._from_dict(doc.id, doc.to_dict())
         return None
 
+    def get_by_matricule(self, matricule: str) -> Optional[Etudiant]:
+        docs = self.collection.where('matricule', '==', matricule).limit(1).stream()
+        for doc in docs:
+            return self._from_dict(doc.id, doc.to_dict())
+        return None
+
     def list_all(self) -> List[Etudiant]:
         docs = self.collection.stream()
         return [self._from_dict(doc.id, doc.to_dict()) for doc in docs]

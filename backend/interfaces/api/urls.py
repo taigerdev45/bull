@@ -5,6 +5,7 @@ from interfaces.api.views.absence_viewset import AbsenceViewSet
 from interfaces.api.views.evaluation_viewset import EvaluationViewSet
 from interfaces.api.views.resultat_view import ResultatSemestreView, ResultatAnnuelView, PromotionStatsView
 from interfaces.api.views.bulletin_view import BulletinView
+from interfaces.api.views.import_export_view import ImportEvaluationsView, ExportResultatsView
 
 router = DefaultRouter()
 router.register(r'etudiants', EtudiantViewSet, basename='etudiant')
@@ -17,5 +18,7 @@ urlpatterns = [
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),
     path('resultats/promotion/stats/', PromotionStatsView.as_view()),
     path('bulletins/donnees/<str:etudiant_id>/', BulletinView.as_view()),
+    path('import/evaluations/', ImportEvaluationsView.as_view()),
+    path('export/resultats/', ExportResultatsView.as_view()),
     path('evaluations/', EvaluationView.as_view(), name='evaluation-create'),
 ]

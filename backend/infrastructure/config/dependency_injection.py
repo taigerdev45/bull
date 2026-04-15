@@ -15,6 +15,11 @@ from infrastructure.persistence.firebase.firebase_absence_repository import Fire
 from application.commands.creer_absence_command import CreerAbsenceHandler
 from application.handlers.evaluation_command_handler import EvaluationCommandHandler
 from application.handlers.resultat_query_handler import ResultatQueryHandler
+from application.services.import_export_service import ImportExportService
+from application.commands.importer_evaluations_command import ImporterEvaluationsHandler
+from infrastructure.parsers.openpyxl_parser import OpenpyxlParser
+from infrastructure.generators.excel_generator import ExcelGenerator
+from infrastructure.persistence.firebase.firebase_matiere_repository import FirebaseMatiereRepository
 from domain.services.penalites.penalite_service import PenaliteService
 
 class Container(containers.DeclarativeContainer):
@@ -94,4 +99,26 @@ class Container(containers.DeclarativeContainer):
         ResultatQueryHandler,
         resultat_repo=resultat_repo,
         evaluation_repo=evaluation_repo
+    )
+
+    matiere_repo = providers.Factory(
+        FirebaseMatiereRepository,
+        connection=firebase_connection
+    )
+
+    excel_parser = providers.Factory(OpenpyxlParser)
+    excel_generator = providers.Factory(ExcelGenerator)
+
+    importer_evaluations_handler = providers.Factory(
+        ImporterEvaluationsHandler,
+        etudiant_repo=etudiant_repo,
+        matiere_repo=matiere_repo,
+        evaluation_repo=evaluation_repo
+    )
+
+    import_export_service = providers.Factory(
+        ImportExportService,
+        parser=excel_parser,
+        generator=excel_generator,
+        import_handler=importer_evaluations_handler
     )

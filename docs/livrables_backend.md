@@ -86,7 +86,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 |---------|--------|--------|
 | `evaluation_service.py` | [x] | Saisie, modification notes |
 | `bulletin_service.py` | [x] | Préparation données bulletins |
-| `import_export_service.py` | [ ] | En attente |
+| `import_export_service.py` | [x] | Import/Export Excel |
 
 ---
 
@@ -121,6 +121,9 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | `evaluation_viewset.py` | [x] | `/api/evaluations/` (CRUD, Bulk, Filtres) |
 | `resultat_view.py` | [x] | `/api/resultats/` |
 | `bulletin_view.py` | [x] | `/api/bulletins/` |
+| `import_export_view.py` | [x] | `/api/import/` , `/api/export/` |
+| `openpyxl_parser.py` | [x] | Parsing Excel notes |
+| `excel_generator.py` | [x] | Génération rapports |
 | `resultat_serializer.py` | [x] | Nested profond |
 
 ### **4.5 CLI Commands (interfaces/cli/commands/)**
@@ -134,4 +137,10 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 - **Domain Layer** : ~90% Implémenté
 - **Application Layer** : ~40% Implémenté
 - **Infrastructure Layer** : ~70% Implémenté
-- **API Layer** : ~20% Implémenté (en cours)
+- **API Layer** : ~80% Implémenté (en cours)
+
+## **5. DOCUMENTATION (docs/)**
+| Fichier | Status | Rôle |
+|---------|--------|------|
+| `regles_metier.md` | [x] | Logique calculs ASUR |
+| `workflow_git.md` | [x] | Guide utilisateur équipe |

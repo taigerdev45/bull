@@ -21,6 +21,11 @@ class IEtudiantRepository(ABC):
         pass
 
     @abstractmethod
+    def get_by_matricule(self, matricule: str) -> Optional[Etudiant]:
+        """Récupère un étudiant par son matricule unique."""
+        pass
+
+    @abstractmethod
     def delete(self, etudiant_id: str) -> None:
         """Supprime un udiant."""
         pass
