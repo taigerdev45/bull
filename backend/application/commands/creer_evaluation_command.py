@@ -9,6 +9,7 @@ class CreerEvaluationCommand(Command):
     type_eval: str
     note: float
     saisie_par: str
+    metadata: dict = None  # {ip, user_agent, user_email}
 
     def executer(self) -> any:
         # La logique est centralisée dans EvaluationCommandHandler

@@ -21,6 +21,10 @@ from infrastructure.parsers.openpyxl_parser import OpenpyxlParser
 from infrastructure.generators.excel_generator import ExcelGenerator
 from infrastructure.persistence.firebase.firebase_matiere_repository import FirebaseMatiereRepository
 from domain.services.penalites.penalite_service import PenaliteService
+from infrastructure.persistence.firebase.firebase_audit_repository import FirebaseAuditRepository
+from application.services.audit_service import AuditService
+from domain.events.handlers.audit_log_handler import AuditLogHandler
+from infrastructure.persistence.firebase.firebase_ue_repository import FirebaseUERepository
 
 class Container(containers.DeclarativeContainer):
     """Conteneur d'injection de dépendances principal (Pattern Inversion of Control)."""
@@ -121,4 +125,24 @@ class Container(containers.DeclarativeContainer):
         parser=excel_parser,
         generator=excel_generator,
         import_handler=importer_evaluations_handler
+    )
+
+    ue_repo = providers.Factory(
+        FirebaseUERepository,
+        connection=firebase_connection
+    )
+
+    audit_repo = providers.Factory(
+        FirebaseAuditRepository,
+        connection=firebase_connection
+    )
+
+    audit_service = providers.Factory(
+        AuditService,
+        audit_repo=audit_repo
+    )
+
+    audit_log_handler = providers.Singleton(
+        AuditLogHandler,
+        audit_service=audit_service
     )

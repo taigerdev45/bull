@@ -6,6 +6,10 @@ from domain.value_objects.note import Note
 from application.commands.creer_evaluation_command import CreerEvaluationCommand
 from application.commands.modifier_evaluation_command import ModifierEvaluationCommand
 from application.commands.supprimer_evaluation_command import SupprimerEvaluationCommand
+from domain.events.evaluation_creee import EvaluationCreee
+from domain.events.evaluation_modifiee import EvaluationModifiee
+from domain.events.evaluation_supprimee import EvaluationSupprimee
+from domain.events.event_dispatcher import dispatcher
 
 class EvaluationCommandHandler:
     """
@@ -42,8 +46,20 @@ class EvaluationCommandHandler:
             return eval_id
 
         eval_id = _in_transaction(transaction)
-        # Déclenchement du recalcul (Façade OrchestreCalcul)
+        # Déclenchement du recalcul
         self._orchestre_calcul.recalculer_pour_etudiant(cmd.etudiant_id)
+
+        # 4. Dispatch Audit Event
+        dispatcher.dispatch(EvaluationCreee(
+            data={
+                'evaluation_id': eval_id,
+                'etudiant_id': cmd.etudiant_id,
+                'matiere_libelle': cmd.matiere_id, 
+                'type_eval': cmd.type_eval,
+                'note': cmd.note
+            },
+            metadata=cmd.metadata
+        ))
         return eval_id
 
     def handle_modifier(self, cmd: ModifierEvaluationCommand):
@@ -66,6 +82,19 @@ class EvaluationCommandHandler:
         etudiant_id = _in_transaction(transaction)
         self._orchestre_calcul.recalculer_pour_etudiant(etudiant_id)
 
+        # Dispatch audit modification
+        dispatcher.dispatch(EvaluationModifiee(
+            data={
+                'evaluation_id': cmd.evaluation_id,
+                'etudiant_id': etudiant_id,
+                'nouvelle_note': cmd.nouvelle_note,
+                'ancienne_note': 'N/A', # Simple pour l'instant
+                'matiere_libelle': 'Matière',
+                'type_eval': 'N/A'
+            },
+            metadata=cmd.metadata
+        ))
+
     def handle_supprimer(self, cmd: SupprimerEvaluationCommand):
         transaction = self._db.transaction()
         
@@ -83,6 +112,16 @@ class EvaluationCommandHandler:
 
         etudiant_id = _in_transaction(transaction)
         self._orchestre_calcul.recalculer_pour_etudiant(etudiant_id)
+
+        # Dispatch audit suppression
+        dispatcher.dispatch(EvaluationSupprimee(
+            data={
+                'evaluation_id': cmd.evaluation_id,
+                'etudiant_id': etudiant_id,
+                'derniere_note': 'N/A'
+            },
+            metadata=cmd.metadata
+        ))
 
     def handle_bulk_creer(self, commands: List[CreerEvaluationCommand]):
         """Saisie par lot (atomique)."""

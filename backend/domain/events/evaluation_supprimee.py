@@ -1,6 +1,6 @@
 from .event import Event
 
-class EvaluationModifiee(Event):
-    """Émis lors de la modification d'une note (traçabilité ancienne valeur)."""
+class EvaluationSupprimee(Event):
+    """Émis lors de la suppression d'une note."""
     def __init__(self, data: dict, metadata: dict = None):
         super().__init__(data, metadata)

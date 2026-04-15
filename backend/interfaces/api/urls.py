@@ -7,6 +7,11 @@ from interfaces.api.views.resultat_view import ResultatSemestreView, ResultatAnn
 from interfaces.api.views.bulletin_view import BulletinView
 from interfaces.api.views.import_export_view import ImportEvaluationsView, ExportResultatsView
 from interfaces.api.views.ue_viewset import UEViewSet, MatiereViewSet
+from interfaces.api.views.audit_viewset import AuditViewSet
+from application.startup import initialiser_abonnements
+
+# Initialisation de l'audit
+initialiser_abonnements()
 
 router = DefaultRouter()
 router.register(r'etudiants', EtudiantViewSet, basename='etudiant')
@@ -14,6 +19,7 @@ router.register(r'absences', AbsenceViewSet, basename='absence')
 router.register(r'evaluations', EvaluationViewSet, basename='evaluation')
 router.register(r'ues', UEViewSet, basename='ue')
 router.register(r'matieres', MatiereViewSet, basename='matiere')
+router.register(r'audit', AuditViewSet, basename='audit')
 
 urlpatterns = [
     path('', include(router.urls)),

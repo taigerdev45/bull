@@ -7,6 +7,7 @@ class ModifierEvaluationCommand(Command):
     evaluation_id: str
     nouvelle_note: float
     auteur: str
+    metadata: dict = None
 
     def executer(self) -> any:
         pass

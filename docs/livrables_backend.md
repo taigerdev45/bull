@@ -121,6 +121,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | `matiere_viewset.py` | [x] | `/api/matieres/` (UE, Enseignant, Attribution) |
 | `absence_viewset.py` | [x] | `/api/absences/` |
 | `evaluation_viewset.py` | [x] | `/api/evaluations/` (CRUD, Bulk, Filtres) |
+| `audit_viewset.py` | [x] | `/api/audit/etudiant/{id}/` |
 | `resultat_view.py` | [x] | `/api/resultats/` |
 | `bulletin_view.py` | [x] | `/api/bulletins/` |
 | `import_export_view.py` | [x] | `/api/import/` , `/api/export/` |
