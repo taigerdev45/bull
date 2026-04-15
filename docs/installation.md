@@ -1,4 +1,4 @@
-# 🚀 Guide d'Installation
+#  Guide d'Installation
 
 ## Prérequis
 - Python 3.12+

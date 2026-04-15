@@ -1,4 +1,4 @@
-# 📐 Référentiel et Règles Métier
+#  Référentiel et Règles Métier
 
 ## Structure Pédagogique LP ASUR
 

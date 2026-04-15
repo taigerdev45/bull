@@ -1,4 +1,4 @@
-# 📦 LIVRABLES BACKEND - SUIVI D'AVANCEMENT
+#  LIVRABLES BACKEND - SUIVI D'AVANCEMENT
 
 Ce document permet à l'équipe frontend de suivre l'avancement des composants backend pour l'intégration des routes et des fonctionnalités.
 
@@ -118,7 +118,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 |---------|--------|-----------|
 | `etudiant_viewset.py` | [x] | `/api/etudiants/` |
 | `absence_viewset.py` | [x] | `/api/absences/` |
-| `evaluation_viewset.py` | [ ] | En attente |
+| `evaluation_viewset.py` | [x] | `/api/evaluations/` (CRUD, Bulk, Filtres) |
 | `resultat_view.py` | [ ] | En attente |
 
 ### **4.5 CLI Commands (interfaces/cli/commands/)**
@@ -128,7 +128,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 
 ---
 
-## **📊 RÉCAPITULATIF QUANTITATIF**
+## ** RÉCAPITULATIF QUANTITATIF**
 - **Domain Layer** : ~90% Implémenté
 - **Application Layer** : ~40% Implémenté
 - **Infrastructure Layer** : ~70% Implémenté
