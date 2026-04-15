@@ -117,6 +117,8 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | Fichier | Status | Endpoints |
 |---------|--------|-----------|
 | `etudiant_viewset.py` | [x] | `/api/etudiants/` |
+| `ue_viewset.py` | [x] | `/api/ues/` (CRUD, Semestre) |
+| `matiere_viewset.py` | [x] | `/api/matieres/` (UE, Enseignant, Attribution) |
 | `absence_viewset.py` | [x] | `/api/absences/` |
 | `evaluation_viewset.py` | [x] | `/api/evaluations/` (CRUD, Bulk, Filtres) |
 | `resultat_view.py` | [x] | `/api/resultats/` |

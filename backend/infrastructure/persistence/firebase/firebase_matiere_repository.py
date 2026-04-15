@@ -17,6 +17,7 @@ class FirebaseMatiereRepository(IMatiereRepository):
             'coefficient': matiere._coefficient.valeur,
             'credits': matiere._credits,
             'ue_id': matiere._ue_id,
+            'enseignant_id': getattr(matiere, '_enseignant_id', None),
             'updated_at': matiere.updated_at
         }
 
@@ -26,6 +27,7 @@ class FirebaseMatiereRepository(IMatiereRepository):
             coefficient=Coefficient(data['coefficient']),
             credits=data['credits'],
             ue_id=data['ue_id'],
+            enseignant_id=data.get('enseignant_id'),
             id=doc_id
         )
 
@@ -47,6 +49,20 @@ class FirebaseMatiereRepository(IMatiereRepository):
     def list_all(self) -> List[Matiere]:
         docs = self.collection.stream()
         return [self._from_dict(doc.id, doc.to_dict()) for doc in docs]
+
+    def get_by_ue(self, ue_id: str) -> List[Matiere]:
+        """Récupère toutes les matières d'une UE."""
+        docs = self.collection.where('ue_id', '==', ue_id).stream()
+        return [self._from_dict(doc.id, doc.to_dict()) for doc in docs]
+
+    def get_by_enseignant(self, enseignant_id: str) -> List[Matiere]:
+        """Récupère toutes les matières attribuées à un enseignant."""
+        docs = self.collection.where('enseignant_id', '==', enseignant_id).stream()
+        return [self._from_dict(doc.id, doc.to_dict()) for doc in docs]
+
+    def attribuer_enseignant(self, matiere_id: str, enseignant_id: str) -> None:
+        """Assigne un enseignant à une matière."""
+        self.collection.document(matiere_id).update({'enseignant_id': enseignant_id})
 
     def delete(self, id: str) -> None:
         self.collection.document(id).delete()

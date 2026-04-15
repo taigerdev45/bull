@@ -6,11 +6,14 @@ from interfaces.api.views.evaluation_viewset import EvaluationViewSet
 from interfaces.api.views.resultat_view import ResultatSemestreView, ResultatAnnuelView, PromotionStatsView
 from interfaces.api.views.bulletin_view import BulletinView
 from interfaces.api.views.import_export_view import ImportEvaluationsView, ExportResultatsView
+from interfaces.api.views.ue_viewset import UEViewSet, MatiereViewSet
 
 router = DefaultRouter()
 router.register(r'etudiants', EtudiantViewSet, basename='etudiant')
 router.register(r'absences', AbsenceViewSet, basename='absence')
 router.register(r'evaluations', EvaluationViewSet, basename='evaluation')
+router.register(r'ues', UEViewSet, basename='ue')
+router.register(r'matieres', MatiereViewSet, basename='matiere')
 
 urlpatterns = [
     path('', include(router.urls)),

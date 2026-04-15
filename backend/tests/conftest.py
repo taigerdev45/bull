@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
-import firebase_admin
+from rest_framework.test import APIClient
+from infrastructure.config.dependency_injection import Container
 
 @pytest.fixture(autouse=True)
 def mock_firebase(monkeypatch):
@@ -18,9 +19,37 @@ def mock_firebase(monkeypatch):
     return mock_db
 
 @pytest.fixture
+def api_client():
+    from rest_framework.test import APIClient
+    return APIClient()
+
+@pytest.fixture
 def etudiant_repo_mock():
     return MagicMock()
 
 @pytest.fixture
 def evaluation_repo_mock():
     return MagicMock()
+
+@pytest.fixture
+def matiere_repo_mock():
+    return MagicMock()
+
+@pytest.fixture
+def ue_repo_mock():
+    return MagicMock()
+
+@pytest.fixture
+def resultat_repo_mock():
+    return MagicMock()
+
+@pytest.fixture
+def ioc_container(etudiant_repo_mock, evaluation_repo_mock, matiere_repo_mock, ue_repo_mock, resultat_repo_mock):
+    """Conteneur IoC avec des mocks pour les tests unitaires/intégration."""
+    container = Container()
+    container.etudiant_repo.override(etudiant_repo_mock)
+    container.evaluation_repo.override(evaluation_repo_mock)
+    container.matiere_repo.override(matiere_repo_mock)
+    container.ue_repo.override(ue_repo_mock)
+    container.resultat_repo.override(resultat_repo_mock)
+    return container
