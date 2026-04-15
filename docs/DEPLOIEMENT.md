@@ -2,12 +2,12 @@
 
 Ce document explique comment déployer l'application en production sur les plateformes Cloud recommandées.
 
-## 1. Backend (Django + DRF) - Railway / Render
+## 1. Backend (Django + DRF) - Render
 
-Le backend est conçu pour être déployé sur Railway.
+Le backend est conçu pour être déployé sur Render.
 
 ### Etapes :
-1. Connectez votre repository GitHub à Railway.
+1. Connectez votre repository GitHub à Render.
 2. Ajoutez un service PostgreSQL (si migration SQL prévue) ou utilisez uniquement Firestore.
 3. Configurez les variables d'environnement (voir section dédiée).
 4. Le fichier Procfile ou le start command doit être :  
