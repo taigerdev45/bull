@@ -66,7 +66,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | `i_ue_repository.py` | [x] | CRUD UE |
 | `i_matiere_repository.py` | [x] | CRUD Matière |
 | `i_resultat_repository.py` | [x] | CRUD Résultats calculés |
-| `i_absence_repository.py` | [ ] | En attente |
+| `i_absence_repository.py` | [x] | CRUD et calcul total heures |
 
 ---
 
@@ -79,6 +79,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | `evaluation_dto.py` | [x] | DTO Évaluation |
 | `resultat_dto.py` | [x] | DTO Résultat calculé |
 | `bulletin_dto.py` | [x] | DTO Données bulletin PDF |
+| `absence_dto.py` | [x] | DTO Absence et création |
 
 ### **2.5 Services Application (application/services/)**
 | Fichier | Status | Façade |
@@ -99,6 +100,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | `firebase_evaluation_repository.py` | [x] | Firestore Évaluation |
 | `firebase_ue_repository.py` | [x] | Firestore UE |
 | `firebase_resultat_repository.py` | [x] | Firestore Résultats |
+| `firebase_absence_repository.py` | [x] | Firestore Absence |
 
 ### **3.5 Configuration (infrastructure/config/)**
 | Fichier | Status | Contenu |
@@ -115,6 +117,7 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | Fichier | Status | Endpoints |
 |---------|--------|-----------|
 | `etudiant_viewset.py` | [x] | `/api/etudiants/` |
+| `absence_viewset.py` | [x] | `/api/absences/` |
 | `evaluation_viewset.py` | [ ] | En attente |
 | `resultat_view.py` | [ ] | En attente |
 

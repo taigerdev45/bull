@@ -2,7 +2,7 @@
 
 Ce projet est un système de gestion de bulletins de notes pour l'INPTIC, conçu selon les principes du **Domain-Driven Design (DDD)** et de la **Clean Architecture**.
 
-## 🏗️ Architecture
+##  Architecture
 
 Le projet est divisé en quatre couches strictes :
 1.  **Domain** : Cœur métier (Entités, Value Objects, Calculateurs). Aucune dépendance externe.
@@ -28,7 +28,7 @@ sequenceDiagram
     CMD-->>API: Success (ID, Status)
 ```
 
-## 🚀 Installation & Lancement
+##  Installation & Lancement
 
 ### Prérequis
 - Python 3.11+
@@ -57,13 +57,13 @@ sequenceDiagram
 docker-compose up --build
 ```
 
-## 🧪 Tests & Couverture
+##  Tests & Couverture
 Le projet utilise `pytest` pour garantir la fiabilité des calculs métier.
 ```bash
 pytest --cov=domain
 ```
 
-## 🛡️ Sécurité
+##  Sécurité
 - **Authentification** : JWT Firebase obligatoire pour tous les endpoints.
 - **RBAC** : Permissions basées sur les Custom Claims (Admin, Enseignant, Étudiant).
 - **Validation** : Schémas strictes via Pydantic pour tous les inputs.

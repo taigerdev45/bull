@@ -11,6 +11,9 @@ from infrastructure.persistence.firebase.firebase_resultat_repository import Fir
 from infrastructure.persistence.firebase.connection import FirebaseConnection
 from application.services.evaluation_service import EvaluationService
 from application.services.bulletin_service import BulletinService
+from infrastructure.persistence.firebase.firebase_absence_repository import FirebaseAbsenceRepository
+from application.commands.creer_absence_command import CreerAbsenceHandler
+from domain.services.penalites.penalite_service import PenaliteService
 
 class Container(containers.DeclarativeContainer):
     """Conteneur d'injection de dépendances principal (Pattern Inversion of Control)."""
@@ -34,6 +37,11 @@ class Container(containers.DeclarativeContainer):
     
     resultat_repo = providers.Factory(
         FirebaseResultatRepository,
+        connection=firebase_connection
+    )
+    
+    absence_repo = providers.Factory(
+        FirebaseAbsenceRepository,
         connection=firebase_connection
     )
     
@@ -66,4 +74,10 @@ class Container(containers.DeclarativeContainer):
         BulletinService,
         etudiant_repo=etudiant_repo,
         resultat_repo=resultat_repo
+    )
+    
+    creer_absence_handler = providers.Factory(
+        CreerAbsenceHandler,
+        absence_repo=absence_repo,
+        orchestrateur=orchestre_calcul
     )
