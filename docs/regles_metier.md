@@ -1,39 +1,53 @@
-#  Référentiel et Règles Métier
+# ⚖️ Règles Métier & Algorithmes de Calcul
 
-## Structure Pédagogique LP ASUR
+Ce document formalise les règles de calcul utilisées pour la délivrance des bulletins de notes de la LP ASUR.
 
-### Semestre 5 (30 crédits)
-| UE | Libellé | Crédits | Matières (Coefficient/Crédits) |
-|----|---------|---------|-------------------------------|
-| **UE5-1** | Enseignement Général | 11 | Anglais technique (1/2), Management d'équipe (1/1), Communication (2/1), Droit de l'informatique (2/2), Gestion de projets (1/1), Veille technologique (1/1), Consolidation bases de la programmation (2/2), Conception BDD et SQL (2/2) |
-| **UE5-2** | Réseaux d'Entreprise | 19 | Remise à niveau IOS (2/2), Connaissance des réseaux LAN (2/2), Les langages du script (2/2), Virtualisation (3/3), Application client-serveur (2/2), Téléphonie IP avancée (2/2), Services à valeur ajoutée (2/2), CCNA2 (1/2) |
+## 1. Calcul de la Moyenne d'une Matière
 
-### Semestre 6 (30 crédits)
-| UE | Libellé | Crédits | Matières (Coefficient/Crédits) |
-|----|---------|---------|-------------------------------|
-| **UE6-1** | Sciences de Base | 20 | Environnement Windows (3/3), Environnement Linux (3/3), Interopérabilité (3/3), Cryptage et Authentification (2/2), Prévention et Sécurité (3/3), Optimisation de l'accès Internet (3/3), Contrôle d'accès distant (2/2), CCNA3 (1/1) |
-| **UE6-2** | Télécommunications et Réseaux | 10 | Méthodologie de rédaction du rapport de stage (2/2), Soutenance (8/8) |
+Chaque matière est évaluée via un Contrôle Continu (CC) et un Examen.
 
-## Algorithmes de Calcul
+**Formule Standard :**  
+`Moyenne = (Note_CC * 0.4) + (Note_Examen * 0.6)`
 
-### 1. Moyenne d'une matière
-```python
-if rattrapage_existe:
-    moyenne = note_rattrapage          # Rattrapage remplace l'intégralité
-else:
-    moyenne = (CC × 0.4) + (Examen × 0.6)  # Pondération officielle 40/60
+**Cas Particuliers :**
+- **Note Unique** : Si une seule note est saisie, elle compte pour 100% de la moyenne.
+- **Rattrapage** : Si une note de rattrapage est saisie, elle **remplace intégralement** la moyenne calculée précédemment (Rattrapage = 100%).
+- **Absences** : Chaque heure d'absence injustifiée entraîne une pénalité de **-0.01 pt** sur la moyenne de la matière concernée.
 
-moyenne_finale = max(0, moyenne - (heures_absence × 0.01))
-```
+---
 
-### 2. Validation d'UE (Compensation)
-Le système applique la règle de compensation globale du semestre :
-- **Acquise Directe** : Si moyenne UE >= 10.0
-- **Compensée** : Si moyenne UE < 10.0 MAIS Moyenne Générale Semestre >= 10.0
-- **Non Acquise** : Si Moyenne Générale Semestre < 10.0
+## 2. Calcul de la Moyenne d'une UE
 
-### 3. Mentions
-- **Passable** : [10.0 - 12.0[
-- **Assez Bien** : [12.0 - 14.0[
-- **Bien** : [14.0 - 16.0[
-- **Très Bien** : [16.0 - 20.0]
+L'Unité d'Enseignement (UE) agrège plusieurs matières pondérées par leur coefficient.
+
+**Formule :**  
+`Moyenne_UE = Σ(Moyenne_Matière_i * Coefficient_i) / Σ(Coefficients)`
+
+---
+
+## 3. Validation et Compensation
+
+Le système suit les règles académiques de compensation annuelle.
+
+### Acquisition d'une UE
+- **Acquisition Directe** : `Moyenne_UE >= 10.0`. L'étudiant valide l'UE et obtient les crédits ECTS associés.
+- **Compensation** : Si `Moyenne_UE < 10.0`, l'UE peut être compensée si la **Moyenne Générale du Semestre >= 10.0**. 
+    - L'UE est alors marquée comme `COMPENSÉE`.
+    - L'étudiant obtient tout de même les crédits ECTS.
+
+### Validation du Semestre
+Un semestre est validé si la moyenne pondérée de toutes les UEs du semestre est `>= 10.0`.
+
+---
+
+## 4. Mentions du Jury
+
+Les mentions sont calculées sur la base de la Moyenne Générale Annuelle :
+
+| Moyenne | Mention |
+|---------|---------|
+| [16, 20] | Très Bien |
+| [14, 16[ | Bien |
+| [12, 14[ | Assez Bien |
+| [10, 12[ | Passable |
+| < 10 | Ajourné (Échec) |

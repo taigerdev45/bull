@@ -1,0 +1,22 @@
+@startuml use_case_detail_saisie_notes
+left to right direction
+actor "Enseignant" as Enseignant
+
+rectangle "Saisie des Notes" {
+    usecase "Saisir note par etudiant" as UC1
+    usecase "Import par lot (Excel)" as UC2
+    usecase "Controle seuil 0-20" as UC3
+    usecase "Recalculer moyennes" as UC4
+    usecase "Generer log d'audit" as UC5
+    usecase "Verrouiller note (Jury)" as UC6
+}
+
+Enseignant --> UC1
+Enseignant --> UC2
+UC1 ..> UC3 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+UC1 ..> UC5 : <<include>>
+UC6 ..> UC1 : <<preclude>>
+
+@enduml

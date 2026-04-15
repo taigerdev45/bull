@@ -20,6 +20,7 @@ from application.commands.importer_evaluations_command import ImporterEvaluation
 from infrastructure.parsers.openpyxl_parser import OpenpyxlParser
 from infrastructure.generators.excel_generator import ExcelGenerator
 from infrastructure.persistence.firebase.firebase_matiere_repository import FirebaseMatiereRepository
+from infrastructure.persistence.firebase.firebase_config_repository import FirebaseConfigRepository
 from domain.services.penalites.penalite_service import PenaliteService
 from infrastructure.persistence.firebase.firebase_audit_repository import FirebaseAuditRepository
 from application.services.audit_service import AuditService
@@ -58,7 +59,9 @@ class Container(containers.DeclarativeContainer):
     
     # Services métier (Domaine)
     penalite_service = providers.Factory(
-        'domain.services.penalites.penalite_service.PenaliteService'
+        'domain.services.penalites.penalite_service.PenaliteService',
+        absence_repo=absence_repo,
+        config_repo=config_repo
     )
     
     calculateur_matiere = providers.Factory(
@@ -145,4 +148,9 @@ class Container(containers.DeclarativeContainer):
     audit_log_handler = providers.Singleton(
         AuditLogHandler,
         audit_service=audit_service
+    )
+
+    config_repo = providers.Singleton(
+        FirebaseConfigRepository,
+        connection=firebase_connection
     )

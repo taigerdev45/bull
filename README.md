@@ -9,6 +9,16 @@
 
 Automatisation complète du processus d'évaluation : saisie des notes, calculs pondérés, règles de compensation, décisions de jury et génération de bulletins PDF.
 
+##  Documentation Technique
+
+Toute la documentation technique est disponible dans le dossier `/docs` :
+
+- **Architecture & Design** : [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Référentiel API** : [API.md](docs/API.md)
+- **Règles Métier (Calculs)** : [REGLES_METIER.md](docs/REGLES_METIER.md)
+- **Guide de Déploiement** : [DEPLOIEMENT.md](docs/DEPLOIEMENT.md)
+- **Diagrammes UML (PlantUML)** : [UML/](docs/UML/)
+
 ---
 
 ##  Table des matières

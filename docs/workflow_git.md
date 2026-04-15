@@ -1,4 +1,4 @@
-## **📘 GUIDE ÉQUIPE FRONTEND - WORKFLOW GIT**
+## ** WORKFLOW GIT**
 
 **Projet :** Gestion Bulletins de Notes LP ASUR  
 **Repository :** `https://github.com/taigerdev45/bull.git`  
@@ -6,7 +6,7 @@
 
 ---
 
-## **🎯 Rappel des branches**
+## ** Rappel des branches**
 
 | Collaborateur | Branche personnelle | Rôle |
 |--------------|---------------------|------|
@@ -85,7 +85,7 @@ git checkout -b feature_herbert origin/feature_herbert
 git branch
 ```
 
-> 💡 **Astuce :** Une fois fait, vous resterez sur cette branche. Tout votre travail se fait ici.
+>  **Astuce :** Une fois fait, vous resterez sur cette branche. Tout votre travail se fait ici.
 
 ---
 
@@ -155,7 +155,7 @@ git push origin feature_brady   # Brady
 git push origin feature_herbert # Herbert
 ```
 
-> ⚠️ **Si vous tentez push sur main, vous aurez une erreur 403. C'est normal !**
+>  **Si vous tentez push sur main, vous aurez une erreur 403. C'est normal !**
 
 ---
 
@@ -252,11 +252,11 @@ git commit -m "fix: corrige pagination selon review"
 git push origin feature_bary
 ```
 
-> 🔄 **La Pull Request se met à jour automatiquement** quand vous push sur la même branche.
+>  **La Pull Request se met à jour automatiquement** quand vous push sur la même branche.
 
 ---
 
-## **📋 Commandes de référence rapide**
+## ** Commandes de référence rapide**
 
 ### **Carte de visite (à garder sous la main)**
 
@@ -284,7 +284,7 @@ git reset --hard HEAD~1            # Annuler dernier commit (perd modifications)
 
 ---
 
-## **❌ Erreurs courantes et solutions**
+## ** Erreurs courantes et solutions**
 
 ### **Erreur 1 : "fatal: not a git repository"**
 
@@ -315,7 +315,7 @@ git push origin feature_bary   # Puis push
 ### **Erreur 4 : "403 Forbidden" sur push main**
 
 ```bash
-# ✅ C'est NORMAL ! Main est protégée.
+#  C'est NORMAL ! Main est protégée.
 # Solution : Push sur votre branche feature
 git push origin feature_bary   # ✓ Correct
 ```
@@ -337,7 +337,7 @@ git push origin feature_bary
 
 ---
 
-## **🔄 Résumé visuel du workflow**
+## ** Résumé visuel du workflow**
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -364,7 +364,7 @@ git push origin feature_bary
 
 ---
 
-## **📞 Support**
+## ** Support**
 
 **En cas de problème :**
 

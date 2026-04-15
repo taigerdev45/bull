@@ -1,0 +1,19 @@
+@startuml activity_decision_jury
+start
+:Recuperation Moyennes S5 et S6;
+:Calcul Moyenne Annuelle = (Moy_S5 + Moy_S6) / 2;
+if (Moyenne Annuelle >= 10.0?) then (oui)
+    :Attribuer Mention (Passable, Bien, etc.);
+    if (60 Credits ECTS acquis?) then (oui)
+        :Decision = ADMIS;
+    else (non)
+        :Decision = ADMIS_SOUS_RESERVE;
+    fi
+else (non)
+    :Decision = AJOURNE;
+    :Proposer Rattrapages;
+fi
+:Calcul Classement Promotion;
+:Generer Proces-Verbal;
+stop
+@enduml

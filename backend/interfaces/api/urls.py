@@ -8,6 +8,7 @@ from interfaces.api.views.bulletin_view import BulletinView
 from interfaces.api.views.import_export_view import ImportEvaluationsView, ExportResultatsView
 from interfaces.api.views.ue_viewset import UEViewSet, MatiereViewSet
 from interfaces.api.views.audit_viewset import AuditViewSet
+from interfaces.api.views.parametres_view import ParametresView
 from application.startup import initialiser_abonnements
 
 # Initialisation de l'audit
@@ -29,5 +30,6 @@ urlpatterns = [
     path('bulletins/donnees/<str:etudiant_id>/', BulletinView.as_view()),
     path('import/evaluations/', ImportEvaluationsView.as_view()),
     path('export/resultats/', ExportResultatsView.as_view()),
+    path('parametres/', ParametresView.as_view(), name='parametres'),
     path('evaluations/', EvaluationView.as_view(), name='evaluation-create'),
 ]

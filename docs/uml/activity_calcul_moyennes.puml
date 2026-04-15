@@ -1,0 +1,17 @@
+@startuml activity_calcul_moyennes
+start
+:Recuperation Evaluations;
+if (Rattrapage present?) then (oui)
+    :Moyenne = Note Rattrapage;
+else (non)
+    if (CC et Examen presents?) then (oui)
+        :Moyenne = (CC * 0.4) + (Examen * 0.6);
+    else (non)
+        :Moyenne = Note Unique;
+    fi
+fi
+:Appliquer penalites d'absence (-0.01 / h);
+:Tronquer a 0 (si negatif);
+:Retourner Moyenne;
+stop
+@enduml

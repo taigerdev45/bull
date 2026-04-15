@@ -1,30 +1,34 @@
 version: '3.8'
-services:
-  db:
-    image: postgres:15
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=bulletin_db
-      - POSTGRES_USER=bulletin_user
-      - POSTGRES_PASSWORD=bulletin_password
 
+services:
   backend:
-    build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
+    build: .
     volumes:
       - ./backend:/app
     ports:
-      - '8000:8000'
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - FIREBASE_AUTH_EMULATOR_HOST=firebase-emulator:9099
+      - FIRESTORE_EMULATOR_HOST=firebase-emulator:8080
+      - PYTHONUNBUFFERED=1
+    command: python manage.py runserver 0.0.0.0:8000
     depends_on:
-      - db
+      - firebase-emulator
+    networks:
+      - bull-network
 
-  frontend:
-    build: ./frontend
+  firebase-emulator:
+    image: spinejs/firebase-emulator:latest
     ports:
-      - '3000:3000'
+      - "9099:9099" # Auth
+      - "8080:8080" # Firestore
+      - "4000:4000" # UI
+    networks:
+      - bull-network
     volumes:
-      - ./frontend:/app
+      - ./firebase_data:/app/data
 
-volumes:
-  postgres_data:
+networks:
+  bull-network:
+    driver: bridge

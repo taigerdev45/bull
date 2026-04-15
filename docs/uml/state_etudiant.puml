@@ -1,0 +1,12 @@
+@startuml state_etudiant
+[*] --> INSCRIT
+INSCRIT --> EN_COURS : Annee academique debute
+EN_COURS --> EXAMENS : Fin semestre
+EXAMENS --> ADMIS : Moyenne >= 10.0 & 60 ECTS
+EXAMENS --> RATTRAPAGE : Moins de 60 ECTS
+RATTRAPAGE --> ADMIS : Apres validation
+RATTRAPAGE --> REDOUBLANT : Echec definitif
+ADMIS --> DIPLOME : Fin de cycle
+REDOUBLANT --> EN_COURS : Reinscription
+DIPLOME --> [*]
+@enduml

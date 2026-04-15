@@ -1,0 +1,29 @@
+@startuml component_diagram
+package "Frontend" {
+    [React Application] as UI
+    [Firebase SDK Client] as FBC
+}
+
+package "Backend Django" {
+    [REST API Views] as View
+    [Application Services] as App
+    [Domain Entities] as Dom
+    [Firebase Admin SDK] as FBAS
+    [Excel Engine (openpyxl)] as Excel
+}
+
+database "Firebase Server" {
+    [Firestore DB] as DB
+    [Firebase Auth Service] as Auth
+}
+
+UI -- FBC
+FBC ..> Auth
+UI --> View : HTTP/JWT
+View --> App
+App --> Dom
+App --> FBAS
+App --> Excel
+FBAS --> DB
+FBAS --> Auth
+@enduml

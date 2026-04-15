@@ -1,0 +1,69 @@
+@startuml class_diagram
+package "Domain" {
+    class Etudiant {
+        +matricule: String
+        +nom: String
+        +prenom: String
+        +promotion: String
+    }
+    
+    class UE {
+        +id: String
+        +code: String
+        +libelle: String
+        +credits: Integer
+    }
+    
+    class Matiere {
+        +id: String
+        +libelle: String
+        +coefficient: Float
+        +credits: Integer
+    }
+    
+    class Evaluation <<Aggregate Root>> {
+        +id: String
+        +type: TypeEvaluation
+        +note: Note
+        +date_saisie: DateTime
+    }
+    
+    class Note <<Value Object>> {
+        +valeur: Float
+    }
+    
+    class Moyenne <<Value Object>> {
+        +valeur: Float
+        +type: TypeCalcul
+    }
+    
+    UE "1" *-- "many" Matiere
+    Etudiant "1" -- "many" Evaluation
+    Matiere "1" -- "many" Evaluation
+}
+
+package "Domain Services" {
+    class OrchestreCalcul {
+        +recalculer_pour_etudiant(etu_id)
+        +calculer_bulletin_semestre(etu_id)
+    }
+    
+    class ValidateurCompensation {
+        +valider(moy_ue, moy_gen): ValidationResult
+    }
+}
+
+package "Repositories (Interfaces)" {
+    interface IEvaluationRepository {
+        +creer(eval)
+        +obtenir_par_etudiant(etu_id)
+    }
+    interface IMatiereRepository {
+        +obtenir_tout()
+        +attribuer_enseignant(id, prof_id)
+    }
+}
+
+OrchestreCalcul ..> IEvaluationRepository
+OrchestreCalcul ..> ValidateurCompensation
+@enduml

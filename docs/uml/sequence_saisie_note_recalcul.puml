@@ -1,0 +1,35 @@
+@startuml sequence_saisie_note_recalcul
+actor Enseignant
+participant "API View" as API
+participant "Command Handler" as Handler
+participant "Repository" as Repo
+participant "Orchestrateur" as Calc
+participant "Event Dispatcher" as Events
+
+Enseignant -> API: POST /api/evaluations/ (note)
+activate API
+API -> Handler: handle_creer(cmd)
+activate Handler
+Handler -> Repo: start_transaction()
+Handler -> Repo: creer(Evaluation)
+activate Repo
+Repo --> Handler: ok
+deactivate Repo
+Handler -> Repo: commit_transaction()
+Handler -> Calc: recalculer_pour_etudiant(etu_id)
+activate Calc
+Calc -> Repo: obtenir_evaluations()
+Calc -> Calc: calculer_moyennes_cascade()
+Calc -> Repo: sauvegarder_resultats()
+Calc --> Handler: ok
+deactivate Calc
+Handler -> Events: dispatch(EvaluationCreee)
+activate Events
+Events -> Events: AuditLogHandler.handle()
+Events --> Handler: ok
+deactivate Events
+Handler --> API: eval_id
+deactivate Handler
+API --> Enseignant: 201 Created
+deactivate API
+@enduml

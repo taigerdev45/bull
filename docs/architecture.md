@@ -1,36 +1,61 @@
-#  Architecture Technique
+# Architecture du Projet - Clean Architecture et DDD
 
-## Stack Technologique
+Le projet est conçu selon les principes de la Clean Architecture et du Domain-Driven Design (DDD) pour assurer une séparation stricte des préoccupations et une extensibilité maximale.
 
-### Frontend
-- **Framework** : Next.js 14 (App Router)
-- **Styling** : Tailwind CSS + shadcn/ui
-- **State Management** : TanStack Query
-- **Génération PDF** : Puppeteer
+## Structure en Couches
 
-### Backend
-- **Framework** : Django 5 + Django REST Framework (DRF)
-- **Base de données** : Firebase Firestore (NoSQL)
-- **Auth** : Firebase Authentication (JWT)
-- **Validation** : Pydantic
-
-## Principes de Développement (POO/DDD)
-L'application suit strictement les principes de la **Clean Architecture** et du **Domain-Driven Design (DDD)** :
-
-- **Domain Layer** (Pur Python) : Contient la logique métier, les entités (`Etudiant`, `Evaluation`), les Value Objects (`Note`, `Moyenne`) et les interfaces des repositories.
-- **Application Layer** : Orchestre les cas d'utilisation (Service Layer, Commands, Queries).
-- **Infrastructure Layer** : Implémente les détails techniques (Firebase, Auth, Génération Excel).
-- **Interfaces Layer** : Points d'entrée de l'application (API REST, CLI).
-
-## Structure du Backend
+```mermaid
+graph TD
+    UI[Interfaces API/CLI] --> App[Application Layer]
+    App --> Domain[Domain Layer]
+    Infra[Infrastructure Layer] --> App
+    Infra --> Domain
 ```
-backend/
-├── domain/                    # Cœur métier (pur, testable)
-│   ├── entities/              # Etudiant, UE, Matière, Evaluation...
-│   ├── value_objects/         # Note, Moyenne, Coefficient (immutables)
-│   ├── services/              # Calculateurs, Validateurs, Décideurs
-│   └── repositories/          # Interfaces (DIP)
-├── application/               # Orchestration (Commands, Queries)
-├── infrastructure/            # Firebase, Persistence, Config
-└── interfaces/                # API REST Django
-```
+
+### 1. Domaine (Domain)
+Le cœur du système, indépendant de toute technologie externe (Base de données, Web).
+- **Entities** : Etudiant, Evaluation, UE, Matiere.
+- **Value Objects** : Note, Moyenne, Coefficient.
+- **Repository Interfaces** : IEvaluationRepository, IMatiereRepository.
+- **Domain Services** : OrchestreCalcul, ValidateurCompensation.
+
+### 2. Application
+Coordonne les flux de données et exécute les cas d'utilisation.
+- **Commands** : CreerEvaluationCommand, ImporterEvaluationsCommand.
+- **Handlers** : EvaluationCommandHandler, ResultatQueryHandler.
+- **Application Services** : AuditService, BulletinService.
+
+### 3. Infrastructure
+Implémente les détails techniques.
+- **Persistence** : FirebaseEvaluationRepository (Firestore).
+- **External Tools** : OpenpyxlParser (Excel), ExcelGenerator.
+- **Config** : Dependency Injection (Container).
+
+### 4. Interfaces
+Points d'entrée du système.
+- **REST API** : Django Rest Framework (ViewSets, Serializers).
+- **CLI** : Commandes manage.py (Maintenance, Initialisation).
+
+---
+
+## Patterns POO Utilises
+
+### Repository Pattern
+Toutes les interactions avec Firestore passent par des interfaces (IEvaluationRepository). Cela permet de changer de base de données sans impacter la logique métier.
+
+### Strategy Pattern
+Utilisé dans les calculateurs (CalculateurMatiere, CalculateurUE). L'algorithme de calcul peut varier selon le contexte (rattrapage vs normal) sans modifier l'appelant.
+
+### Observer Pattern (Domain Events)
+Implémenté via EventDispatcher. Lorsqu'une note est modifiée, un événement est publié, et le AuditLogHandler réagit pour enregistrer l'action sans coupler les deux services.
+
+---
+
+## Flux de Donnees - Saisie d'une Note
+
+1. **API View** : Reçoit la requête, valide le token Firebase.
+2. **Command Handler** : Démarre une transaction Firestore.
+3. **Repository** : Enregistre l'entité Evaluation.
+4. **Orchestrateur** : Déclenche le recalcul en cascade des moyennes (Matière -> UE -> Semestre).
+5. **Event Dispatcher** : Diffuse EvaluationCreee pour la journalisation d'audit.
+6. **API Response** : Retourne l'ID de la nouvelle évaluation.

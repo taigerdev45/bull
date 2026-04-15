@@ -1,0 +1,19 @@
+@startuml activity_validation_ue_compensation
+start
+:Calcul de la Moyenne UE;
+if (Moyenne UE >= 10.0?) then (oui)
+    :Statut = ACQUISE_DIRECTE;
+    :Octroi de tous les credits;
+else (non)
+    :Recuperation Moyenne Semestre;
+    if (Moyenne Semestre >= 10.0?) then (oui)
+        :Statut = COMPENSEE;
+        :Octroi de tous les credits;
+    else (non)
+        :Statut = NON_ACQUISE;
+        :0 Credit;
+    fi
+fi
+:Mise a jour du Bulletin;
+stop
+@enduml
