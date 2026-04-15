@@ -1,16 +1,16 @@
 import os
 import django
 from infrastructure.persistence.firebase.connection import FirebaseConnection
-from infrastructure.config.constants import REFERENTIEL_INPTIC
+from infrastructure.config.constants import REFERENTIEL_LP_ASUR
 
 def run():
-    """Initialise le référentiel INPTIC dans Firestore."""
-    print("🚀 Initialisation du référentiel pédagogique INPTIC...")
+    """Initialise le référentiel LP ASUR dans Firestore."""
+    print("🚀 Initialisation du référentiel pédagogique LP ASUR...")
     
     connection = FirebaseConnection()
     db = connection.client
     
-    for semestre in REFERENTIEL_INPTIC:
+    for semestre in REFERENTIEL_LP_ASUR.values():
         print(f"--- {semestre.libelle} ---")
         
         for ue in semestre.ues:

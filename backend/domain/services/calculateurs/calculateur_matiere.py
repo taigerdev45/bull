@@ -1,60 +1,98 @@
-from typing import List, Dict
-from domain.services.interfaces.i_calculateur import ICalculateur
-from domain.value_objects.note import Note
-from domain.value_objects.moyenne import Moyenne, TypeCalculMoyenne
-from domain.entities.evaluation import TypeEvaluation
-from infrastructure.config.constants import PONDERATION_CC, PONDERATION_EXAMEN, PENALITE_PAR_HEURE
+from typing import Dict, Any, List
+from .interfaces.i_calculateur import ICalculateur
+from ...value_objects.note import Note
+from ...value_objects.moyenne import Moyenne, TypeCalculMoyenne
+from ...entities.evaluation import TypeEvaluation
+from domain.exceptions.domain_exception import CalculImpossibleException
 
 class CalculateurMatiere(ICalculateur):
-    """Calculateur de la moyenne pour une matière spécifique."""
-
-    def calculer(self, data: Dict) -> Moyenne:
+    """
+    Calcule la moyenne d'une matière selon règles métier.
+    Pattern Strategy: algorithme interchangeable.
+    """
+    
+    PONDERATION_CC = 0.4
+    PONDERATION_EXAMEN = 0.6
+    
+    def __init__(self, penalite_service: 'IPenaliteService'):
+        # Injection dépendance
+        self._penalite_service = penalite_service
+    
+    def peut_calculer(self, contexte: Dict[str, Any]) -> bool:
+        evaluations = contexte.get('evaluations', [])
+        return len(evaluations) > 0
+    
+    def calculer(self, contexte: Dict[str, Any]) -> Moyenne:
         """
-        data: {
-            'evaluations': List[Evaluation],
-            'heures_absence': int
-        }
+        Algorithme:
+        1. Si rattrapage présent → rattrapage remplace tout
+        2. Sinon pondération 40/60 CC/Examen
+        3. Appliquer pénalités absences
         """
-        evals = data.get('evaluations', [])
-        heures_abs = data.get('heures_absence', 0)
+        evaluations: List = contexte['evaluations']
+        etudiant_id = contexte['etudiant_id']
+        matiere_id = contexte['matiere_id']
         
-        if not evals:
-            return Moyenne(0.0, TypeCalculMoyenne.ARITHMETIQUE, {"error": "Aucune évaluation"})
-
-        # 1. Vérifier la présence d'un rattrapage
-        rattrapage = next((e for e in evals if e.type == TypeEvaluation.RATTRAPAGE), None)
-        if rattrapage and rattrapage.note_valeur is not None:
-            valeur_base = rattrapage.note_valeur
-            details = {"mode": "RATTRAPAGE"}
+        # Stratégie selon présence rattrapage
+        rattrapage = self._trouver_evaluation(evaluations, TypeEvaluation.RATTRAPAGE)
+        
+        if rattrapage and rattrapage.note.est_presente():
+            return self._calcul_avec_rattrapage(rattrapage, etudiant_id, matiere_id)
+        
+        return self._calcul_normal(evaluations, etudiant_id, matiere_id)
+    
+    def _trouver_evaluation(self, evaluations: List, type_eval: TypeEvaluation):
+        return next((e for e in evaluations if e.type == type_eval), None)
+    
+    def _calcul_avec_rattrapage(self, rattrapage, etudiant_id, matiere_id) -> Moyenne:
+        note = rattrapage.note
+        note_penalisee = self._appliquer_penalite(note, etudiant_id, matiere_id)
+        
+        return Moyenne(
+            valeur=float(note_penalisee.valeur) if note_penalisee.valeur is not None else 0.0,
+            type_calcul=TypeCalculMoyenne.RATTRAPAGE,
+            details={
+                'note_rattrapage': float(rattrapage.note.valeur) if rattrapage.note.valeur is not None else 0.0,
+                'penalite': (float(rattrapage.note.valeur) - float(note_penalisee.valeur)) if (rattrapage.note.valeur and note_penalisee.valeur) else 0.0,
+                'methode': 'Rattrapage remplace tout'
+            }
+        )
+    
+    def _calcul_normal(self, evaluations, etudiant_id, matiere_id) -> Moyenne:
+        cc = self._trouver_evaluation(evaluations, TypeEvaluation.CC)
+        examen = self._trouver_evaluation(evaluations, TypeEvaluation.EXAMEN)
+        
+        note_cc = cc.note if cc else Note(None)
+        note_examen = examen.note if examen else Note(None)
+        
+        # Calcul pondéré
+        if note_cc.est_presente() and note_examen.est_presente():
+            valeur = (float(note_cc.valeur) * self.PONDERATION_CC + 
+                     float(note_examen.valeur) * self.PONDERATION_EXAMEN)
+            type_calc = TypeCalculMoyenne.NORMAL
+        elif note_cc.est_presente():
+            valeur = float(note_cc.valeur)
+            type_calc = TypeCalculMoyenne.UNIQUE
+        elif note_examen.est_presente():
+            valeur = float(note_examen.valeur)
+            type_calc = TypeCalculMoyenne.UNIQUE
         else:
-            # 2. CC x 40% + Examen x 60%
-            cc = next((e for e in evals if e.type == TypeEvaluation.CC), None)
-            examen = next((e for e in evals if e.type == TypeEvaluation.EXAMEN), None)
-            
-            if cc and examen and cc.note_valeur is not None and examen.note_valeur is not None:
-                valeur_base = (cc.note_valeur * PONDERATION_CC) + (examen.note_valeur * PONDERATION_EXAMEN)
-                details = {"cc": cc.note_valeur, "examen": examen.note_valeur, "mode": "PONDEREE"}
-            elif len(evals) == 1:
-                # Si une seule note (et pas de rattrapage géré au dessus)
-                valeur_base = evals[0].note_valeur or 0.0
-                details = {"mode": "UNIQUE", "note": valeur_base}
-            else:
-                # Moyenne arithmétique simple si structure incomplète
-                notes = [e.note_valeur for e in evals if e.note_valeur is not None]
-                valeur_base = sum(notes) / len(notes) if notes else 0.0
-                details = {"mode": "ARITHMETIQUE_DEFAUT"}
-
-        # 3. Pénalité absences (0.01 pt/heure)
-        penalite = heures_abs * PENALITE_PAR_HEURE
-        valeur_finale = max(0, valeur_base - penalite)
+            raise CalculImpossibleException("Aucune note disponible")
         
-        details.update({
-            "valeur_avant_penalite": valeur_base,
-            "penalite_absences": penalite,
-            "heures_absence": heures_abs
-        })
-
-        return Moyenne(valeur_finale, TypeCalculMoyenne.ARITHMETIQUE, details)
-
-    def peut_calculer(self, data: Dict) -> bool:
-        return 'evaluations' in data
+        # Appliquer pénalités
+        note_finale = self._appliquer_penalite(Note(valeur), etudiant_id, matiere_id)
+        
+        return Moyenne(
+            valeur=float(note_finale.valeur) if note_finale.valeur is not None else 0.0,
+            type_calcul=type_calc,
+            details={
+                'note_cc': float(note_cc.valeur) if note_cc.est_presente() else None,
+                'note_examen': float(note_examen.valeur) if note_examen.est_presente() else None,
+                'ponderation_cc': self.PONDERATION_CC if type_calc == TypeCalculMoyenne.NORMAL else None,
+                'methode': 'Pondération 40/60' if type_calc == TypeCalculMoyenne.NORMAL else 'Note unique'
+            }
+        )
+    
+    def _appliquer_penalite(self, note: Note, etudiant_id: str, matiere_id: str) -> Note:
+        penalite = self._penalite_service.calculer(etudiant_id, matiere_id)
+        return note.appliquer_penalite(penalite)

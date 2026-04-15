@@ -1,21 +1,30 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Optional
 from enum import Enum, auto
-from typing import Dict
 
 class TypeCalculMoyenne(Enum):
-    ARITHMETIQUE = auto()
-    PONDEREE = auto()
+    NORMAL = auto()           # CC + Examen
+    RATTRAPAGE = auto()       # Rattrapage remplace
+    UNIQUE = auto()           # Une seule note
 
 @dataclass(frozen=True)
 class Moyenne:
-    """Objet Valeur immuable représentant une Moyenne calculée."""
+    """Value Object Moyenne avec contexte de calcul"""
     valeur: float
     type_calcul: TypeCalculMoyenne
-    details: Dict = field(default_factory=dict)
-
+    details: dict  # Traçabilité calcul
+    
+    def __post_init__(self):
+        # Conversion forcée en float en cas de passage d'un autre type
+        object.__setattr__(self, 'valeur', float(self.valeur))
+        if self.valeur < 0 or self.valeur > 20:
+            raise ValueError(f"Moyenne {self.valeur} invalide")
+    
     def est_reussite(self, seuil: float = 10.0) -> bool:
-        """Détermine si la moyenne constitue une réussite."""
         return self.valeur >= seuil
+    
+    def __float__(self) -> float:
+        return self.valeur
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.valeur:.2f}"

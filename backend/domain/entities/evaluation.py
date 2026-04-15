@@ -24,6 +24,10 @@ class Evaluation(BaseEntity):
         return self._note.valeur
 
     @property
+    def note(self) -> Note:
+        return self._note
+
+    @property
     def type(self) -> TypeEvaluation:
         return self._type
 

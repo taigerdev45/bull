@@ -1,23 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 class ICalculateur(ABC):
-    """Interface pour les stratégies de calcul métier."""
+    """Interface pour tous les calculateurs"""
     
     @abstractmethod
-    def calculer(self, data: Any) -> Any:
-        """Exécute le calcul sur les données fournies."""
+    def calculer(self, contexte: Dict[str, Any]) -> Any:
+        """Calcule un résultat à partir d'un contexte"""
         pass
-
-    @abstractmethod
-    def peut_calculer(self, data: Any) -> bool:
-        """Vérifie si le calculateur peut traiter ces données."""
-        pass
-
-class IValidateur(ABC):
-    """Interface pour les stratégies de validation."""
     
     @abstractmethod
-    def valider(self, data: Any) -> Any:
-        """Valide les données et retourne un résultat de validation."""
+    def peut_calculer(self, contexte: Dict[str, Any]) -> bool:
+        """Vérifie si le calcul est possible avec les données fournies"""
         pass

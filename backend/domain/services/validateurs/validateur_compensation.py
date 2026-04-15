@@ -1,45 +1,55 @@
-from typing import Dict
-from domain.services.interfaces.i_validateur import IValidateur
-from domain.value_objects.validation_result import ValidationResult, EtatAcquisition
-from infrastructure.config.constants import SEUIL_REUSSITE
+from dataclasses import dataclass
+from typing import Tuple
+from ...value_objects.moyenne import Moyenne
 
-class ValidateurCompensation(IValidateur):
-    """Logique critique de validation des UE et compensation par le semestre."""
+@dataclass(frozen=True)
+class ValidationResult:
+    """Value Object résultat validation"""
+    est_valide: bool
+    statut: str  # 'ACQUISE_DIRECTE', 'COMPENSEE', 'NON_ACQUISE'
+    credits_acquis: int
+    message: str
 
-    def valider(self, data: Dict) -> ValidationResult:
+class ValidateurCompensation:
+    """
+    Pattern Chain of Responsibility + Strategy.
+    Valide une UE selon règles de compensation.
+    """
+    
+    SEUIL_REUSSITE = 10.0
+    
+    def __init__(self, credits_ue: int):
+        self._credits_ue = credits_ue
+    
+    def valider(self, moyenne_ue: Moyenne, moyenne_generale: Moyenne) -> ValidationResult:
         """
-        data: {
-            'moyenne_ue': float,
-            'moyenne_generale_semestre': float,
-            'credits_ue': int
-        }
+        Chaîne de décision:
+        1. Acquisition directe (moyenne UE >= 10)
+        2. Compensation (moyenne UE < 10 mais générale >= 10)
+        3. Non acquise
         """
-        moy_ue = data.get('moyenne_ue', 0.0)
-        moy_gen = data.get('moyenne_generale_semestre', 0.0)
-        credits = data.get('credits_ue', 0)
-
-        # 1. Réussite directe
-        if moy_ue >= SEUIL_REUSSITE:
+        # Étape 1: Acquisition directe
+        if moyenne_ue.est_reussite(self.SEUIL_REUSSITE):
             return ValidationResult(
-                etat=EtatAcquisition.ACQUISE_DIRECTE,
-                credits_acquis=credits,
-                moyenne=moy_ue,
-                message="UE acquise par réussite directe."
+                est_valide=True,
+                statut='ACQUISE_DIRECTE',
+                credits_acquis=self._credits_ue,
+                message=f"UE acquise directement (moyenne: {moyenne_ue.valeur:.2f})"
             )
-
-        # 2. Compensation par la moyenne générale
-        if moy_gen >= SEUIL_REUSSITE:
+        
+        # Étape 2: Compensation
+        if moyenne_generale.est_reussite(self.SEUIL_REUSSITE):
             return ValidationResult(
-                etat=EtatAcquisition.COMPENSEE,
-                credits_acquis=credits,
-                moyenne=moy_ue,
-                message=f"UE compensée par la moyenne semestrielle ({moy_gen:.2f})."
+                est_valide=True,
+                statut='COMPENSEE',
+                credits_acquis=self._credits_ue,  # Tous les crédits quand même!
+                message=f"UE acquise par compensation (UE: {moyenne_ue.valeur:.2f}, générale: {moyenne_generale.valeur:.2f})"
             )
-
-        # 3. Échec
+        
+        # Étape 3: Non acquise
         return ValidationResult(
-            etat=EtatAcquisition.NON_ACQUISE,
+            est_valide=False,
+            statut='NON_ACQUISE',
             credits_acquis=0,
-            moyenne=moy_ue,
-            message="UE non acquise."
+            message=f"UE non acquise (moyenne: {moyenne_ue.valeur:.2f})"
         )
