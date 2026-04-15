@@ -10,15 +10,13 @@ class BulletinService:
         self.etudiant_repo = etudiant_repo
         self.resultat_repo = resultat_repo
 
-    def préparer_donnees_bulletin(self, etudiant_id: str, semestre: int) -> Optional[BulletinDTO]:
+    def préparer_donnees_bulletin(self, etudiant_id: str, type_bulletin: str, semestre: Optional[int] = None) -> Optional[BulletinDTO]:
         """Récupère et formate les données pour la génération d'un bulletin."""
         etudiant = self.etudiant_repo.get_by_id(etudiant_id)
         if not etudiant:
             return None
             
-        # Simulation de la récupération des résultats calculés
-        # En production: self.resultat_repo.get_par_etudiant_semestre(...)
-        
+        from datetime import datetime
         dto_etudiant = EtudiantDTO(
             id=etudiant.id,
             nom=etudiant._nom,
@@ -27,12 +25,18 @@ class BulletinService:
             date_naissance=etudiant._date_naissance.isoformat()
         )
         
-        return BulletinDTO(
+        bulletin = BulletinDTO(
             etudiant=dto_etudiant,
-            semestre=semestre,
-            moyenne_generale=0.0,
-            total_credits=0,
-            resultats_ues=[],
-            mention="Ajourné",
-            decision_jury="REDOUBLEMENT"
+            type_bulletin=type_bulletin,
+            date_generation=datetime.now().isoformat(),
+            saisie_par="SYSTEM"
         )
+
+        if type_bulletin == "SEMESTRIEL":
+            # Appel au repository resultat pour les détails
+            pass
+        elif type_bulletin == "ANNUEL":
+            # Agrégation S5 + S6
+            pass
+            
+        return bulletin

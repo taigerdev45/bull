@@ -31,12 +31,13 @@ class ResultatUEDTO(BaseModel):
     etat: str
     credits: int
 
+from application.dto.resultat_dto import ResultatSemestreDTO, ResultatAnnuelDTO
+
 class BulletinDTO(BaseModel):
     """DTO complet pour la génération d'un bulletin de notes."""
     etudiant: EtudiantDTO
-    semestre: int
-    moyenne_generale: float
-    total_credits: int
-    resultats_ues: List[ResultatUEDTO]
-    mention: str
-    decision_jury: str
+    type_bulletin: str # SEMESTRIEL | ANNUEL
+    resultat_semestre: Optional[ResultatSemestreDTO] = None
+    resultat_annuel: Optional[ResultatAnnuelDTO] = None
+    date_generation: str
+    saisie_par: str

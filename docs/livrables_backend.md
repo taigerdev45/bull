@@ -119,7 +119,9 @@ Ce document permet à l'équipe frontend de suivre l'avancement des composants b
 | `etudiant_viewset.py` | [x] | `/api/etudiants/` |
 | `absence_viewset.py` | [x] | `/api/absences/` |
 | `evaluation_viewset.py` | [x] | `/api/evaluations/` (CRUD, Bulk, Filtres) |
-| `resultat_view.py` | [ ] | En attente |
+| `resultat_view.py` | [x] | `/api/resultats/` |
+| `bulletin_view.py` | [x] | `/api/bulletins/` |
+| `resultat_serializer.py` | [x] | Nested profond |
 
 ### **4.5 CLI Commands (interfaces/cli/commands/)**
 | Fichier | Status | Management command |

@@ -29,6 +29,21 @@ class FirebaseResultatRepository(IResultatRepository):
         # Logique similaire pour annuel...
         pass
 
-    def get_par_etudiant(self, etudiant_id: str) -> List[ResultatUE]:
-        # Requête par étudiant
+    def get_par_etudiant_semestre(self, etudiant_id: str, semestre: int) -> Optional[ResultatSemestre]:
+        docs = self.coll_semestre.where('etudiant_id', '==', etudiant_id)\
+                                 .where('semestre', '==', semestre).stream()
+        for doc in docs:
+            # Mapping vers entité à faire
+            pass
+        return None
+
+    def get_par_etudiant_annuel(self, etudiant_id: str) -> Optional[ResultatAnnuel]:
+        docs = self.coll_annuel.where('etudiant_id', '==', etudiant_id).stream()
+        for doc in docs:
+            pass
+        return None
+
+    def obtenir_ue_details(self, etudiant_id: str, semestre: int) -> List[ResultatUE]:
+        docs = self.coll_ue.where('etudiant_id', '==', etudiant_id).stream()
+        # Filtrage UE par semestre nécessiterait de joindre avec Matiere/UE
         return []

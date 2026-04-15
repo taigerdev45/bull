@@ -14,6 +14,7 @@ from application.services.bulletin_service import BulletinService
 from infrastructure.persistence.firebase.firebase_absence_repository import FirebaseAbsenceRepository
 from application.commands.creer_absence_command import CreerAbsenceHandler
 from application.handlers.evaluation_command_handler import EvaluationCommandHandler
+from application.handlers.resultat_query_handler import ResultatQueryHandler
 from domain.services.penalites.penalite_service import PenaliteService
 
 class Container(containers.DeclarativeContainer):
@@ -87,4 +88,10 @@ class Container(containers.DeclarativeContainer):
         EvaluationCommandHandler,
         evaluation_repo=evaluation_repo,
         orchestre_calcul=orchestre_calcul
+    )
+
+    resultat_query_handler = providers.Factory(
+        ResultatQueryHandler,
+        resultat_repo=resultat_repo,
+        evaluation_repo=evaluation_repo
     )
