@@ -317,6 +317,6 @@ L'ensemble du backend est désormais implémenté, documenté et conteneurisé. 
 
 ---
 
-**Dernière mise à jour :** 2026-04-15
+**Dernière mise à jour :** 2026-04
 
-**Responsable suivi :** Antigravity AI
+**Responsable suivi :** MOUDJIEGOU MBOUMBA 
