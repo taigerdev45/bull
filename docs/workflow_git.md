@@ -74,14 +74,14 @@ git branch
 ### **Pour Brady**
 
 ```bash
-git checkout -b feature_brady origin/feature_brady
+git switch feature_brady 
 git branch
 ```
 
 ### **Pour Herbert**
 
 ```bash
-git checkout -b feature_herbert origin/feature_herbert
+git switch feature_herbert
 git branch
 ```
 
@@ -95,7 +95,7 @@ git branch
 
 ```bash
 # S'assurer d'être sur votre branche
-git checkout feature_bary    # (ou feature_brady / feature_herbert)
+git switch feature_bary    # (ou feature_brady / feature_herbert)
 
 # Récupérer les infos du serveur
 git fetch origin
