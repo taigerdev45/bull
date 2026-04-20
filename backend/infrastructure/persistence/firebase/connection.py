@@ -20,26 +20,33 @@ class FirebaseConnection:
             import os
             import json
             
-            # On tente de récupérer le JSON brut d'abord (recommandé pour Render/Vercel)
-            raw_json = os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON')
-            cred_path = getattr(settings, 'FIREBASE_SERVICE_ACCOUNT_KEY', None)
+            # 1. On cherche la source (JSON brut ou chemin)
+            # Priorité 1: Variable d'env directe
+            # Priorité 2: Configuration settings (via FIREBASE_SERVICE_ACCOUNT_KEY_PATH)
+            source = os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON')
+            if not source:
+                source = getattr(settings, 'FIREBASE_SERVICE_ACCOUNT_KEY', None)
             
-            if raw_json:
+            if source:
                 try:
-                    cred_info = json.loads(raw_json)
-                    cred = credentials.Certificate(cred_info)
+                    # Est-ce du JSON brut ?
+                    if isinstance(source, str) and source.strip().startswith('{'):
+                        cred_info = json.loads(source)
+                        cred = credentials.Certificate(cred_info)
+                    else:
+                        # C'est probablement un chemin de fichier
+                        cred = credentials.Certificate(source)
+                    
                     firebase_admin.initialize_app(cred)
                 except Exception as e:
-                    print(f"Erreur lors du chargement du JSON Firebase: {e}")
-                    # On tente de fallback sur le chemin de fichier
-                    if cred_path:
-                        cred = credentials.Certificate(cred_path)
-                        firebase_admin.initialize_app(cred)
-            elif cred_path:
-                cred = credentials.Certificate(cred_path)
-                firebase_admin.initialize_app(cred)
+                    print(f"Tentative Firebase avec source brute échouée: {e}")
+                    # Fallback sur ADC (GCP/Local auth)
+                    try:
+                        firebase_admin.initialize_app()
+                    except Exception as e_adc:
+                        print(f"Échec final de l'initialisation Firebase: {e_adc}")
             else:
-                # Fallback sur les credentials par défaut (utile pour GCP/ADC)
+                # Fallback par défaut
                 firebase_admin.initialize_app()
                 
         self.db = firestore.client()
