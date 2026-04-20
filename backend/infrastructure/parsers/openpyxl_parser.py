@@ -1,6 +1,6 @@
 import openpyxl
 from io import BytesIO
-from typing import List
+from typing import List, Optional
 from .parse_result import ParseResult, EvaluationImportDTO, ValidationErreurDTO
 
 class OpenpyxlParser:

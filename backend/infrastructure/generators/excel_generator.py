@@ -1,6 +1,7 @@
 import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 from io import BytesIO
+from typing import List
 
 class ExcelGenerator:
     """Générateur de classeurs Excel professionnels."""
