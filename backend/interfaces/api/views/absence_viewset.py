@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat, IsEtudiant
-from .serializers.absence_serializer import AbsenceSerializer
+from interfaces.api.serializers.absence_serializer import AbsenceSerializer
 from application.commands.creer_absence_command import CreerAbsenceCommand, CreerAbsenceHandler
 from infrastructure.config.dependency_injection import Container
 from dependency_injector.wiring import inject, Provide
