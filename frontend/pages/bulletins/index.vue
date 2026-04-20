@@ -5,7 +5,6 @@
         <h2>Bulletins Individuels</h2>
         <p>Générez et imprimez les bulletins (modèle INPTIC A4).</p>
       </div>
-      <div class="header-actions">
         <div class="toggle-group no-print">
           <button 
             v-for="sem in ['S5', 'S6', 'Annuel']" 
@@ -17,9 +16,6 @@
             {{ sem === 'Annuel' ? 'Annuel' : 'Semestre ' + sem.substring(1) }}
           </button>
         </div>
-        <button class="btn btn-secondary" @click="printBulletin">
-          <span class="icon">🖨️</span> Imprimer / PDF
-        </button>
       </div>
     </header>
 
@@ -268,6 +264,13 @@
             Il ne sera délivré qu'un seul et unique exemplaire de bulletins de notes. L'étudiant est donc prié d'en faire plusieurs copies légalisées.
           </div>
         </div>
+
+        <!-- Action d'impression en bas (Hors feuille A4) -->
+        <div class="bulletin-actions no-print">
+          <button class="btn btn-primary btn-lg" @click="printBulletin">
+            <span class="icon">🖨️</span> Imprimer le bulletin en PDF
+          </button>
+        </div>
       </div>
       
       <div v-else-if="!isDataLoading" class="empty-selection">
@@ -465,6 +468,32 @@ const printBulletin = () => {
   font-family: 'Times New Roman', Times, serif;
   font-size: 11pt;
   position: relative;
+}
+
+.bulletin-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+.btn-primary {
+  background-color: #000080;
+  color: white;
+  border: none;
+  padding: 0.8rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 128, 0.3);
+  transition: all 0.3s;
+  font-size: 1.1rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 128, 0.4);
+  background-color: #0000a0;
 }
 
 .text-blue { color: #000080; }
