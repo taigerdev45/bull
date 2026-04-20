@@ -19,10 +19,13 @@
 
 # production
 /build
+/.output
+/dist
 
 # misc
 .DS_Store
 *.pem
+.nuxt
 
 # debug
 npm-debug.log*

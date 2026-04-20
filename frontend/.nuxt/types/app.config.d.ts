@@ -1,11 +1,7 @@
 
-import type { AppConfigInput, CustomAppConfig } from 'nuxt/schema'
+import type { CustomAppConfig } from 'nuxt/schema'
 import type { Defu } from 'defu'
 
-
-declare global {
-  const defineAppConfig: <C extends AppConfigInput> (config: C) => C
-}
 
 declare const inlineConfig = {
   "nuxt": {}

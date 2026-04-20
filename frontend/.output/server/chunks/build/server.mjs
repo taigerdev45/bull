@@ -1,5 +1,5 @@
 import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { hasInjectionContext, getCurrentInstance, defineAsyncComponent, defineComponent, h, inject, computed, unref, shallowRef, provide, shallowReactive, ref, Suspense, Fragment, createApp, onErrorCaptured, onServerPrefetch, createVNode, resolveDynamicComponent, reactive, effectScope, mergeProps, getCurrentScope, toRef, withCtx, nextTick, isReadonly, useSSRContext, isRef, isShallow, isReactive, toRaw } from 'vue';
-import { p as parseURL, l as encodePath, m as decodePath, n as hasProtocol, o as isScriptProtocol, k as joinURL, w as withQuery, q as sanitizeStatusCode, r as getContext, $ as $fetch, v as defu, h as createError$1, x as executeAsync } from '../_/nitro.mjs';
+import { p as parseURL, l as encodePath, m as decodePath, n as hasProtocol, o as isScriptProtocol, k as joinURL, w as withQuery, q as sanitizeStatusCode, r as getContext, $ as $fetch, v as defu, x as createHooks, h as createError$1, y as executeAsync } from '../_/nitro.mjs';
 import { b as baseURL } from '../routes/renderer.mjs';
 import { useRoute as useRoute$1, RouterView, createMemoryHistory, createRouter, START_LOCATION } from 'vue-router';
 import { ssrRenderSuspense, ssrRenderComponent, ssrRenderVNode } from 'vue/server-renderer';
@@ -15,179 +15,7 @@ import 'vue-bundle-renderer/runtime';
 import 'unhead/server';
 import 'devalue';
 import 'unhead/utils';
-
-function flatHooks(configHooks, hooks = {}, parentName) {
-	for (const key in configHooks) {
-		const subHook = configHooks[key];
-		const name = parentName ? `${parentName}:${key}` : key;
-		if (typeof subHook === "object" && subHook !== null) flatHooks(subHook, hooks, name);
-		else if (typeof subHook === "function") hooks[name] = subHook;
-	}
-	return hooks;
-}
-const createTask = /* @__PURE__ */ (() => {
-	if (console.createTask) return console.createTask;
-	const defaultTask = { run: (fn) => fn() };
-	return () => defaultTask;
-})();
-function callHooks(hooks, args, startIndex, task) {
-	for (let i = startIndex; i < hooks.length; i += 1) try {
-		const result = task ? task.run(() => hooks[i](...args)) : hooks[i](...args);
-		if (result && typeof result.then === "function") return Promise.resolve(result).then(() => callHooks(hooks, args, i + 1, task));
-	} catch (error) {
-		return Promise.reject(error);
-	}
-}
-function serialTaskCaller(hooks, args, name) {
-	if (hooks.length > 0) return callHooks(hooks, args, 0, createTask(name));
-}
-function parallelTaskCaller(hooks, args, name) {
-	if (hooks.length > 0) {
-		const task = createTask(name);
-		return Promise.all(hooks.map((hook) => task.run(() => hook(...args))));
-	}
-}
-function callEachWith(callbacks, arg0) {
-	for (const callback of [...callbacks]) callback(arg0);
-}
-var Hookable = class {
-	_hooks;
-	_before;
-	_after;
-	_deprecatedHooks;
-	_deprecatedMessages;
-	constructor() {
-		this._hooks = {};
-		this._before = void 0;
-		this._after = void 0;
-		this._deprecatedMessages = void 0;
-		this._deprecatedHooks = {};
-		this.hook = this.hook.bind(this);
-		this.callHook = this.callHook.bind(this);
-		this.callHookWith = this.callHookWith.bind(this);
-	}
-	hook(name, function_, options = {}) {
-		if (!name || typeof function_ !== "function") return () => {};
-		const originalName = name;
-		let dep;
-		while (this._deprecatedHooks[name]) {
-			dep = this._deprecatedHooks[name];
-			name = dep.to;
-		}
-		if (dep && !options.allowDeprecated) {
-			let message = dep.message;
-			if (!message) message = `${originalName} hook has been deprecated` + (dep.to ? `, please use ${dep.to}` : "");
-			if (!this._deprecatedMessages) this._deprecatedMessages = /* @__PURE__ */ new Set();
-			if (!this._deprecatedMessages.has(message)) {
-				console.warn(message);
-				this._deprecatedMessages.add(message);
-			}
-		}
-		if (!function_.name) try {
-			Object.defineProperty(function_, "name", {
-				get: () => "_" + name.replace(/\W+/g, "_") + "_hook_cb",
-				configurable: true
-			});
-		} catch {}
-		this._hooks[name] = this._hooks[name] || [];
-		this._hooks[name].push(function_);
-		return () => {
-			if (function_) {
-				this.removeHook(name, function_);
-				function_ = void 0;
-			}
-		};
-	}
-	hookOnce(name, function_) {
-		let _unreg;
-		let _function = (...arguments_) => {
-			if (typeof _unreg === "function") _unreg();
-			_unreg = void 0;
-			_function = void 0;
-			return function_(...arguments_);
-		};
-		_unreg = this.hook(name, _function);
-		return _unreg;
-	}
-	removeHook(name, function_) {
-		const hooks = this._hooks[name];
-		if (hooks) {
-			const index = hooks.indexOf(function_);
-			if (index !== -1) hooks.splice(index, 1);
-			if (hooks.length === 0) this._hooks[name] = void 0;
-		}
-	}
-	clearHook(name) {
-		this._hooks[name] = void 0;
-	}
-	deprecateHook(name, deprecated) {
-		this._deprecatedHooks[name] = typeof deprecated === "string" ? { to: deprecated } : deprecated;
-		const _hooks = this._hooks[name] || [];
-		this._hooks[name] = void 0;
-		for (const hook of _hooks) this.hook(name, hook);
-	}
-	deprecateHooks(deprecatedHooks) {
-		for (const name in deprecatedHooks) this.deprecateHook(name, deprecatedHooks[name]);
-	}
-	addHooks(configHooks) {
-		const hooks = flatHooks(configHooks);
-		const removeFns = Object.keys(hooks).map((key) => this.hook(key, hooks[key]));
-		return () => {
-			for (const unreg of removeFns) unreg();
-			removeFns.length = 0;
-		};
-	}
-	removeHooks(configHooks) {
-		const hooks = flatHooks(configHooks);
-		for (const key in hooks) this.removeHook(key, hooks[key]);
-	}
-	removeAllHooks() {
-		this._hooks = {};
-	}
-	callHook(name, ...args) {
-		return this.callHookWith(serialTaskCaller, name, args);
-	}
-	callHookParallel(name, ...args) {
-		return this.callHookWith(parallelTaskCaller, name, args);
-	}
-	callHookWith(caller, name, args) {
-		const event = this._before || this._after ? {
-			name,
-			args,
-			context: {}
-		} : void 0;
-		if (this._before) callEachWith(this._before, event);
-		const result = caller(this._hooks[name] ? [...this._hooks[name]] : [], args, name);
-		if (result instanceof Promise) return result.finally(() => {
-			if (this._after && event) callEachWith(this._after, event);
-		});
-		if (this._after && event) callEachWith(this._after, event);
-		return result;
-	}
-	beforeEach(function_) {
-		this._before = this._before || [];
-		this._before.push(function_);
-		return () => {
-			if (this._before !== void 0) {
-				const index = this._before.indexOf(function_);
-				if (index !== -1) this._before.splice(index, 1);
-			}
-		};
-	}
-	afterEach(function_) {
-		this._after = this._after || [];
-		this._after.push(function_);
-		return () => {
-			if (this._after !== void 0) {
-				const index = this._after.indexOf(function_);
-				if (index !== -1) this._after.splice(index, 1);
-			}
-		};
-	}
-};
-function createHooks() {
-	return new Hookable();
-}
+import 'unhead/plugins';
 
 if (!globalThis.$fetch) {
   globalThis.$fetch = $fetch.create({
@@ -212,9 +40,10 @@ function createNuxtApp(options) {
     _id: options.id || appId || "nuxt-app",
     _scope: effectScope(),
     provide: void 0,
+    globalName: "nuxt",
     versions: {
       get nuxt() {
-        return "4.4.2";
+        return "3.21.2";
       },
       get vue() {
         return nuxtApp.vueApp.version;
@@ -258,7 +87,6 @@ function createNuxtApp(options) {
     },
     _asyncDataPromises: {},
     _asyncData: shallowReactive({}),
-    _state: shallowReactive({}),
     _payloadRevivers: {},
     ...options
   };
@@ -282,7 +110,7 @@ function createNuxtApp(options) {
         await nuxtApp.runWithContext(() => hook(...args));
       }
     };
-    nuxtApp.hooks.callHook = (name, ...args) => nuxtApp.hooks.callHookWith(contextCaller, name, args);
+    nuxtApp.hooks.callHook = (name, ...args) => nuxtApp.hooks.callHookWith(contextCaller, name, ...args);
   }
   nuxtApp.callHook = nuxtApp.hooks.callHook;
   nuxtApp.provide = (name, value) => {
@@ -577,45 +405,74 @@ function getRouteRules(arg) {
     return {};
   }
 }
+const __nuxt_page_meta$1 = {
+  layout: "empty"
+};
 const __nuxt_page_meta = {
   layout: "empty"
 };
 const _routes = [
   {
-    name: "bulletins",
-    path: "/bulletins",
-    component: () => import('./index-D8gLDFzk.mjs')
-  },
-  {
-    name: "deliberations",
-    path: "/deliberations",
-    component: () => import('./index-BJEb9qy0.mjs')
-  },
-  {
-    name: "etudiants",
-    path: "/etudiants",
-    component: () => import('./index-DgLPmduN.mjs')
+    name: "index",
+    path: "/",
+    meta: __nuxt_page_meta$1 || {},
+    component: () => import('./index-DG_rVnjk.mjs')
   },
   {
     name: "login",
     path: "/login",
     meta: __nuxt_page_meta || {},
-    component: () => import('./login-lSuGUiy0.mjs')
+    component: () => import('./login-BYGlB2TL.mjs')
   },
   {
-    name: "referentiels",
-    path: "/referentiels",
-    component: () => import('./index-D9jVPIia.mjs')
+    name: "admin",
+    path: "/admin",
+    component: () => import('./index-ynuv8Ufh.mjs')
+  },
+  {
+    name: "profil",
+    path: "/profil",
+    component: () => import('./index-qTphGTiX.mjs')
   },
   {
     name: "saisie",
     path: "/saisie",
-    component: () => import('./index-CFaxyTXR.mjs')
+    component: () => import('./index-qW4ntREY.mjs')
   },
   {
-    name: "index",
-    path: "/",
-    component: () => import('./index-C7qiY3Wr.mjs')
+    name: "etudiant",
+    path: "/etudiant",
+    component: () => import('./index-DhUvdZoo.mjs')
+  },
+  {
+    name: "bulletins",
+    path: "/bulletins",
+    component: () => import('./index-mRQJOmFR.mjs')
+  },
+  {
+    name: "etudiants",
+    path: "/etudiants",
+    component: () => import('./index-Cd-QvmtM.mjs')
+  },
+  {
+    name: "enseignant",
+    path: "/enseignant",
+    component: () => import('./index-D1cxY6u2.mjs')
+  },
+  {
+    name: "secretariat",
+    path: "/secretariat",
+    component: () => import('./index-Ck2Qm2Al.mjs')
+  },
+  {
+    name: "referentiels",
+    path: "/referentiels",
+    component: () => import('./index-DtvwYFpk.mjs')
+  },
+  {
+    name: "deliberations",
+    path: "/deliberations",
+    component: () => import('./index-Cql_6vBg.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -981,18 +838,18 @@ const revive_payload_server_MVtmlZaQpj6ApFmshWfUWl5PehCebzaBf2NuRMiIbms = /* @__
     }
   }
 });
-const components_plugin_4kY4pyzJIYX99vmMAAIorFf3CnAaptHitJgf7JxiED8 = /* @__PURE__ */ defineNuxtPlugin({
+const components_plugin_z4hgvsiddfKkfXTP6M8M4zG5Cb7sGnDhcryKVM45Di4 = /* @__PURE__ */ defineNuxtPlugin({
   name: "nuxt:global-components"
 });
 const plugins = [
   unhead_k2P3m_ZDyjlr2mMYnoDPwavjsDN8hBlk9cFai0bbopU,
   plugin,
   revive_payload_server_MVtmlZaQpj6ApFmshWfUWl5PehCebzaBf2NuRMiIbms,
-  components_plugin_4kY4pyzJIYX99vmMAAIorFf3CnAaptHitJgf7JxiED8
+  components_plugin_z4hgvsiddfKkfXTP6M8M4zG5Cb7sGnDhcryKVM45Di4
 ];
 const layouts = {
-  default: defineAsyncComponent(() => import('./default-gx1Zkr5i.mjs').then((m) => m.default || m)),
-  empty: defineAsyncComponent(() => import('./empty-Dy-S6din.mjs').then((m) => m.default || m))
+  default: defineAsyncComponent(() => import('./default-BULgIuRB.mjs').then((m) => m.default || m)),
+  empty: defineAsyncComponent(() => import('./empty-CfjuvQar.mjs').then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent({
@@ -1274,8 +1131,8 @@ const _sfc_main$1 = {
     const statusText = _error.statusMessage ?? (is404 ? "Page Not Found" : "Internal Server Error");
     const description = _error.message || _error.toString();
     const stack = void 0;
-    const _Error404 = defineAsyncComponent(() => import('./error-404-CoKJV5z4.mjs'));
-    const _Error = defineAsyncComponent(() => import('./error-500-CQ5H_1IE.mjs'));
+    const _Error404 = defineAsyncComponent(() => import('./error-404-BOCHHvRn.mjs'));
+    const _Error = defineAsyncComponent(() => import('./error-500-CO22rUsw.mjs'));
     const ErrorTemplate = is404 ? _Error404 : _Error;
     return (_ctx, _push, _parent, _attrs) => {
       _push(ssrRenderComponent(unref(ErrorTemplate), mergeProps({ status: unref(status), statusText: unref(statusText), statusCode: unref(status), statusMessage: unref(statusText), description: unref(description), stack: unref(stack) }, _attrs), null, _parent));
@@ -1285,7 +1142,7 @@ const _sfc_main$1 = {
 const _sfc_setup$1 = _sfc_main$1.setup;
 _sfc_main$1.setup = (props, ctx) => {
   const ssrContext = useSSRContext();
-  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("../node_modules/nuxt/dist/app/components/nuxt-error-page.vue");
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("node_modules/nuxt/dist/app/components/nuxt-error-page.vue");
   return _sfc_setup$1 ? _sfc_setup$1(props, ctx) : void 0;
 };
 const _sfc_main = {
@@ -1302,7 +1159,7 @@ const _sfc_main = {
     const error = /* @__PURE__ */ useError();
     const abortRender = error.value && !nuxtApp.ssrContext.error;
     onErrorCaptured((err, target, info) => {
-      nuxtApp.hooks.callHook("vue:error", err, target, info)?.catch((hookError) => console.error("[nuxt] Error in `vue:error` hook", hookError));
+      nuxtApp.hooks.callHook("vue:error", err, target, info).catch((hookError) => console.error("[nuxt] Error in `vue:error` hook", hookError));
       {
         const p = nuxtApp.runWithContext(() => showError(err));
         onServerPrefetch(() => p);
@@ -1333,7 +1190,7 @@ const _sfc_main = {
 const _sfc_setup = _sfc_main.setup;
 _sfc_main.setup = (props, ctx) => {
   const ssrContext = useSSRContext();
-  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("../node_modules/nuxt/dist/app/components/nuxt-root.vue");
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("node_modules/nuxt/dist/app/components/nuxt-root.vue");
   return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
 };
 let entry;
@@ -1356,5 +1213,5 @@ let entry;
 }
 const entry_default = ((ssrContext) => entry(ssrContext));
 
-export { _export_sfc as _, useRouter as a, useRuntimeConfig as b, nuxtLinkDefaults as c, entry_default as default, encodeRoutePath as e, navigateTo as n, resolveRouteObject as r, useNuxtApp as u };
+export { _export_sfc as _, useNuxtApp as a, useRuntimeConfig as b, nuxtLinkDefaults as c, entry_default as default, encodeRoutePath as e, navigateTo as n, resolveRouteObject as r, tryUseNuxtApp as t, useRouter as u };
 //# sourceMappingURL=server.mjs.map

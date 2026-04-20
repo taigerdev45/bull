@@ -6,14 +6,11 @@ type ComponentProps<T> = T extends new(...args: any) => { $props: infer P } ? No
 
 declare module 'nuxt/app' {
   interface NuxtLayouts {
-  }
+    default: ComponentProps<typeof import("C:/Users/HP/Downloads/bull/frontend/layouts/default.vue").default>,
+    empty: ComponentProps<typeof import("C:/Users/HP/Downloads/bull/frontend/layouts/empty.vue").default>,
+}
   export type LayoutKey = keyof NuxtLayouts extends never ? string : keyof NuxtLayouts
   interface PageMeta {
-    layout?: MaybeRef<LayoutKey | false> | ComputedRef<LayoutKey | false> | {
-      [K in LayoutKey]: {
-        name?: MaybeRef<K | false> | ComputedRef<K | false>
-        props?: NuxtLayouts[K]
-      }
-    }[LayoutKey]
+    layout?: MaybeRef<LayoutKey | false> | ComputedRef<LayoutKey | false>
   }
 }

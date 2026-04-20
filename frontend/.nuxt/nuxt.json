@@ -1,9 +1,9 @@
 {
-  "_hash": "IWYaoG6R90jrmSjW68nusRoDCS8bK5Zeld2p7NVXQqk",
+  "_hash": "wHksNC5r2qkhICGp9fEzefkCQ7k2bEyXhNqnERIX3kQ",
   "project": {
     "rootDir": "C:/Users/HP/Downloads/bull/frontend"
   },
   "versions": {
-    "nuxt": "4.4.2"
+    "nuxt": "3.21.2"
   }
 }
