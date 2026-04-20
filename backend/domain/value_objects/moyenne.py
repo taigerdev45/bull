@@ -6,6 +6,8 @@ class TypeCalculMoyenne(Enum):
     NORMAL = auto()           # CC + Examen
     RATTRAPAGE = auto()       # Rattrapage remplace
     UNIQUE = auto()           # Une seule note
+    ARITHMETIQUE = auto()     # Moyenne de moyennes (ex: Annuel)
+    ANNUEL = auto()           # Spécifique au résultat annuel
 
 @dataclass(frozen=True)
 class Moyenne:

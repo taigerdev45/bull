@@ -14,7 +14,7 @@ graph TD
 
 ### 1. Domaine (Domain)
 Le cœur du système, indépendant de toute technologie externe (Base de données, Web).
-- **Entities** : Etudiant, Evaluation, UE, Matiere.
+- **Entities** : Etudiant, Evaluation, UE, Matiere, Bulletin.
 - **Value Objects** : Note, Moyenne, Coefficient.
 - **Repository Interfaces** : IEvaluationRepository, IMatiereRepository.
 - **Domain Services** : OrchestreCalcul, ValidateurCompensation.

@@ -40,8 +40,8 @@ class UE(BaseEntity):
     def valider(self):
         if not self._code or not self._libelle:
             raise ValidationException("Le code et le libellé de l'UE sont obligatoires.")
-        if not (1 <= self._semestre <= 8):
-            raise ValidationException("Le semestre doit être compris entre 1 et 8.")
+        if not self._semestre or not (1 <= self._semestre <= 8):
+            raise ValidationException("Le semestre est obligatoire et doit être compris entre 1 et 8.")
 
     def __repr__(self):
         return f"<UE {self._code}: {self._libelle}>"

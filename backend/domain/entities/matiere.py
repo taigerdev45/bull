@@ -28,6 +28,8 @@ class Matiere(BaseEntity):
     def valider(self):
         if not self._libelle:
             raise ValidationException("Le libellé de la matière est obligatoire.")
+        if not self._ue_id:
+            raise ValidationException("L'ID de l'UE est obligatoire pour une matière.")
         if self._credits < 0:
             raise ValidationException("Les crédits ne peuvent pas être négatifs.")
 

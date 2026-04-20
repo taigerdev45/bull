@@ -94,6 +94,8 @@ class Container(containers.DeclarativeContainer):
         OrchestreCalcul,
         evaluation_repo=evaluation_repo,
         resultat_repo=resultat_repo,
+        ue_repo=ue_repo,
+        matiere_repo=matiere_repo,
         calc_matiere=calculateur_matiere
     )
     
@@ -107,7 +109,8 @@ class Container(containers.DeclarativeContainer):
     bulletin_service = providers.Factory(
         BulletinService,
         etudiant_repo=etudiant_repo,
-        resultat_repo=resultat_repo
+        resultat_repo=resultat_repo,
+        orchestrateur=orchestre_calcul
     )
     
     creer_absence_handler = providers.Factory(
