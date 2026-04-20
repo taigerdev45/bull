@@ -1,0 +1,1 @@
+export default function EvaluationsPage() { return <div>Évaluations</div>; }

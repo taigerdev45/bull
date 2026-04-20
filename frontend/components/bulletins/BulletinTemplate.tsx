@@ -1,0 +1,1 @@
+export default function BulletinTemplate() { return <div>Template</div>; }
