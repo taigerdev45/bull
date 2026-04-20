@@ -15,9 +15,9 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
 
 # CORS Configuration for Vercel
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-if not CORS_ALLOWED_ORIGINS[0]:
-    CORS_ALLOWED_ORIGINS = []
+CORS_ALLOWED_ORIGINS = [
+    origin.rstrip('/') for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin
+]
 
 # Autoriser les prévisualisations Vercel via Regex
 CORS_ALLOWED_ORIGIN_REGEXES = [
