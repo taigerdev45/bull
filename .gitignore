@@ -1,0 +1,30 @@
+# =================================================================
+# Bulletin de Notes - Git Ignore Configuration
+# =================================================================
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+*.sqlite3
+staticfiles/
+
+# Firebase / Secrets (MASQUÉS SUR GITHUB)
+backend/.env
+backend/serviceAccountKey.json
+
+# Next.js / Frontend
+frontend/.next/
+frontend/node_modules/
+frontend/.env.local
+frontend/.env
+
+# Environnement / IDE
+.env
+.idea/
+.vscode/
+*.swp
+*.bak
+.DS_Store
