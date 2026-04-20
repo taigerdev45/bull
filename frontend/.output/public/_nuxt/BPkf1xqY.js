@@ -1,0 +1,1 @@
+import{_ as t,o as s,c as o,s as a}from"./Bw5WA-HG.js";const c={},n={class:"empty-layout"};function r(e,d){return s(),o("div",n,[a(e.$slots,"default",{},void 0)])}const l=t(c,[["render",r],["__scopeId","data-v-6a21bbda"]]);export{l as default};
