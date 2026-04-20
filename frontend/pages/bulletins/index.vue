@@ -6,11 +6,17 @@
         <p>Générez et imprimez les bulletins (modèle INPTIC A4).</p>
       </div>
       <div class="header-actions">
-        <select class="type-select" v-model="selectedSemester">
-          <option value="S5">Semestre 5</option>
-          <option value="S6">Semestre 6</option>
-          <option value="Annuel">Annuel</option>
-        </select>
+        <div class="toggle-group no-print">
+          <button 
+            v-for="sem in ['S5', 'S6', 'Annuel']" 
+            :key="sem"
+            class="toggle-btn"
+            :class="{ active: selectedSemester === sem }"
+            @click="selectedSemester = sem"
+          >
+            {{ sem === 'Annuel' ? 'Annuel' : 'Semestre ' + sem.substring(1) }}
+          </button>
+        </div>
         <button class="btn btn-secondary" @click="printBulletin">
           <span class="icon">🖨️</span> Imprimer / PDF
         </button>
@@ -405,8 +411,39 @@ const printBulletin = () => {
 <style scoped>
 .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
 .header-content h2 { font-size: 1.75rem; color: var(--text-main); margin-bottom: 0.25rem; font-weight: 700; }
-.type-select { padding: 0.6rem 1rem; border-radius: var(--radius); border: 1px solid var(--border); margin-right: 1rem; }
-.btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border); padding: 0.6rem 1.25rem; border-radius: var(--radius); cursor: pointer; }
+
+/* Toggle Group Styles */
+.toggle-group {
+  display: flex;
+  background-color: #f0f2f5;
+  padding: 4px;
+  border-radius: 50px;
+  margin-right: 1.5rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+.toggle-btn {
+  padding: 0.6rem 1.5rem;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+.toggle-btn.active {
+  background-color: #000080;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 128, 0.2), 0 2px 4px -1px rgba(0, 0, 128, 0.1);
+}
+.toggle-btn:hover:not(.active) {
+  background-color: rgba(0, 0, 128, 0.05);
+  color: #000080;
+}
+
+.btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border); padding: 0.6rem 1.25rem; border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+.btn-secondary:hover { background-color: #f9fafb; border-color: #000080; color: #000080; }
 
 .content-wrapper { display: flex; gap: 2rem; }
 .students-list { width: 280px; background: var(--surface); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); }
