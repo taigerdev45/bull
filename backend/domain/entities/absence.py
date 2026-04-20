@@ -1,6 +1,6 @@
 from datetime import date
 from .base_entity import BaseEntity
-from domain.exceptions.validation_exception import ValidationException
+from domain.exceptions.domain_exception import ValidationException
 
 class Absence(BaseEntity):
     """
