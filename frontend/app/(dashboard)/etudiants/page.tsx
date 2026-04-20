@@ -1,1 +1,0 @@
-export default function EtudiantsPage() { return <div>Étudiants</div>; }
