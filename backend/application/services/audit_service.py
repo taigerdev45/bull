@@ -1,5 +1,5 @@
 from typing import Dict, Any, List
-from .audit_service_interface import IAuditService
+
 
 class AuditService:
     """Service centralisant la journalisation des actions pour traçabilité."""
