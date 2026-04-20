@@ -3,7 +3,7 @@ from typing import List, Optional
 from domain.entities.ue import UE
 from domain.entities.resultat import ResultatUE, ResultatSemestre, ResultatAnnuel
 
-class IUE_Repository(ABC):
+class IUERepository(ABC):
     """Interface pour le repository des Unités d'Enseignement."""
     @abstractmethod
     def save(self, ue: UE) -> None: pass
