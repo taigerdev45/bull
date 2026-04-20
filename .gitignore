@@ -1,4 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =================================================================
+# Bulletin de Notes - Git Ignore Configuration (Global)
+# =================================================================
 
 # Frontend (Nuxt 3)
 frontend/node_modules/
@@ -11,6 +13,8 @@ frontend/.yarn/*
 frontend/.next/
 frontend/out/
 frontend/build/
+frontend/.env
+frontend/.env.local
 
 # Backend (Python / Django)
 backend/__pycache__/
@@ -29,6 +33,7 @@ backend/serviceAccountKey.json
 .DS_Store
 .idea/
 .vscode/
+*.swp
 *.swps
 *.bak
 *.pem

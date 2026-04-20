@@ -6,16 +6,17 @@ Cette documentation est destinée à l'équipe frontend pour faciliter l'intégr
 
 ## 🔐 1. Authentification & Sécurité
 
-L'API utilise **Firebase Authentication** (JWT).
+L'accès à l'API est protégé par Firebase Auth. Chaque requête doit inclure un jeton ID dans le header `Authorization`.
 
-### Headers Standards
-| Header | Valeur | Obligatoire | Description |
-| :--- | :--- | :--- | :--- |
-| `Authorization` | `Bearer <ID_TOKEN>` | Oui | Jeton d'identité Firebase (Firebase ID Token). |
-| `Content-Type` | `application/json` | Oui | Pour toutes les requêtes avec corps (POST, PATCH, PUT). |
+| Header | Valeur | Description |
+| :--- | :--- | :--- |
+| **Authorization** | `Bearer <TOKEN>` | Jeton obtenu via `firebase.auth().currentUser.getIdToken()` |
+| **Content-Type** | `application/json` | Format de données requis pour toutes les requêtes POST/PATCH |
 
 ### Structure des Erreurs Auth
+
 En cas d'échec d'authentification :
+
 ```json
 {
   "detail": "Token Firebase invalide: [raison]",
@@ -38,9 +39,10 @@ Les permissions sont basées sur les `Custom Claims` du token Firebase.
 
 ---
 
-## 📡 3. Référence des Endpoints
+## 📡 2. Endpoints Bulletins
 
-### 🎓 Étudiants (`/api/etudiants/`)
+### Données de Bulletin (`GET /api/bulletins/donnees/{etudiant_id}/`)
+
 Recherche et gestion des apprenants.
 
 | Action | Méthode | URL |
@@ -49,6 +51,7 @@ Recherche et gestion des apprenants.
 | Consulter | `GET` | `/api/etudiants/{id}/` |
 
 **Réponse Type (Format JSON) :**
+
 ```json
 [
   {
@@ -63,7 +66,10 @@ Recherche et gestion des apprenants.
 
 ---
 
-### 📝 Évaluations & Notes (`/api/evaluations/`)
+### 3. Endpoints Évaluations (Saisie de notes)
+
+### Liste / Création (`GET` & `POST /api/evaluations/`)
+
 Gestion des notes (CC, Examen, Rattrapage).
 
 | Action | Méthode | URL | Description |
@@ -73,11 +79,12 @@ Gestion des notes (CC, Examen, Rattrapage).
 | Filtrer | `GET` | `/api/evaluations/?etudiant_id={id}` | Liste des notes d'un étudiant. |
 
 **Modèle de Saisie (POST) :**
+
 ```json
 {
   "etudiant_id": "etu-123",
   "matiere_id": "mat-res-01",
-  "type": "CC", // ENUM: [CC, EXAMEN, RATTRAPAGE]
+  "type": "CC",
   "note": 15.25
 }
 ```
@@ -85,6 +92,7 @@ Gestion des notes (CC, Examen, Rattrapage).
 ---
 
 ### 📊 Résultats Académiques (`/api/resultats/`)
+
 Calculs automatiques basés sur les règles de l'institut.
 
 #### Résultats Semestriels
@@ -92,6 +100,7 @@ Calculs automatiques basés sur les règles de l'institut.
 - **Méthode** : `GET`
 
 **Réponse Détaillée :**
+
 ```json
 {
   "etudiant_id": "string",
@@ -112,7 +121,7 @@ Calculs automatiques basés sur les règles de l'institut.
           "libelle": "Cisco CCNA",
           "note_cc": 14.0,
           "note_examen": 10.0,
-          "moyenne": 11.6, // (14*0.4)+(10*0.6)
+          "moyenne": 11.6,
           "penalite": 0.0
         }
       ]
@@ -127,18 +136,19 @@ Calculs automatiques basés sur les règles de l'institut.
 
 Il est crucial que le frontend reflète ces règles pour la validation :
 
-1.  **Pondération Standard** : `Moyenne = (Note_CC * 0.4) + (Note_Examen * 0.6)`.
-2.  **Rattrapage** : Si une note de rattrapage est saisie, elle remplace la moyenne calculée (si elle est supérieure).
-3.  **Absences & Pénalités** :
-    *   Le système applique automatiquement des pénalités sur la moyenne de la matière en fonction du nombre d'heures d'absences injustifiées.
-    *   La formule exacte est gérée par le `CalculateurMatiere` au backend.
-4.  **Compensation d'UE** : Une UE est validée si sa moyenne est ≥ 10/20. Une compensation peut s'appliquer selon le règlement (consulter les paramètres).
+### Règles de Calcul
+
+- **Pondération** : 40% CC / 60% Examen.
+- **Rattrapage** : La note de rattrapage remplace la moyenne calculée si elle est supérieure.
+- **Absences** : Une pénalité de -0.5 point par absence non justifiée est appliquée sur la moyenne de l'UE.
+- **Compensation d'UE** : Une UE est validée si sa moyenne est ≥ 10/20. Une compensation peut s'appliquer selon le règlement.
 
 ---
 
 ## 💻 5. Exemple d'Intégration Avancée (Next.js)
 
-### Gestionnaire d'API (api-client.js)
+### Exemple d'appel avec Axios
+
 ```javascript
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
