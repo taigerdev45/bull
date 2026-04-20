@@ -16,7 +16,6 @@
             {{ sem === 'Annuel' ? 'Annuel' : 'Semestre ' + sem.substring(1) }}
           </button>
         </div>
-      </div>
     </header>
 
     <div class="content-wrapper">
