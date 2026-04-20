@@ -129,14 +129,16 @@
             <!-- Rang & Mention (Table 2x2) -->
             <div class="rank-mention-block mt-2">
               <table class="simple-table center-table">
-                <tr>
-                   <td width="50%">Rang de l'étudiant au Semestre</td>
-                   <td>Mention</td>
-                </tr>
-                <tr class="font-bold">
-                   <td>{{ bulletinData?.rang || 'Non classé' }}</td>
-                   <td>{{ bulletinData?.mention || 'Passable' }}</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td width="50%">Rang de l'étudiant au Semestre</td>
+                    <td>Mention</td>
+                  </tr>
+                  <tr class="font-bold">
+                    <td>{{ bulletinData?.rang || 'Non classé' }}</td>
+                    <td>{{ bulletinData?.mention || 'Passable' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
@@ -144,22 +146,24 @@
             <div class="validation-block mt-4">
               <h4 class="text-center font-bold mb-1">Etat de la Validation des Crédits au {{ selectedSemester }}</h4>
               <table class="validation-table">
-                <tr>
-                  <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">{{ ue.id }}</td>
-                  <td class="center">Crédits validés au {{ selectedSemester }}</td>
-                </tr>
-                <tr>
-                  <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">
-                    {{ ue.credits_acquis }} Crédits / {{ ue.total_credits_ue }}
-                  </td>
-                  <td class="center">{{ bulletinData?.credits_acquis }} Crédits / {{ bulletinData?.total_credits || 30 }}</td>
-                </tr>
-                <tr>
-                  <td :colspan="(bulletinData?.ues?.length || 0)" class="center text-blue font-bold">
-                    {{ bulletinData?.validation_commentaire || 'Semestre Acquis' }}
-                  </td>
-                  <td class="center text-blue font-bold">{{ bulletinData?.valide ? 'Semestre Acquis' : 'NON VALIDE' }}</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">{{ ue.id }}</td>
+                    <td class="center">Crédits validés au {{ selectedSemester }}</td>
+                  </tr>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">
+                      {{ ue.credits_acquis }} Crédits / {{ ue.total_credits_ue }}
+                    </td>
+                    <td class="center">{{ bulletinData?.credits_acquis }} Crédits / {{ bulletinData?.total_credits || 30 }}</td>
+                  </tr>
+                  <tr>
+                    <td :colspan="(bulletinData?.ues?.length || 0)" class="center text-blue font-bold">
+                      {{ bulletinData?.validation_commentaire || 'Semestre Acquis' }}
+                    </td>
+                    <td class="center text-blue font-bold">{{ bulletinData?.valide ? 'Semestre Acquis' : 'NON VALIDE' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
           </template>
@@ -227,14 +231,16 @@
             <!-- Bilan Annuel par UE -->
             <div class="annual-bilan mt-4">
               <table class="bilan-table">
-                <tr>
-                  <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center font-bold">{{ ue.id }}</td>
-                  <td class="center font-bold bg-light">Bilan annuel</td>
-                </tr>
-                <tr>
-                  <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center">{{ ue.status_annuel || 'VALIDÉ' }}</td>
-                  <td class="center font-bold text-blue">ADMIS</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center font-bold">{{ ue.id }}</td>
+                    <td class="center font-bold bg-light">Bilan annuel</td>
+                  </tr>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center">{{ ue.status_annuel || 'VALIDÉ' }}</td>
+                    <td class="center font-bold text-blue">ADMIS</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
