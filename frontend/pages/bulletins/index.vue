@@ -1,11 +1,15 @@
 <template>
   <div class="page-bulletins">
-    <header class="page-header">
+    <header class="page-header no-print">
       <div class="header-content">
         <h2>Bulletins Individuels</h2>
-        <p>Générez et imprimez les bulletins (modèle INPTIC A4).</p>
+        <div class="header-subtitle">
+          <span class="dot"></span>
+          <p>Modèle officiel INPTIC A4</p>
+        </div>
       </div>
-        <div class="toggle-group no-print">
+      <div class="toggle-container">
+        <div class="toggle-group">
           <button 
             v-for="sem in ['S5', 'S6', 'Annuel']" 
             :key="sem"
@@ -15,7 +19,9 @@
           >
             {{ sem === 'Annuel' ? 'Annuel' : 'Semestre ' + sem.substring(1) }}
           </button>
+          <div class="toggle-slider" :class="'pos-' + selectedSemester"></div>
         </div>
+      </div>
     </header>
 
     <div class="content-wrapper">
@@ -411,38 +417,88 @@ const printBulletin = () => {
 </script>
 
 <style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-.header-content h2 { font-size: 1.75rem; color: var(--text-main); margin-bottom: 0.25rem; font-weight: 700; }
-
-/* Toggle Group Styles */
-.toggle-group {
-  display: flex;
-  background-color: #f0f2f5;
-  padding: 4px;
-  border-radius: 50px;
-  margin-right: 1.5rem;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+.page-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 2.5rem; 
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,128,0.1);
 }
-.toggle-btn {
-  padding: 0.6rem 1.5rem;
-  border-radius: 50px;
-  border: none;
-  background: transparent;
+.header-content h2 { 
+  font-size: 2rem; 
+  color: #000080; 
+  margin-bottom: 0.5rem; 
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.header-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   color: #64748b;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
   font-size: 0.95rem;
 }
-.toggle-btn.active {
+.header-subtitle .dot {
+  width: 8px;
+  height: 8px;
   background-color: #000080;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Toggle Group Modernized */
+.toggle-container {
+  display: flex;
+  align-items: center;
+}
+.toggle-group {
+  position: relative;
+  display: flex;
+  background-color: #f1f5f9;
+  padding: 6px;
+  border-radius: 100px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+  z-index: 1;
+}
+.toggle-btn {
+  position: relative;
+  padding: 0.7rem 1.8rem;
+  border-radius: 100px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  font-size: 0.9rem;
+  z-index: 2;
+  white-space: nowrap;
+}
+.toggle-btn.active {
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 128, 0.2), 0 2px 4px -1px rgba(0, 0, 128, 0.1);
 }
-.toggle-btn:hover:not(.active) {
-  background-color: rgba(0, 0, 128, 0.05);
-  color: #000080;
+.toggle-slider {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  height: calc(100% - 12px);
+  width: calc(33.33% - 8px);
+  background-color: #000080;
+  border-radius: 100px;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  z-index: 1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 128, 0.3);
 }
+
+.toggle-slider.pos-S5 { transform: translateX(0); width: 105px; }
+.toggle-slider.pos-S6 { transform: translateX(105px); width: 105px; }
+.toggle-slider.pos-Annuel { transform: translateX(210px); width: 90px; }
+
+/* Correction des largeurs du slider */
+.toggle-btn:nth-child(1) { width: 105px; }
+.toggle-btn:nth-child(2) { width: 105px; }
+.toggle-btn:nth-child(3) { width: 90px; }
 
 .btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border); padding: 0.6rem 1.25rem; border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
 .btn-secondary:hover { background-color: #f9fafb; border-color: #000080; color: #000080; }
