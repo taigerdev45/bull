@@ -24,5 +24,8 @@ COPY backend/ /app/
 # Exposition du port
 EXPOSE 8000
 
-# Commande de lancement : migrations + collectstatic + démarrage serveur
-CMD python manage.py migrate && python manage.py collectstatic --no-input && gunicorn --bind 0.0.0.0:8000 config.wsgi:application
+# Commande de lancement robuste (Expert mode)
+# On force le PYTHONPATH et on utilise le module 'config' explicitement
+CMD python manage.py migrate --noinput && \
+    python manage.py collectstatic --noinput && \
+    gunicorn --bind 0.0.0.0:8000 --workers 2 --access-logfile - config.wsgi:application
