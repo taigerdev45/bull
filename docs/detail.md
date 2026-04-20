@@ -1,146 +1,185 @@
-# 📘 Documentation API - Bulletin Notes (LP ASUR)
+# 📘 Documentation API Détaillée - Bulletin Notes (LP ASUR)
 
-Ce document fournit les détails techniques nécessaires pour l'intégration du frontend Next.js avec le backend Django DDD.
-
----
-
-## 🔐 Authentification & Headers
-
-L'API est sécurisée via **Firebase Auth**. Chaque requête doit inclure le token d'identité dans les headers.
-
-### Headers requis
-| Header | Valeur | Description |
-| :--- | :--- | :--- |
-| `Authorization` | `Bearer <ID_TOKEN>` | Token récupéré via `auth.currentUser.getIdToken()`. |
-| `Content-Type` | `application/json` | Format de données pour les requêtes `POST`, `PUT`, `PATCH`. |
-
-### Rôles (Custom Claims)
-Le backend vérifie les rôles suivants via le token :
-- `admin` : Accès total.
-- `secretariat` : Gestion des étudiants, absences et paramètres.
-- `enseignant` : Saisie des notes pour ses matières uniquement.
-- `etudiant` : Consultation de ses propres notes et bulletins.
+Cette documentation est destinée à l'équipe frontend pour faciliter l'intégration complète du système de gestion des notes de l'INPTIC.
 
 ---
 
-## 📡 Endpoints de Ressources
+## 🔐 1. Authentification & Sécurité
 
-### 🎓 Étudiants (`/api/etudiants/`)
+L'API utilise **Firebase Authentication** (JWT).
 
-| Action | Méthode | Endpoint | Description |
+### Headers Standards
+| Header | Valeur | Obligatoire | Description |
 | :--- | :--- | :--- | :--- |
-| Lister | `GET` | `/api/etudiants/` | Récupère la liste de tous les étudiants. |
-| Créer | `POST` | `/api/etudiants/` | Ajoute un nouvel étudiant. |
-| Consulter | `GET` | `/api/etudiants/{id}/` | Détails d'un étudiant spécifique. |
+| `Authorization` | `Bearer <ID_TOKEN>` | Oui | Jeton d'identité Firebase (Firebase ID Token). |
+| `Content-Type` | `application/json` | Oui | Pour toutes les requêtes avec corps (POST, PATCH, PUT). |
 
-**Exemple de Modèle (Étudiant) :**
+### Structure des Erreurs Auth
+En cas d'échec d'authentification :
 ```json
 {
-  "id": "uuid-string",
-  "nom": "DOE",
-  "prenom": "John",
-  "matricule": "2024-INP-001",
-  "date_naissance": "2002-05-15"
+  "detail": "Token Firebase invalide: [raison]",
+  "code": "authentication_failed"
 }
+```
+
+---
+
+## 🎭 2. Rôles & Permissions
+
+Les permissions sont basées sur les `Custom Claims` du token Firebase.
+
+| Rôle | Portée des actions |
+| :--- | :--- |
+| `admin` | Accès total (Lecture/Écriture) sur toutes les ressources. |
+| `secretariat` | Gestion des inscriptions, saisie des absences, configuration globale. |
+| `enseignant` | Saisie et modification des notes pour les matières qui lui sont attribuées. |
+| `etudiant` | Lecture seule de ses propres notes, absences et bulletins. |
+
+---
+
+## 📡 3. Référence des Endpoints
+
+### 🎓 Étudiants (`/api/etudiants/`)
+Recherche et gestion des apprenants.
+
+| Action | Méthode | URL |
+| :--- | :--- | :--- |
+| Lister | `GET` | `/api/etudiants/` |
+| Consulter | `GET` | `/api/etudiants/{id}/` |
+
+**Réponse Type (Format JSON) :**
+```json
+[
+  {
+    "id": "etu-2024-001",
+    "nom": "KOFFI",
+    "prenom": "Jean",
+    "matricule": "LPASUR001",
+    "date_naissance": "2001-12-30"
+  }
+]
 ```
 
 ---
 
 ### 📝 Évaluations & Notes (`/api/evaluations/`)
+Gestion des notes (CC, Examen, Rattrapage).
 
-| Action | Méthode | Endpoint | Description |
+| Action | Méthode | URL | Description |
 | :--- | :--- | :--- | :--- |
-| Saisie | `POST` | `/api/evaluations/` | Enregistre une note individuelle. |
-| Saisie Groupée | `POST` | `/api/evaluations/bulk/` | Envoie une liste de notes pour une classe. |
-| Modifier | `PATCH` | `/api/evaluations/{id}/` | Modifie une note existante. |
-| Supprimer | `DELETE` | `/api/evaluations/{id}/` | Suppression (soft delete) d'une note. |
+| Saisie | `POST` | `/api/evaluations/` | Création d'une note unique. |
+| Bulk | `POST` | `/api/evaluations/bulk/` | Saisie massive pour une classe (Liste d'objets). |
+| Filtrer | `GET` | `/api/evaluations/?etudiant_id={id}` | Liste des notes d'un étudiant. |
 
-**Corps de requête (Saisie) :**
+**Modèle de Saisie (POST) :**
 ```json
 {
   "etudiant_id": "etu-123",
-  "matiere_id": "mat-maths",
-  "type": "CC", // ou "EXAMEN", "RATTRAPAGE"
-  "note": 14.5
+  "matiere_id": "mat-res-01",
+  "type": "CC", // ENUM: [CC, EXAMEN, RATTRAPAGE]
+  "note": 15.25
 }
 ```
 
 ---
 
-### 📊 Résultats & Bulletins
+### 📊 Résultats Académiques (`/api/resultats/`)
+Calculs automatiques basés sur les règles de l'institut.
 
-| Action | Méthode | Endpoint | Description |
-| :--- | :--- | :--- | :--- |
-| Résultat Semestre | `GET` | `/api/resultats/semestre/{etudiant_id}/?semestre=5` | Calcul temps réel du semestre. |
-| Résultat Annuel | `GET` | `/api/resultats/annuel/{etudiant_id}/` | Moyenne annuelle et décision jury. |
-| Données Bulletin | `GET` | `/api/bulletins/donnees/{etudiant_id}/?semestre=5` | Données formatées pour le PDF. |
+#### Résultats Semestriels
+- **URL** : `/api/resultats/semestre/{etudiant_id}/?semestre=5`
+- **Méthode** : `GET`
+
+**Réponse Détaillée :**
+```json
+{
+  "etudiant_id": "string",
+  "semestre": 5,
+  "moyenne_generale": 13.45,
+  "credits_acquis": 30,
+  "total_credits": 30,
+  "valide": true,
+  "ues": [
+    {
+      "id": "UE5-1",
+      "libelle": "Réseaux Pro",
+      "moyenne_ue": 12.0,
+      "statut": "VALIDÉ",
+      "credits_acquis": 6,
+      "matieres": [
+        {
+          "libelle": "Cisco CCNA",
+          "note_cc": 14.0,
+          "note_examen": 10.0,
+          "moyenne": 11.6, // (14*0.4)+(10*0.6)
+          "penalite": 0.0
+        }
+      ]
+    }
+  ]
+}
+```
 
 ---
 
-### 🏫 Structure Académique
+## 📏 4. Règles Métier (Business Rules)
 
-| Ressource | Méthode | Endpoint | Description |
-| :--- | :--- | :--- | :--- |
-| UEs | `GET` | `/api/ues/` | Liste des Unités d'Enseignement. |
-| Matières | `GET` | `/api/matieres/` | Liste des matières. |
-| Par Enseignant | `GET` | `/api/matieres/enseignant/{id}/` | Matières attribuées à un prof. |
+Il est crucial que le frontend reflète ces règles pour la validation :
+
+1.  **Pondération Standard** : `Moyenne = (Note_CC * 0.4) + (Note_Examen * 0.6)`.
+2.  **Rattrapage** : Si une note de rattrapage est saisie, elle remplace la moyenne calculée (si elle est supérieure).
+3.  **Absences & Pénalités** :
+    *   Le système applique automatiquement des pénalités sur la moyenne de la matière en fonction du nombre d'heures d'absences injustifiées.
+    *   La formule exacte est gérée par le `CalculateurMatiere` au backend.
+4.  **Compensation d'UE** : Une UE est validée si sa moyenne est ≥ 10/20. Une compensation peut s'appliquer selon le règlement (consulter les paramètres).
 
 ---
 
-## 💻 Exemples d'Intégration (JavaScript/TypeScript)
+## 💻 5. Exemple d'Intégration Avancée (Next.js)
 
-### 🚀 Avec Axios
+### Gestionnaire d'API (api-client.js)
 ```javascript
 import axios from 'axios';
+import { getAuth } from 'firebase/auth';
 
-const api = axios.create({
+const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
-// Intercepteur pour ajouter le token Firebase automatiquement
-api.interceptors.request.use(async (config) => {
-  const user = firebase.auth().currentUser;
-  if (user) {
-    const token = await user.getIdToken();
+apiClient.interceptors.request.use(async (config) => {
+  const auth = getAuth();
+  const token = await auth.currentUser?.getIdToken();
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// Exemple : Saisie d'une note
-export const saveGrade = async (gradeData) => {
-  try {
-    const response = await api.post('/evaluations/', gradeData);
-    return response.data;
-  } catch (error) {
-    console.error("Erreur lors de la saisie :", error.response?.data);
-    throw error;
-  }
-};
-```
-
-### 🌐 Avec Fetch API
-```javascript
-const getStudentResults = async (studentId, semester) => {
-  const token = await firebase.auth().currentUser.getIdToken();
-  
-  const response = await fetch(`${API_URL}/resultats/semestre/${studentId}/?semestre=${semester}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+// Intercepteur pour gérer les erreurs globalement
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403) {
+      alert("Accès refusé : Vérifiez vos droits d'accès.");
     }
-  });
+    return Promise.reject(error);
+  }
+);
 
-  if (!response.ok) throw new Error('Erreur réseau');
-  return await response.json();
-};
+export default apiClient;
 ```
 
 ---
 
-## ⚠️ Codes d'Erreur Communs
-- `401 Unauthorized` : Token manquant ou expiré.
-- `403 Forbidden` : L'utilisateur n'a pas le rôle requis (ex: Étudiant tentant de saisir une note).
-- `400 Bad Request` : Données invalides (ex: note > 20 ou format de date incorrect).
-- `404 Not Found` : Étudiant ou matière inexistant.
+## 📂 6. Imports/Exports & Audit
+
+- **Import Excel** : `POST /api/import/evaluations/` (Corps : `multipart/form-data` avec champ `fichier`).
+- **Export Excel** : `GET /api/export/resultats/?promotion=2024` (Retourne un flux binaire `.xlsx`).
+- **Audit Logs** : `GET /api/audit/etudiant/{id}/` (Historique des modifications de notes pour la traçabilité).
+
+---
+
+## ❓ FAQ Intégration
+- **Comment savoir si un étudiant a validé ?** Regardez le champ `valide: boolean` dans le résultat semestriel.
+- **Les notes sont-elles en temps réel ?** Oui, chaque modification déclenche un recalcul via l'orchestrateur de domaine.
