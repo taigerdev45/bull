@@ -416,63 +416,63 @@ const _routes = [
     name: "index",
     path: "/",
     meta: __nuxt_page_meta$1 || {},
-    component: () => import('./index-DG_rVnjk.mjs')
+    component: () => import('./index-DDX6OPu2.mjs')
   },
   {
     name: "login",
     path: "/login",
     meta: __nuxt_page_meta || {},
-    component: () => import('./login-BYGlB2TL.mjs')
+    component: () => import('./login-CtPeTJCj.mjs')
   },
   {
     name: "admin",
     path: "/admin",
-    component: () => import('./index-ynuv8Ufh.mjs')
+    component: () => import('./index-fIMj0NgD.mjs')
   },
   {
     name: "profil",
     path: "/profil",
-    component: () => import('./index-qTphGTiX.mjs')
+    component: () => import('./index-D4KJ8Utb.mjs')
   },
   {
     name: "saisie",
     path: "/saisie",
-    component: () => import('./index-qW4ntREY.mjs')
+    component: () => import('./index-LLZDjKEX.mjs')
   },
   {
     name: "etudiant",
     path: "/etudiant",
-    component: () => import('./index-DhUvdZoo.mjs')
+    component: () => import('./index-Cgxpipph.mjs')
   },
   {
     name: "bulletins",
     path: "/bulletins",
-    component: () => import('./index-mRQJOmFR.mjs')
+    component: () => import('./index-b4hAfFWD.mjs')
   },
   {
     name: "etudiants",
     path: "/etudiants",
-    component: () => import('./index-Cd-QvmtM.mjs')
+    component: () => import('./index-_BgbAtI2.mjs')
   },
   {
     name: "enseignant",
     path: "/enseignant",
-    component: () => import('./index-D1cxY6u2.mjs')
+    component: () => import('./index-6oe3Dzpi.mjs')
   },
   {
     name: "secretariat",
     path: "/secretariat",
-    component: () => import('./index-Ck2Qm2Al.mjs')
+    component: () => import('./index-BccCjmrZ.mjs')
   },
   {
     name: "referentiels",
     path: "/referentiels",
-    component: () => import('./index-DtvwYFpk.mjs')
+    component: () => import('./index-Dew8pjEQ.mjs')
   },
   {
     name: "deliberations",
     path: "/deliberations",
-    component: () => import('./index-Cql_6vBg.mjs')
+    component: () => import('./index-DXkRkL0y.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -848,8 +848,8 @@ const plugins = [
   components_plugin_z4hgvsiddfKkfXTP6M8M4zG5Cb7sGnDhcryKVM45Di4
 ];
 const layouts = {
-  default: defineAsyncComponent(() => import('./default-BULgIuRB.mjs').then((m) => m.default || m)),
-  empty: defineAsyncComponent(() => import('./empty-CfjuvQar.mjs').then((m) => m.default || m))
+  default: defineAsyncComponent(() => import('./default-Bu8p3l7S.mjs').then((m) => m.default || m)),
+  empty: defineAsyncComponent(() => import('./empty-CHhYCKP5.mjs').then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;
 const LayoutLoader = defineComponent({
