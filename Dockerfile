@@ -24,5 +24,5 @@ COPY backend/ /app/
 # Exposition du port
 EXPOSE 8000
 
-# Commande de lancement (Gunicorn pour la prod, peut être surchargée pour le dev)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi:application"]
+# Commande de lancement : migrations + collectstatic + démarrage serveur
+CMD python manage.py migrate && python manage.py collectstatic --no-input && gunicorn --bind 0.0.0.0:8000 config.wsgi:application
