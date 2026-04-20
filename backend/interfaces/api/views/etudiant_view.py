@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, views
 from rest_framework.response import Response
-from interfaces.api.serializers.etudiant_serializer import EtudiantSerializer, EvaluationSerializer
+from interfaces.api.serializers.etudiant_serializer import EtudiantSerializer
+from interfaces.api.serializers.evaluation_serializer import EvaluationSerializer
 from interfaces.api.permissions.role_permissions import IsSecretariat, IsEnseignant
 from infrastructure.config.dependency_injection import Container
 
