@@ -11,4 +11,5 @@ services:
         value: "3.12"
       - key: DJANGO_DEBUG
         value: "False"
-      - fromGroup: bulletin-secrets # Groupe de secrets à créer sur Render
+      # Les secrets seront lus via un "Secret Group" sur Render
+      - fromGroup: bulletin-shared-secrets
