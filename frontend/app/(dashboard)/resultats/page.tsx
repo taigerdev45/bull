@@ -1,1 +1,0 @@
-export default function ResultatsPage() { return <div>Résultats</div>; }
