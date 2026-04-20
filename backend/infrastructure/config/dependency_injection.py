@@ -56,10 +56,30 @@ class Container(containers.DeclarativeContainer):
         FirebaseAbsenceRepository,
         connection=firebase_connection
     )
+
+    matiere_repo = providers.Factory(
+        FirebaseMatiereRepository,
+        connection=firebase_connection
+    )
+
+    ue_repo = providers.Factory(
+        FirebaseUERepository,
+        connection=firebase_connection
+    )
+
+    audit_repo = providers.Factory(
+        FirebaseAuditRepository,
+        connection=firebase_connection
+    )
+
+    config_repo = providers.Singleton(
+        FirebaseConfigRepository,
+        connection=firebase_connection
+    )
     
     # Services métier (Domaine)
     penalite_service = providers.Factory(
-        'domain.services.penalites.penalite_service.PenaliteService',
+        PenaliteService,
         absence_repo=absence_repo,
         config_repo=config_repo
     )
@@ -108,9 +128,10 @@ class Container(containers.DeclarativeContainer):
         evaluation_repo=evaluation_repo
     )
 
-    matiere_repo = providers.Factory(
-        FirebaseMatiereRepository,
-        connection=firebase_connection
+    resultat_query_handler = providers.Factory(
+        ResultatQueryHandler,
+        resultat_repo=resultat_repo,
+        evaluation_repo=evaluation_repo
     )
 
     excel_parser = providers.Factory(OpenpyxlParser)
@@ -130,14 +151,11 @@ class Container(containers.DeclarativeContainer):
         import_handler=importer_evaluations_handler
     )
 
-    ue_repo = providers.Factory(
-        FirebaseUERepository,
-        connection=firebase_connection
-    )
-
-    audit_repo = providers.Factory(
-        FirebaseAuditRepository,
-        connection=firebase_connection
+    import_export_service = providers.Factory(
+        ImportExportService,
+        parser=excel_parser,
+        generator=excel_generator,
+        import_handler=importer_evaluations_handler
     )
 
     audit_service = providers.Factory(
@@ -150,7 +168,7 @@ class Container(containers.DeclarativeContainer):
         audit_service=audit_service
     )
 
-    config_repo = providers.Singleton(
-        FirebaseConfigRepository,
-        connection=firebase_connection
+    audit_log_handler = providers.Singleton(
+        AuditLogHandler,
+        audit_service=audit_service
     )
