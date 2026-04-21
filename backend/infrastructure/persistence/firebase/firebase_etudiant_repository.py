@@ -16,7 +16,12 @@ class FirebaseEtudiantRepository(IEtudiantRepository):
             'nom': etudiant._nom,
             'prenom': etudiant._prenom,
             'matricule': etudiant._matricule,
+            'email': etudiant._email,
+            'user_id': etudiant._user_id,
             'date_naissance': etudiant._date_naissance.isoformat() if etudiant._date_naissance else None,
+            'lieu_naissance': etudiant._lieu_naissance,
+            'bac': etudiant._bac,
+            'provenance': etudiant._provenance,
             'updated_at': etudiant.updated_at
         }
 
@@ -25,7 +30,12 @@ class FirebaseEtudiantRepository(IEtudiantRepository):
             nom=data['nom'],
             prenom=data['prenom'],
             matricule=data['matricule'],
+            email=data.get('email', ''),
+            user_id=data.get('user_id'),
             date_naissance=date.fromisoformat(data['date_naissance']) if data.get('date_naissance') else None,
+            lieu_naissance=data.get('lieu_naissance'),
+            bac=data.get('bac'),
+            provenance=data.get('provenance'),
             id=doc_id
         )
 

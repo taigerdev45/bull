@@ -6,13 +6,25 @@ from domain.value_objects.moyenne import Moyenne, TypeCalculMoyenne
 class UE(BaseEntity):
     """Entité Unité d'Enseignement (UE)."""
 
-    def __init__(self, code: str, libelle: str, credits: int, semestre: int, id: Optional[str] = None):
+    def __init__(self, code: str, libelle: str, credits: int, semestre_id: str, id: Optional[str] = None):
         super().__init__(id)
         self._code = code
         self._libelle = libelle
         self._credits = credits
-        self._semestre = semestre
+        self._semestre_id = semestre_id
         self._matieres_ids: List[str] = []
+
+    @property
+    def code(self) -> str:
+        return self._code
+
+    @property
+    def libelle(self) -> str:
+        return self._libelle
+
+    @property
+    def credits(self) -> int:
+        return self._credits
 
     def ajouter_matiere(self, matiere_id: str):
         if matiere_id not in self._matieres_ids:
@@ -40,8 +52,8 @@ class UE(BaseEntity):
     def valider(self):
         if not self._code or not self._libelle:
             raise ValidationException("Le code et le libellé de l'UE sont obligatoires.")
-        if not self._semestre or not (1 <= self._semestre <= 8):
-            raise ValidationException("Le semestre est obligatoire et doit être compris entre 1 et 8.")
+        if not self._semestre_id:
+            raise ValidationException("Le semestre est obligatoire.")
 
     def __repr__(self):
         return f"<UE {self._code}: {self._libelle}>"

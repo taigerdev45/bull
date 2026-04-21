@@ -58,3 +58,24 @@ class AbsenceViewSet(viewsets.ViewSet):
         absences = repo.obtenir_par_etudiant(etudiant_id)
         serializer = AbsenceSerializer([a.to_dict() for a in absences], many=True)
         return Response(serializer.data)
+
+    @inject
+    def update(self, request, pk=None, repo=Provide[Container.absence_repo]):
+        absence = repo.get_by_id(pk)
+        if not absence:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = AbsenceSerializer(data=request.data)
+        if serializer.is_valid():
+            absence._etudiant_id = serializer.validated_data['etudiant_id']
+            absence._matiere_id = serializer.validated_data['matiere_id']
+            absence._nombre_heures = serializer.validated_data['nombre_heures']
+            absence._date_absence = serializer.validated_data['date_absence']
+            repo.save(absence)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @inject
+    def destroy(self, request, pk=None, repo=Provide[Container.absence_repo]):
+        repo.delete(pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)

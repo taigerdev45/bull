@@ -8,7 +8,8 @@ from domain.services.calculateurs.calculateur_ue import CalculateurUE
 from domain.services.calculateurs.calculateur_semestre import CalculateurSemestre
 from domain.services.calculateurs.calculateur_annuel import CalculateurAnnuel
 from domain.services.validateurs.validateur_compensation import ValidateurCompensation
-from domain.value_objects.moyenne import Moyenne
+from domain.value_objects.moyenne import Moyenne, TypeCalculMoyenne
+from domain.entities.resultat import ResultatUE, ResultatSemestre, ResultatAnnuel
 
 class OrchestreCalcul:
     """
@@ -36,6 +37,40 @@ class OrchestreCalcul:
         self._calc_ue = calc_ue or CalculateurUE()
         self._calc_semestre = calc_semestre or CalculateurSemestre()
         self._calc_annuel = calc_annuel or CalculateurAnnuel()
+
+    def recalculer_pour_etudiant(self, etudiant_id: str) -> Dict[str, Any]:
+        """
+        Méthode principale appelée par les handlers et le CLI.
+        Recalcule S5, S6 et l'Annuel dans une seule passe.
+        """
+        print(f"🔄 Recalcul complet pour l'étudiant {etudiant_id}...")
+        
+        # 1. Calcul Annuel (qui déclenche S5 et S6 internally)
+        resultat = self.calculer_resultat_annuel(etudiant_id)
+        
+        # 2. Persistance des résultats semestriels et annuel
+        # S5
+        s5_data = resultat['semestre_1']
+        moy_s5 = Moyenne(s5_data['moyenne_generale'], TypeCalculMoyenne.ARITHMETIQUE, s5_data)
+        self._resultat_repo.save_semestre(ResultatSemestre(etudiant_id, 5, moy_s5))
+        
+        # S6
+        s6_data = resultat['semestre_2']
+        moy_s6 = Moyenne(s6_data['moyenne_generale'], TypeCalculMoyenne.ARITHMETIQUE, s6_data)
+        self._resultat_repo.save_semestre(ResultatSemestre(etudiant_id, 6, moy_s6))
+        
+        # Annuel
+        moy_ann = Moyenne(resultat['moyenne_annuelle'], TypeCalculMoyenne.ANNUEL, resultat)
+        self._resultat_repo.save_annuel(ResultatAnnuel(etudiant_id, "2025-2026", moy_ann))
+        
+        # 3. Persistance des résultats d'UE
+        for s_data in [s5_data, s6_data]:
+            for ue_res in s_data['resultats_ues']:
+                moy_ue = Moyenne(ue_res['moyenne_ue'], TypeCalculMoyenne.PONDEREE, ue_res)
+                self._resultat_repo.save_ue(ResultatUE(etudiant_id, ue_res['ue_id'], moy_ue))
+
+        print(f"✅ Recalcul terminé pour {etudiant_id}")
+        return resultat
 
     def calculer_semestre_par_referentiel(self, etudiant_id: str, semestre_index: int) -> Dict[str, Any]:
         """
@@ -70,8 +105,8 @@ class OrchestreCalcul:
         res_s2 = self.calculer_semestre_par_referentiel(etudiant_id, s2_index)
         
         contexte_annuel = {
-            'moyenne_s1': res_s1['moyenne_generale'],
-            'moyenne_s2': res_s2['moyenne_generale']
+            'moyenne_s1': Moyenne(res_s1['moyenne_generale'], TypeCalculMoyenne.ARITHMETIQUE, res_s1),
+            'moyenne_s2': Moyenne(res_s2['moyenne_generale'], TypeCalculMoyenne.ARITHMETIQUE, res_s2)
         }
         
         moy_annuelle = self._calc_annuel.calculer(contexte_annuel)
@@ -113,7 +148,7 @@ class OrchestreCalcul:
                 
                 if self._calc_matiere and self._calc_matiere.peut_calculer(contexte_m):
                     moy_m = self._calc_matiere.calculer(contexte_m)
-                    moyennes_matieres[m_id] = moy_m.valeur
+                    moyennes_matieres[m_id] = moy_m
                     coeffs_matieres[m_id] = m_data.get('coefficient', 1)
                     
                     matieres_details.append({
@@ -142,7 +177,7 @@ class OrchestreCalcul:
             })
 
         # Calcul de la moyenne du semestre
-        contexte_s = {'moyennes_ue': [m.valeur for m in moyennes_ue_objs]}
+        contexte_s = {'moyennes_ue': moyennes_ue_objs}
         moy_semestre = self._calc_semestre.calculer(contexte_s)
 
         # Validation et Crédits (Chain of Responsibility / Strategy)
@@ -152,10 +187,10 @@ class OrchestreCalcul:
         for res in resultats_ues:
             # Nouveau Validateur avec injection des crédits de l'UE
             validateur = ValidateurCompensation(credits_ue=res['credits_potentiels'])
-            val_res = validateur.valider(Moyenne(res['moyenne_ue'], None, {}), moy_semestre)
+            val_res = validateur.valider(Moyenne(res['moyenne_ue'], TypeCalculMoyenne.PONDEREE, {}), moy_semestre)
             
             total_credits += val_res.credits_acquis
-            res['statut'] = val_res.decision
+            res['statut'] = val_res.statut
             res['credits_acquis'] = val_res.credits_acquis
             details_validation.append(val_res)
 

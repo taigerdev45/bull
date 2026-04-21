@@ -6,12 +6,14 @@ from domain.exceptions.domain_exception import ValidationException
 class Matiere(BaseEntity):
     """Entité représentant une matière d'enseignement."""
 
-    def __init__(self, libelle: str, coefficient: Coefficient, credits: int, ue_id: str, id: Optional[str] = None):
+    def __init__(self, libelle: str, coefficient: Coefficient, credits: int, ue_id: str, 
+                 enseignant_id: Optional[str] = None, id: Optional[str] = None):
         super().__init__(id)
         self._libelle = libelle
         self._coefficient = coefficient
         self._credits = credits
         self._ue_id = ue_id
+        self._enseignant_id = enseignant_id
 
     @property
     def libelle(self) -> str:

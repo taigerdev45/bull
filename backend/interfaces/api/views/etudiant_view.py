@@ -15,6 +15,48 @@ class EtudiantViewSet(viewsets.ViewSet):
         serializer = EtudiantSerializer(etudiants, many=True)
         return Response(serializer.data)
 
+    def create(self, request):
+        serializer = EtudiantSerializer(data=request.data)
+        if serializer.is_valid():
+            from domain.entities.etudiant import Etudiant
+            etudiant = Etudiant(
+                nom=serializer.validated_data['nom'],
+                prenom=serializer.validated_data['prenom'],
+                matricule=serializer.validated_data['matricule'],
+                date_naissance=serializer.validated_data['date_naissance'],
+                lieu_naissance=serializer.validated_data.get('lieu_naissance'),
+                bac=serializer.validated_data.get('bac'),
+                provenance=serializer.validated_data.get('provenance')
+            )
+            repo = Container.etudiant_repo()
+            repo.save(etudiant)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        repo = Container.etudiant_repo()
+        etudiant = repo.get_by_id(pk)
+        if not etudiant:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = EtudiantSerializer(data=request.data)
+        if serializer.is_valid():
+            etudiant._nom = serializer.validated_data['nom']
+            etudiant._prenom = serializer.validated_data['prenom']
+            etudiant._matricule = serializer.validated_data['matricule']
+            etudiant._date_naissance = serializer.validated_data['date_naissance']
+            etudiant._lieu_naissance = serializer.validated_data.get('lieu_naissance')
+            etudiant._bac = serializer.validated_data.get('bac')
+            etudiant._provenance = serializer.validated_data.get('provenance')
+            repo.save(etudiant)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        repo = Container.etudiant_repo()
+        repo.delete(pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class EvaluationView(views.APIView):
     """Vue pour la saisie de notes déclenchant les commandes applicatives."""
     permission_classes = [IsEnseignant]

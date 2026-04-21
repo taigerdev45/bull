@@ -30,6 +30,39 @@ class UEViewSet(viewsets.ViewSet):
         serializer = UESerializer(ue)
         return Response(serializer.data)
 
+    def create(self, request):
+        serializer = UESerializer(data=request.data)
+        if serializer.is_valid():
+            from domain.entities.ue import UE
+            ue = UE(
+                code=serializer.validated_data['code'],
+                libelle=serializer.validated_data['libelle'],
+                credits=serializer.validated_data['credits'],
+                semestre_id=serializer.validated_data['semestre_id']
+            )
+            self.ue_repo.save(ue)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        ue = self.ue_repo.get_by_id(pk)
+        if not ue:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = UESerializer(data=request.data)
+        if serializer.is_valid():
+            ue._code = serializer.validated_data['code']
+            ue._libelle = serializer.validated_data['libelle']
+            ue._credits = serializer.validated_data['credits']
+            ue._semestre_id = serializer.validated_data['semestre_id']
+            self.ue_repo.save(ue)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        self.ue_repo.delete(pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=False, methods=['get'], url_path='semestre/(?P<semestre>[^/.]+)')
     def semestre(self, request, semestre=None):
         """Filtre les UEs par semestre."""
@@ -62,6 +95,43 @@ class MatiereViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = MatiereSerializer(matiere)
         return Response(serializer.data)
+
+    def create(self, request):
+        serializer = MatiereSerializer(data=request.data)
+        if serializer.is_valid():
+            from domain.entities.matiere import Matiere
+            from domain.value_objects.coefficient import Coefficient
+            matiere = Matiere(
+                libelle=serializer.validated_data['libelle'],
+                coefficient=Coefficient(serializer.validated_data['coefficient']),
+                credits=serializer.validated_data['credits'],
+                ue_id=serializer.validated_data['ue_id'],
+                enseignant_id=serializer.validated_data.get('enseignant_id')
+            )
+            self.matiere_repo.save(matiere)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        matiere = self.matiere_repo.get_by_id(pk)
+        if not matiere:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = MatiereSerializer(data=request.data)
+        if serializer.is_valid():
+            from domain.value_objects.coefficient import Coefficient
+            matiere._libelle = serializer.validated_data['libelle']
+            matiere._coefficient = Coefficient(serializer.validated_data['coefficient'])
+            matiere._credits = serializer.validated_data['credits']
+            matiere._ue_id = serializer.validated_data['ue_id']
+            matiere._enseignant_id = serializer.validated_data.get('enseignant_id')
+            self.matiere_repo.save(matiere)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        self.matiere_repo.delete(pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='ue/(?P<ue_id>[^/.]+)')
     def ue(self, request, ue_id=None):

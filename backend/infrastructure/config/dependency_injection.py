@@ -26,6 +26,16 @@ from infrastructure.persistence.firebase.firebase_audit_repository import Fireba
 from application.services.audit_service import AuditService
 from domain.events.handlers.audit_log_handler import AuditLogHandler
 from infrastructure.persistence.firebase.firebase_ue_repository import FirebaseUERepository
+from infrastructure.persistence.firebase.firebase_semestre_repository import FirebaseSemestreRepository
+from infrastructure.persistence.firebase.firebase_enseignant_repository import FirebaseEnseignantRepository
+from infrastructure.persistence.firebase.firebase_personnel_repository import FirebasePersonnelRepository
+from infrastructure.auth.firebase_auth_service import FirebaseAuthService
+
+from application.commands.register_user_command import RegisterUserHandler
+from application.commands.create_staff_command import CreateStaffHandler
+
+class Store: # Placeholder to match existing structure if needed, but Container is the one used.
+    pass
 
 class Container(containers.DeclarativeContainer):
     """Conteneur d'injection de dépendances principal (Pattern Inversion of Control)."""
@@ -71,6 +81,23 @@ class Container(containers.DeclarativeContainer):
         FirebaseAuditRepository,
         connection=firebase_connection
     )
+
+    semestre_repo = providers.Factory(
+        FirebaseSemestreRepository,
+        connection=firebase_connection
+    )
+
+    enseignant_repo = providers.Factory(
+        FirebaseEnseignantRepository,
+        connection=firebase_connection
+    )
+
+    personnel_repo = providers.Factory(
+        FirebasePersonnelRepository,
+        connection=firebase_connection
+    )
+
+    auth_service = providers.Singleton(FirebaseAuthService)
 
     config_repo = providers.Singleton(
         FirebaseConfigRepository,
@@ -171,7 +198,15 @@ class Container(containers.DeclarativeContainer):
         audit_service=audit_service
     )
 
-    audit_log_handler = providers.Singleton(
-        AuditLogHandler,
-        audit_service=audit_service
+    register_user_handler = providers.Factory(
+        RegisterUserHandler,
+        etudiant_repo=etudiant_repo,
+        enseignant_repo=enseignant_repo,
+        auth_service=auth_service
+    )
+
+    create_staff_handler = providers.Factory(
+        CreateStaffHandler,
+        personnel_repo=personnel_repo,
+        auth_service=auth_service
     )

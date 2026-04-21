@@ -13,4 +13,4 @@ def initialiser_abonnements():
     dispatcher.subscribe(EvaluationModifiee, handler.handle_evaluation_modifiee)
     dispatcher.subscribe(EvaluationSupprimee, handler.handle_evaluation_supprimee)
     
-    print("✓ Abonnements aux événements d'audit configurés.")
+    print("[OK] Abonnements aux événements d'audit configurés.")

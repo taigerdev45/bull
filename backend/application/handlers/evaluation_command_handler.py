@@ -43,10 +43,12 @@ class EvaluationCommandHandler:
             eval_id = self._evaluation_repo.creer(evaluation, transaction=transaction)
             
             # 3. Recalcul (l'orchestrateur devrait idéalement supporter la transaction)
+            # Pour l'instant on garde le calcul post-transaction ou on l'intègre si supporté
             return eval_id
 
         eval_id = _in_transaction(transaction)
-        # Déclenchement du recalcul
+        
+        # Déclenchement du recalcul complet
         self._orchestre_calcul.recalculer_pour_etudiant(cmd.etudiant_id)
 
         # 4. Dispatch Audit Event
@@ -82,19 +84,6 @@ class EvaluationCommandHandler:
         etudiant_id = _in_transaction(transaction)
         self._orchestre_calcul.recalculer_pour_etudiant(etudiant_id)
 
-        # Dispatch audit modification
-        dispatcher.dispatch(EvaluationModifiee(
-            data={
-                'evaluation_id': cmd.evaluation_id,
-                'etudiant_id': etudiant_id,
-                'nouvelle_note': cmd.nouvelle_note,
-                'ancienne_note': 'N/A', # Simple pour l'instant
-                'matiere_libelle': 'Matière',
-                'type_eval': 'N/A'
-            },
-            metadata=cmd.metadata
-        ))
-
     def handle_supprimer(self, cmd: SupprimerEvaluationCommand):
         transaction = self._db.transaction()
         
@@ -112,16 +101,6 @@ class EvaluationCommandHandler:
 
         etudiant_id = _in_transaction(transaction)
         self._orchestre_calcul.recalculer_pour_etudiant(etudiant_id)
-
-        # Dispatch audit suppression
-        dispatcher.dispatch(EvaluationSupprimee(
-            data={
-                'evaluation_id': cmd.evaluation_id,
-                'etudiant_id': etudiant_id,
-                'derniere_note': 'N/A'
-            },
-            metadata=cmd.metadata
-        ))
 
     def handle_bulk_creer(self, commands: List[CreerEvaluationCommand]):
         """Saisie par lot (atomique)."""

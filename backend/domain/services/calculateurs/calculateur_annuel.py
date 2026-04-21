@@ -16,10 +16,13 @@ class CalculateurAnnuel(ICalculateur):
             'moyenne_s2': float
         }
         """
-        m1 = data.get('moyenne_s1', 0.0)
-        m2 = data.get('moyenne_s2', 0.0)
+        m1 = data.get('moyenne_s1')
+        m2 = data.get('moyenne_s2')
         
-        moyenne_annuelle = (m1 + m2) / 2
+        val_m1 = m1.valeur if hasattr(m1, 'valeur') else float(m1 or 0)
+        val_m2 = m2.valeur if hasattr(m2, 'valeur') else float(m2 or 0)
+        
+        moyenne_annuelle = (val_m1 + val_m2) / 2
         
         mention = self._determiner_mention(moyenne_annuelle)
         

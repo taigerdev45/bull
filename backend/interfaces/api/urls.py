@@ -9,6 +9,10 @@ from interfaces.api.views.import_export_view import ImportEvaluationsView, Expor
 from interfaces.api.views.ue_viewset import UEViewSet, MatiereViewSet
 from interfaces.api.views.audit_viewset import AuditViewSet
 from interfaces.api.views.parametres_view import ParametresView
+from interfaces.api.views.semestre_view import SemestreViewSet
+from interfaces.api.views.enseignant_view import EnseignantViewSet
+from interfaces.api.views.auth_view import RegisterView
+from interfaces.api.views.personnel_viewset import PersonnelViewSet
 from application.startup import initialiser_abonnements
 
 # Initialisation de l'audit
@@ -20,10 +24,14 @@ router.register(r'absences', AbsenceViewSet, basename='absence')
 router.register(r'evaluations', EvaluationViewSet, basename='evaluation')
 router.register(r'ues', UEViewSet, basename='ue')
 router.register(r'matieres', MatiereViewSet, basename='matiere')
+router.register(r'semestres', SemestreViewSet, basename='semestre')
+router.register(r'enseignants', EnseignantViewSet, basename='enseignant')
+router.register(r'personnel', PersonnelViewSet, basename='personnel')
 router.register(r'audit', AuditViewSet, basename='audit')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('auth/register/', RegisterView.as_view(), name='register'),
     path('resultats/semestre/<str:etudiant_id>/', ResultatSemestreView.as_view()),
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),
     path('resultats/promotion/stats/', PromotionStatsView.as_view()),

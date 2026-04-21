@@ -21,7 +21,7 @@ class UESerializer(serializers.Serializer):
     code = serializers.CharField(max_length=10)
     libelle = serializers.CharField(max_length=200)
     credits = serializers.IntegerField(min_value=1)
-    semestre = serializers.IntegerField(min_value=1)
+    semestre_id = serializers.CharField()
     matieres = MatiereSerializer(many=True, read_only=True)
 
     def validate_code(self, value):

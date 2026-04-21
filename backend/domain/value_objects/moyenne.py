@@ -7,6 +7,7 @@ class TypeCalculMoyenne(Enum):
     RATTRAPAGE = auto()       # Rattrapage remplace
     UNIQUE = auto()           # Une seule note
     ARITHMETIQUE = auto()     # Moyenne de moyennes (ex: Annuel)
+    PONDEREE = auto()         # Moyenne coefficientée (ex: UE)
     ANNUEL = auto()           # Spécifique au résultat annuel
 
 @dataclass(frozen=True)

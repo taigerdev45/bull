@@ -16,11 +16,18 @@ class CalculateurSemestre(ICalculateur):
         """
         moyennes = data.get('moyennes_ue', [])
         
-        if not moyennes:
-            return Moyenne(0.0, TypeCalculMoyenne.ARITHMETIQUE, {"error": "Aucune UE trouvée"})
+        # On filtre les UEs qui n'ont aucune note (moyenne 0.0) 
+        # pour ne pas fausser la moyenne générale pendant la saisie.
+        moyennes_valides = [m for m in moyennes if m.valeur > 0 or m.details.get('intentional_zero')]
+        
+        if not moyennes_valides:
+            return Moyenne(0.0, TypeCalculMoyenne.ARITHMETIQUE, {"error": "Aucune UE notée trouvée"})
             
-        valeur_moyenne = sum(m.valeur for m in moyennes) / len(moyennes)
-        return Moyenne(valeur_moyenne, TypeCalculMoyenne.ARITHMETIQUE, {"nb_ue": len(moyennes)})
+        valeur_moyenne = sum(m.valeur for m in moyennes_valides) / len(moyennes_valides)
+        return Moyenne(valeur_moyenne, TypeCalculMoyenne.ARITHMETIQUE, {
+            "nb_ue_total": len(moyennes),
+            "nb_ue_calculees": len(moyennes_valides)
+        })
 
     def peut_calculer(self, data: Dict) -> bool:
         return 'moyennes_ue' in data
