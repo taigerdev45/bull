@@ -22,6 +22,7 @@ classDiagram
 
     class Enseignant {
         +id: String
+        +matricule: String
         +nom: String
         +prenom: String
         +email: String
@@ -99,14 +100,16 @@ classDiagram
   - `niveau`: string
   - `role`: "etudiant" (Custom Claim)
 
-### Collection `personnels` (Enseignants)
+### Collection `utilisateurs` (Personnel et Enseignants)
 
 - **ID Document :** UID Firebase
 - **Champs :**
   - `nom`: string
   - `prenom`: string
   - `email`: string
+  - `numero_telephone`: string
   - `role`: "enseignant" | "admin" | "secretariat"
+  - `derniere_connexion`: timestamp
 
 ### Collection `ues`
 
@@ -125,7 +128,7 @@ classDiagram
   - `code`: string
   - `coefficient`: float
   - `ue_id`: string (Référence à `ues`)
-  - `enseignant_id`: string (Référence à `personnels`)
+  - `enseignant_id`: string (Référence à `utilisateurs`)
 
 ### Collection `evaluations`
 
@@ -133,7 +136,7 @@ classDiagram
 - **Champs :**
   - `etudiant_id`: string
   - `matiere_id`: string
-  - `enseignant_id`: string (Référence à `personnels`)
+  - `enseignant_id`: string (Référence à `utilisateurs`)
   - `type`: "CC" | "EXAMEN" | "RATTRAPAGE"
   - `note`: float [0-20]
   - `date_evaluation`: timestamp
