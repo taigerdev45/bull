@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     # Local layers (interfaces)
-    'interfaces.api',
+    'interfaces.api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
