@@ -46,6 +46,15 @@ class FirebaseAuthService:
         except Exception as e:
             raise Exception(f"Erreur lors de la récupération de l'utilisateur: {str(e)}")
 
+    def update_user_password(self, uid: str, new_password: str):
+        """
+        Met à jour le mot de passe d'un utilisateur Firebase existant.
+        """
+        try:
+            auth.update_user(uid, password=new_password)
+        except Exception as e:
+            raise Exception(f"Erreur lors de la mise à jour du mot de passe: {str(e)}")
+
     def delete_user(self, uid: str):
         """Supprime un utilisateur Firebase."""
         auth.delete_user(uid)
