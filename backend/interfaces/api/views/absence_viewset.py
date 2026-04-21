@@ -37,8 +37,12 @@ class AbsenceViewSet(viewsets.ViewSet):
 
     @inject
     def list(self, request, repo=Provide[Container.absence_repo]):
-        if request.user.firebase_claims.get('role') == 'etudiant':
-            absences = repo.obtenir_par_etudiant(request.user.id)
+        claims = getattr(request.user, 'firebase_claims', {})
+        role = claims.get('role')
+        uid = request.user.username  # Utiliser l'UID Firebase stocké dans username
+        
+        if role == 'etudiant':
+            absences = repo.obtenir_par_etudiant(uid)
         else:
             etudiant_id = request.query_params.get('etudiant_id')
             if etudiant_id:
@@ -52,7 +56,11 @@ class AbsenceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     @inject
     def par_etudiant(self, request, etudiant_id=None, repo=Provide[Container.absence_repo]):
-        if request.user.firebase_claims.get('role') == 'etudiant' and request.user.id != etudiant_id:
+        claims = getattr(request.user, 'firebase_claims', {})
+        role = claims.get('role')
+        uid = request.user.username  # Utiliser l'UID Firebase (UID)
+        
+        if role == 'etudiant' and uid != etudiant_id:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
             
         absences = repo.obtenir_par_etudiant(etudiant_id)
