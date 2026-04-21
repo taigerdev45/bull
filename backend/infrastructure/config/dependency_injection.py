@@ -3,19 +3,27 @@ from dependency_injector import containers, providers
 from domain.repositories.i_evaluation_repository import IEvaluationRepository
 from domain.repositories.i_etudiant_repository import IEtudiantRepository
 from domain.repositories.i_resultat_repository import IResultatRepository
-from domain.services.calculateurs.calculateur_matiere import CalculateurMatiere
-from domain.services.orchestre_calcul import OrchestreCalcul
-from infrastructure.persistence.sqlite.sqlite_evaluation_repository import SQLiteEvaluationRepository
-from infrastructure.persistence.sqlite.sqlite_etudiant_repository import SQLiteEtudiantRepository
-from infrastructure.persistence.sqlite.sqlite_resultat_repository import SQLiteResultatRepository
-from infrastructure.persistence.sqlite.sqlite_absence_repository import SQLiteAbsenceRepository
-from infrastructure.persistence.sqlite.sqlite_matiere_repository import SQLiteMatiereRepository
-from infrastructure.persistence.sqlite.sqlite_ue_repository import SQLiteUERepository
-from infrastructure.persistence.sqlite.sqlite_semestre_repository import SQLiteSemestreRepository
-from infrastructure.persistence.sqlite.sqlite_enseignant_repository import SQLiteEnseignantRepository
-from infrastructure.persistence.sqlite.sqlite_personnel_repository import SQLitePersonnelRepository
-from infrastructure.persistence.sqlite.sqlite_audit_repository import SQLiteAuditRepository
-from infrastructure.persistence.sqlite.sqlite_config_repository import SQLiteConfigRepository
+from domain.repositories.i_absence_repository import IAbsenceRepository
+from domain.repositories.i_matiere_repository import IMatiereRepository
+from domain.repositories.i_ue_repository import IUERepository
+from domain.repositories.i_semestre_repository import ISemestreRepository
+from domain.repositories.i_enseignant_repository import IEnseignantRepository
+from domain.repositories.i_personnel_repository import IPersonnelRepository
+from domain.repositories.i_audit_repository import IAuditRepository
+from domain.repositories.i_config_repository import IConfigRepository
+
+from infrastructure.persistence.django_models.repositories.django_evaluation_repository import DjangoEvaluationRepository
+from infrastructure.persistence.django_models.repositories.django_etudiant_repository import DjangoEtudiantRepository
+from infrastructure.persistence.django_models.repositories.django_resultat_repository import DjangoResultatRepository
+from infrastructure.persistence.django_models.repositories.django_absence_repository import DjangoAbsenceRepository
+from infrastructure.persistence.django_models.repositories.django_matiere_repository import DjangoMatiereRepository
+from infrastructure.persistence.django_models.repositories.django_ue_repository import DjangoUERepository
+from infrastructure.persistence.django_models.repositories.django_semestre_repository import DjangoSemestreRepository
+from infrastructure.persistence.django_models.repositories.django_enseignant_repository import DjangoEnseignantRepository
+from infrastructure.persistence.django_models.repositories.django_personnel_repository import DjangoPersonnelRepository
+from infrastructure.persistence.django_models.repositories.django_audit_repository import DjangoAuditRepository
+from infrastructure.persistence.django_models.repositories.django_config_repository import DjangoConfigRepository
+
 from infrastructure.auth.supabase_auth_service import SupabaseAuthService
 
 from application.services.evaluation_service import EvaluationService
@@ -31,9 +39,8 @@ from domain.services.penalites.penalite_service import PenaliteService
 from application.services.audit_service import AuditService
 from domain.events.handlers.audit_log_handler import AuditLogHandler
 from application.commands.create_staff_command import CreateStaffHandler
-
-class Store: # Placeholder to match existing structure if needed, but Container is the one used.
-    pass
+from domain.services.calculateurs.calculateur_matiere import CalculateurMatiere
+from domain.services.orchestre_calcul import OrchestreCalcul
 
 class Container(containers.DeclarativeContainer):
     """Conteneur d'injection de dépendances principal (Pattern Inversion of Control)."""
@@ -41,19 +48,21 @@ class Container(containers.DeclarativeContainer):
     # Configuration
     config = providers.Configuration()
     
-    # Repositories (Abstractions - DAP/Turso)
-    evaluation_repo = providers.Factory(SQLiteEvaluationRepository)
-    etudiant_repo = providers.Factory(SQLiteEtudiantRepository)
-    resultat_repo = providers.Factory(SQLiteResultatRepository)
-    absence_repo = providers.Factory(SQLiteAbsenceRepository)
-    matiere_repo = providers.Factory(SQLiteMatiereRepository)
-    ue_repo = providers.Factory(SQLiteUERepository)
-    audit_repo = providers.Factory(SQLiteAuditRepository)
-    semestre_repo = providers.Factory(SQLiteSemestreRepository)
-    enseignant_repo = providers.Factory(SQLiteEnseignantRepository)
-    personnel_repo = providers.Factory(SQLitePersonnelRepository)
+    # Repositories (Implémentations Django/Supabase)
+    evaluation_repo = providers.Factory(DjangoEvaluationRepository)
+    etudiant_repo = providers.Factory(DjangoEtudiantRepository)
+    resultat_repo = providers.Factory(DjangoResultatRepository)
+    absence_repo = providers.Factory(DjangoAbsenceRepository)
+    matiere_repo = providers.Factory(DjangoMatiereRepository)
+    ue_repo = providers.Factory(DjangoUERepository)
+    semestre_repo = providers.Factory(DjangoSemestreRepository)
+    enseignant_repo = providers.Factory(DjangoEnseignantRepository)
+    personnel_repo = providers.Factory(DjangoPersonnelRepository)
+    audit_repo = providers.Factory(DjangoAuditRepository)
+    config_repo = providers.Factory(DjangoConfigRepository)
+    
+    # Auth
     auth_service = providers.Singleton(SupabaseAuthService)
-    config_repo = providers.Singleton(SQLiteConfigRepository)
     
     # Services métier (Domaine)
     penalite_service = providers.Factory(
@@ -67,7 +76,7 @@ class Container(containers.DeclarativeContainer):
         penalite_service=penalite_service
     )
     
-    # Façade principale (Domaine)
+    # Orchestrateur
     orchestre_calcul = providers.Factory(
         OrchestreCalcul,
         evaluation_repo=evaluation_repo,
@@ -91,6 +100,16 @@ class Container(containers.DeclarativeContainer):
         orchestrateur=orchestre_calcul
     )
     
+    audit_service = providers.Factory(
+        AuditService,
+        audit_repo=audit_repo
+    )
+
+    audit_log_handler = providers.Singleton(
+        AuditLogHandler,
+        audit_service=audit_service
+    )
+
     creer_absence_handler = providers.Factory(
         CreerAbsenceHandler,
         absence_repo=absence_repo,
@@ -101,12 +120,6 @@ class Container(containers.DeclarativeContainer):
         EvaluationCommandHandler,
         evaluation_repo=evaluation_repo,
         orchestre_calcul=orchestre_calcul
-    )
-
-    resultat_query_handler = providers.Factory(
-        ResultatQueryHandler,
-        resultat_repo=resultat_repo,
-        evaluation_repo=evaluation_repo
     )
 
     resultat_query_handler = providers.Factory(
@@ -130,23 +143,6 @@ class Container(containers.DeclarativeContainer):
         parser=excel_parser,
         generator=excel_generator,
         import_handler=importer_evaluations_handler
-    )
-
-    import_export_service = providers.Factory(
-        ImportExportService,
-        parser=excel_parser,
-        generator=excel_generator,
-        import_handler=importer_evaluations_handler
-    )
-
-    audit_service = providers.Factory(
-        AuditService,
-        audit_repo=audit_repo
-    )
-
-    audit_log_handler = providers.Singleton(
-        AuditLogHandler,
-        audit_service=audit_service
     )
 
     create_staff_handler = providers.Factory(

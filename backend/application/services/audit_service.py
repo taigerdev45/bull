@@ -1,10 +1,11 @@
 from typing import Dict, Any, List
+from domain.repositories.i_audit_repository import IAuditRepository
 
 
 class AuditService:
     """Service centralisant la journalisation des actions pour traçabilité."""
 
-    def __init__(self, audit_repo: 'FirebaseAuditRepository'):
+    def __init__(self, audit_repo: IAuditRepository):
         self.audit_repo = audit_repo
 
     def logger_action(self, log_data: Dict[str, Any]) -> None:
