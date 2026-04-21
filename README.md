@@ -5,7 +5,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?logo=firebase)](https://firebase.google.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Application de gestion des bulletins de notes pour la Licence Professionnelle Administration et Sécurité des Réseaux (LP ASUR) de l'Institut National de la Poste, des TIC (INPTIC).**
+> **Application de gestion des bulletins de notes pour la Licence Professionnelle Administration et Sécurité des Réseaux (LP ASUR) de l'Institut National de la Poste,des Technologies de l'Information et de la Communication(INPTIC).**
 
 Automatisation complète du processus d'évaluation : saisie des notes, calculs pondérés, règles de compensation, décisions de jury et génération de bulletins PDF.
 
