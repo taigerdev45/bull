@@ -1,44 +1,39 @@
-#  Guide d'Installation
+# 🛠️ Guide d'Installation - Bull ASUR
 
-## Prérequis
+Ce guide vous aide à installer le projet en local pour le développement.
+
+## 1. Prérequis
 - Python 3.12+
 - Node.js 20+
-- Compte Firebase (Spark ou Blaze)
+- Compte **Supabase** (Gratuit)
 - Git
 
-## 1. Cloner le Projet
+## 2. Clonage et Configuration Backend
+1. Clonez le dépôt : `git clone https://github.com/taigerdev45/bull.git`
+2. Allez dans le dossier backend : `cd bull/bulletin-notes/backend`
+3. Créez un environnement virtuel : `python -m venv venv` et activez-le.
+4. Installez les dépendances : `pip install -r requirements.txt`
+5. Configurez votre fichier `.env` (basé sur `.env.example`) avec vos credentials Supabase.
+
+## 3. Initialisation de la Base de Données
 ```bash
-git clone https://github.com/taigerdev45/bull.git
-cd bull/bulletin-notes
-```
-
-## 2. Configuration Firebase
-1. Créer un projet sur [Firebase Console](https://console.firebase.google.com/).
-2. Activer **Authentication** (Email/Password).
-3. Activer **Firestore Database** en mode production.
-4. Générer une nouvelle clé privée (Service Account) dans les paramètres du projet.
-5. Renommer le fichier en `firebase-credentials.json` et le placer à la racine du dossier `backend/`.
-
-## 3. Configuration Backend (Django)
-```bash
-cd backend
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
-
-pip install -r requirements.txt
-
-# Initialisation
+# Appliquer les schémas
 python manage.py migrate
-python manage.py initialiser_referentiel
+
+# (Optionnel) Créer un administrateur initial
+python manage.py createsuperuser
+
+# Lancer le serveur
 python manage.py runserver
 ```
 
-## 4. Configuration Frontend (Next.js)
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
+## 4. Configuration Frontend (Nuxt 3)
+1. Allez dans le dossier frontend : `cd ../frontend`
+2. Installez les modules : `npm install`
+3. Configurez le `.env` avec l'URL de votre API locale (`http://localhost:8000`) et vos clés Supabase Client.
+4. Lancez le client : `npm run dev`
+
+---
+## 5. Résolution des problèmes fréquents
+- **Erreur de DB** : Vérifiez que votre `DATABASE_URL` utilise bien le mot de passe URL-encodé si vous avez des caractères spéciaux.
+- **JWT Error** : Assurez-vous que le `SUPABASE_JWT_SECRET` dans votre `.env` backend correspond exactement à celui du dashboard Supabase.
