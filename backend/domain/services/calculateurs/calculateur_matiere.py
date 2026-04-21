@@ -1,5 +1,6 @@
 from typing import Dict, Any, List
 from domain.services.interfaces.i_calculateur import ICalculateur
+from domain.services.interfaces.i_penalite_service import IPenaliteService
 from ...value_objects.note import Note
 from ...value_objects.moyenne import Moyenne, TypeCalculMoyenne
 from ...entities.evaluation import TypeEvaluation

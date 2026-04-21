@@ -125,4 +125,18 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API de gestion des bulletins de notes (DDD Architecture)',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'SECURITY': [
+        {
+            'bearerAuth': [],
+        }
+    ],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'bearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    },
 }

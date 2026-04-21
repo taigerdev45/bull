@@ -7,7 +7,8 @@ Ce document détaille la procédure standard pour sécuriser les accès administ
 > [!CAUTION]
 > Ne jamais commiter le fichier `serviceAccountKey.json` ou toute clé privée dans le dépôt Git.
 
-### Mesures en place :
+### Mesures en place
+
 - Le fichier `serviceAccountKey.json` est listé dans le `.gitignore`.
 - En environnement local, chaque développeur possède sa propre clé fournie par l'administrateur Firebase.
 
@@ -15,11 +16,14 @@ Ce document détaille la procédure standard pour sécuriser les accès administ
 
 Pour la production, nous recommandons d'utiliser des **Variables d'Environnement** au lieu d'un fichier physique.
 
-### Étapes recommandées :
+### Étapes recommandées
+
 1. **Conversion JSON en Base64 / String** :
    Copiez le contenu de votre JSON Firebase.
+
 2. **Variable d'Environnement** :
    Créez une variable nommée `FIREBASE_SERVICE_ACCOUNT_JSON` sur votre plateforme de déploiement (ex: Render).
+
 3. **Initialisation Dynamique (Python)** :
    Modifier `connection.py` pour détecter la variable d'environnement :
 
