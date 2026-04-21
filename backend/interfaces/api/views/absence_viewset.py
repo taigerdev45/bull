@@ -56,16 +56,26 @@ class AbsenceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     @inject
     def par_etudiant(self, request, etudiant_id=None, repo=Provide[Container.absence_repo]):
-        claims = getattr(request.user, 'firebase_claims', {})
-        role = claims.get('role')
-        uid = request.user.username  # Utiliser l'UID Firebase (UID)
+        import traceback
+        import logging
+        logger = logging.getLogger(__name__)
         
-        if role == 'etudiant' and uid != etudiant_id:
-            return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            claims = getattr(request.user, 'firebase_claims', {})
+            role = claims.get('role')
+            uid = getattr(request.user, 'username', None)
             
-        absences = repo.obtenir_par_etudiant(etudiant_id)
-        serializer = AbsenceSerializer([a.to_dict() for a in absences], many=True)
-        return Response(serializer.data)
+            if role == 'etudiant' and uid != etudiant_id:
+                return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+                
+            absences = repo.obtenir_par_etudiant(etudiant_id)
+            data = [a.to_dict() for a in absences]
+            serializer = AbsenceSerializer(data, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Erreur dans par_etudiant: {str(e)}")
+            logger.error(traceback.format_exc())
+            return Response({'error': str(e), 'traceback': traceback.format_exc() if True else None}, status=500)
 
     @inject
     def update(self, request, pk=None, repo=Provide[Container.absence_repo]):
