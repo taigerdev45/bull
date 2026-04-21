@@ -14,6 +14,11 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
 
+# Supabase Configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") # Pour les actions Admin
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET") # Pour la validation des tokens
+
 # CORS Configuration for Vercel
 CORS_ALLOWED_ORIGINS = [
     origin.rstrip('/') for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin
@@ -76,12 +81,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Firebase Configuration
-FIREBASE_SERVICE_ACCOUNT_KEY = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY_PATH')
+WSGI_APPLICATION = 'config.wsgi.application'
 
 import dj_database_url
 
-# Database (Turso SQLite via libsql ou SQLite local)
+# Database (PostgreSQL Supabase ou SQLite local)
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -89,9 +93,6 @@ DATABASES = {
         conn_health_checks=True,
     )
 }
-# Permet de bypasser sqllite si Turso est utilisé
-if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3' and DATABASES['default']['NAME'].startswith('libsql://'):
-    DATABASES['default']['ENGINE'] = 'django_libsql'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -116,7 +117,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'interfaces.api.permissions.firebase_auth.FirebaseAuthentication',
+        'interfaces.api.permissions.supabase_auth.SupabaseAuthentication',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',

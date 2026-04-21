@@ -6,11 +6,11 @@ Cette documentation est destinée à l'équipe frontend pour faciliter l'intégr
 
 ## 🔐 1. Authentification & Sécurité
 
-L'accès à l'API est protégé par Firebase Auth. Chaque requête doit inclure un jeton ID dans le header `Authorization`.
+L'accès à l'API est protégé par Supabase Auth. Chaque requête doit inclure un jeton JWT dans le header `Authorization`.
 
 | Header | Valeur | Description |
 | :--- | :--- | :--- |
-| **Authorization** | `Bearer <TOKEN>` | Jeton obtenu via `firebase.auth().currentUser.getIdToken()` |
+| **Authorization** | `Bearer <TOKEN>` | Jeton obtenu via `supabase.auth.getSession().data.session.access_token` |
 | **Content-Type** | `application/json` | Format de données requis pour toutes les requêtes POST/PATCH |
 
 ### Structure des Erreurs Auth
@@ -19,7 +19,7 @@ En cas d'échec d'authentification :
 
 ```json
 {
-  "detail": "Token Firebase invalide: [raison]",
+  "detail": "Token Supabase invalide ou expiré: [raison]",
   "code": "authentication_failed"
 }
 ```
@@ -28,7 +28,7 @@ En cas d'échec d'authentification :
 
 ## 🎭 2. Rôles & Permissions
 
-Les permissions sont basées sur les `Custom Claims` du token Firebase.
+Les permissions sont basées sur les `user_metadata` du token Supabase.
 
 | Rôle | Portée des actions |
 | :--- | :--- |
@@ -147,19 +147,25 @@ Il est crucial que le frontend reflète ces règles pour la validation :
 
 ## 💻 5. Exemple d'Intégration Avancée (Next.js)
 
-### Exemple d'appel avec Axios
+### Exemple d'appel avec Axios et Supabase
 
 ```javascript
 import axios from 'axios';
-import { getAuth } from 'firebase/auth';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 apiClient.interceptors.request.use(async (config) => {
-  const auth = getAuth();
-  const token = await auth.currentUser?.getIdToken();
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

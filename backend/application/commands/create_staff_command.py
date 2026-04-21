@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from domain.entities.personnel import Personnel
 from domain.repositories.i_personnel_repository import IPersonnelRepository
-from infrastructure.auth.firebase_auth_service import FirebaseAuthService
+from infrastructure.auth.supabase_auth_service import SupabaseAuthService
 from domain.exceptions.domain_exception import ValidationException
 
 @dataclass
@@ -14,7 +14,7 @@ class CreateStaffCommand:
 
 class CreateStaffHandler:
     def __init__(self, personnel_repo: IPersonnelRepository, 
-                 auth_service: FirebaseAuthService):
+                 auth_service: SupabaseAuthService):
         self.personnel_repo = personnel_repo
         self.auth_service = auth_service
 

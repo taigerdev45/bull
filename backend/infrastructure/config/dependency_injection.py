@@ -16,7 +16,7 @@ from infrastructure.persistence.sqlite.sqlite_enseignant_repository import SQLit
 from infrastructure.persistence.sqlite.sqlite_personnel_repository import SQLitePersonnelRepository
 from infrastructure.persistence.sqlite.sqlite_audit_repository import SQLiteAuditRepository
 from infrastructure.persistence.sqlite.sqlite_config_repository import SQLiteConfigRepository
-from infrastructure.auth.firebase_auth_service import FirebaseAuthService
+from infrastructure.auth.supabase_auth_service import SupabaseAuthService
 
 from application.services.evaluation_service import EvaluationService
 from application.services.bulletin_service import BulletinService
@@ -52,7 +52,7 @@ class Container(containers.DeclarativeContainer):
     semestre_repo = providers.Factory(SQLiteSemestreRepository)
     enseignant_repo = providers.Factory(SQLiteEnseignantRepository)
     personnel_repo = providers.Factory(SQLitePersonnelRepository)
-    auth_service = providers.Singleton(FirebaseAuthService)
+    auth_service = providers.Singleton(SupabaseAuthService)
     config_repo = providers.Singleton(SQLiteConfigRepository)
     
     # Services métier (Domaine)
