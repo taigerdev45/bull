@@ -31,7 +31,6 @@ from infrastructure.persistence.firebase.firebase_enseignant_repository import F
 from infrastructure.persistence.firebase.firebase_personnel_repository import FirebasePersonnelRepository
 from infrastructure.auth.firebase_auth_service import FirebaseAuthService
 
-from application.commands.register_user_command import RegisterUserHandler
 from application.commands.create_staff_command import CreateStaffHandler
 
 class Store: # Placeholder to match existing structure if needed, but Container is the one used.
@@ -196,13 +195,6 @@ class Container(containers.DeclarativeContainer):
     audit_log_handler = providers.Singleton(
         AuditLogHandler,
         audit_service=audit_service
-    )
-
-    register_user_handler = providers.Factory(
-        RegisterUserHandler,
-        etudiant_repo=etudiant_repo,
-        enseignant_repo=enseignant_repo,
-        auth_service=auth_service
     )
 
     create_staff_handler = providers.Factory(

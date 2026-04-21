@@ -11,7 +11,7 @@ from interfaces.api.views.audit_viewset import AuditViewSet
 from interfaces.api.views.parametres_view import ParametresView
 from interfaces.api.views.semestre_view import SemestreViewSet
 from interfaces.api.views.enseignant_view import EnseignantViewSet
-from interfaces.api.views.auth_view import RegisterView, ChangePasswordView
+from interfaces.api.views.auth_view import ChangePasswordView
 from interfaces.api.views.personnel_viewset import PersonnelViewSet
 from application.startup import initialiser_abonnements
 
@@ -31,7 +31,6 @@ router.register(r'audit', AuditViewSet, basename='audit')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('resultats/semestre/<str:etudiant_id>/', ResultatSemestreView.as_view()),
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),

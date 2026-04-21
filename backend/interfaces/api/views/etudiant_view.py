@@ -19,18 +19,42 @@ class EtudiantViewSet(viewsets.ViewSet):
         serializer = EtudiantSerializer(data=request.data)
         if serializer.is_valid():
             from domain.entities.etudiant import Etudiant
-            etudiant = Etudiant(
-                nom=serializer.validated_data['nom'],
-                prenom=serializer.validated_data['prenom'],
-                matricule=serializer.validated_data['matricule'],
-                date_naissance=serializer.validated_data['date_naissance'],
-                lieu_naissance=serializer.validated_data.get('lieu_naissance'),
-                bac=serializer.validated_data.get('bac'),
-                provenance=serializer.validated_data.get('provenance')
-            )
+            
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
+            auth_service = Container.auth_service()
             repo = Container.etudiant_repo()
-            repo.save(etudiant)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            try:
+                # Création Firebase
+                display_name = f"{serializer.validated_data['prenom']} {serializer.validated_data['nom']}"
+                user_id = auth_service.create_user(
+                    email=email,
+                    password=password,
+                    display_name=display_name
+                )
+                auth_service.set_user_claims(user_id, 'etudiant')
+                
+                etudiant = Etudiant(
+                    nom=serializer.validated_data['nom'],
+                    prenom=serializer.validated_data['prenom'],
+                    matricule=serializer.validated_data['matricule'],
+                    email=email,
+                    user_id=user_id,
+                    date_naissance=serializer.validated_data['date_naissance'],
+                    lieu_naissance=serializer.validated_data.get('lieu_naissance'),
+                    bac=serializer.validated_data.get('bac'),
+                    provenance=serializer.validated_data.get('provenance')
+                )
+                
+                repo.save(etudiant)
+                
+                return_data = serializer.data
+                return_data.pop('password', None)
+                return Response(return_data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
