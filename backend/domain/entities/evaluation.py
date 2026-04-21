@@ -14,10 +14,11 @@ class Evaluation(BaseEntity):
 
     def __init__(self, etudiant_id: str, matiere_id: str, type: TypeEvaluation, note: Note, 
                  date_saisie: Optional[str] = None, saisie_par: Optional[str] = None, 
-                 id: Optional[str] = None):
+                 enseignant_id: Optional[str] = None, id: Optional[str] = None):
         super().__init__(id)
         self._etudiant_id = etudiant_id
         self._matiere_id = matiere_id
+        self._enseignant_id = enseignant_id
         self._type = type
         self._note = note
         self._date_saisie = date_saisie
@@ -33,6 +34,10 @@ class Evaluation(BaseEntity):
     @property
     def matiere_id(self) -> str:
         return self._matiere_id
+
+    @property
+    def enseignant_id(self) -> Optional[str]:
+        return self._enseignant_id
 
     @property
     def date_saisie(self) -> Optional[str]:

@@ -20,6 +20,10 @@ class Matiere(BaseEntity):
         return self._libelle
 
     @property
+    def enseignant_id(self) -> Optional[str]:
+        return self._enseignant_id
+
+    @property
     def coefficient(self) -> float:
         return self._coefficient.valeur
 

@@ -4,6 +4,7 @@ class EvaluationSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     etudiant_id = serializers.CharField()
     matiere_id = serializers.CharField()
+    enseignant_id = serializers.CharField(required=False, allow_null=True)
     type = serializers.ChoiceField(choices=['CC', 'EXAMEN', 'RATTRAPAGE'])
     note = serializers.FloatField(min_value=0, max_value=20)
 
