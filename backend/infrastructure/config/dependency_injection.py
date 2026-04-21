@@ -5,13 +5,21 @@ from domain.repositories.i_etudiant_repository import IEtudiantRepository
 from domain.repositories.i_resultat_repository import IResultatRepository
 from domain.services.calculateurs.calculateur_matiere import CalculateurMatiere
 from domain.services.orchestre_calcul import OrchestreCalcul
-from infrastructure.persistence.firebase.firebase_evaluation_repository import FirebaseEvaluationRepository
-from infrastructure.persistence.firebase.firebase_etudiant_repository import FirebaseEtudiantRepository
-from infrastructure.persistence.firebase.firebase_resultat_repository import FirebaseResultatRepository
-from infrastructure.persistence.firebase.connection import FirebaseConnection
+from infrastructure.persistence.sqlite.sqlite_evaluation_repository import SQLiteEvaluationRepository
+from infrastructure.persistence.sqlite.sqlite_etudiant_repository import SQLiteEtudiantRepository
+from infrastructure.persistence.sqlite.sqlite_resultat_repository import SQLiteResultatRepository
+from infrastructure.persistence.sqlite.sqlite_absence_repository import SQLiteAbsenceRepository
+from infrastructure.persistence.sqlite.sqlite_matiere_repository import SQLiteMatiereRepository
+from infrastructure.persistence.sqlite.sqlite_ue_repository import SQLiteUERepository
+from infrastructure.persistence.sqlite.sqlite_semestre_repository import SQLiteSemestreRepository
+from infrastructure.persistence.sqlite.sqlite_enseignant_repository import SQLiteEnseignantRepository
+from infrastructure.persistence.sqlite.sqlite_personnel_repository import SQLitePersonnelRepository
+from infrastructure.persistence.sqlite.sqlite_audit_repository import SQLiteAuditRepository
+from infrastructure.persistence.sqlite.sqlite_config_repository import SQLiteConfigRepository
+from infrastructure.auth.firebase_auth_service import FirebaseAuthService
+
 from application.services.evaluation_service import EvaluationService
 from application.services.bulletin_service import BulletinService
-from infrastructure.persistence.firebase.firebase_absence_repository import FirebaseAbsenceRepository
 from application.commands.creer_absence_command import CreerAbsenceHandler
 from application.handlers.evaluation_command_handler import EvaluationCommandHandler
 from application.handlers.resultat_query_handler import ResultatQueryHandler
@@ -19,18 +27,9 @@ from application.services.import_export_service import ImportExportService
 from application.commands.importer_evaluations_command import ImporterEvaluationsHandler
 from infrastructure.parsers.openpyxl_parser import OpenpyxlParser
 from infrastructure.generators.excel_generator import ExcelGenerator
-from infrastructure.persistence.firebase.firebase_matiere_repository import FirebaseMatiereRepository
-from infrastructure.persistence.firebase.firebase_config_repository import FirebaseConfigRepository
 from domain.services.penalites.penalite_service import PenaliteService
-from infrastructure.persistence.firebase.firebase_audit_repository import FirebaseAuditRepository
 from application.services.audit_service import AuditService
 from domain.events.handlers.audit_log_handler import AuditLogHandler
-from infrastructure.persistence.firebase.firebase_ue_repository import FirebaseUERepository
-from infrastructure.persistence.firebase.firebase_semestre_repository import FirebaseSemestreRepository
-from infrastructure.persistence.firebase.firebase_enseignant_repository import FirebaseEnseignantRepository
-from infrastructure.persistence.firebase.firebase_personnel_repository import FirebasePersonnelRepository
-from infrastructure.auth.firebase_auth_service import FirebaseAuthService
-
 from application.commands.create_staff_command import CreateStaffHandler
 
 class Store: # Placeholder to match existing structure if needed, but Container is the one used.
@@ -42,66 +41,19 @@ class Container(containers.DeclarativeContainer):
     # Configuration
     config = providers.Configuration()
     
-    # Singletons
-    firebase_connection = providers.Singleton(FirebaseConnection)
-    
-    # Repositories (Abstractions - DAP)
-    evaluation_repo = providers.Factory(
-        FirebaseEvaluationRepository,
-        connection=firebase_connection
-    )
-    
-    etudiant_repo = providers.Factory(
-        FirebaseEtudiantRepository,
-        connection=firebase_connection
-    )
-    
-    resultat_repo = providers.Factory(
-        FirebaseResultatRepository,
-        connection=firebase_connection
-    )
-    
-    absence_repo = providers.Factory(
-        FirebaseAbsenceRepository,
-        connection=firebase_connection
-    )
-
-    matiere_repo = providers.Factory(
-        FirebaseMatiereRepository,
-        connection=firebase_connection
-    )
-
-    ue_repo = providers.Factory(
-        FirebaseUERepository,
-        connection=firebase_connection
-    )
-
-    audit_repo = providers.Factory(
-        FirebaseAuditRepository,
-        connection=firebase_connection
-    )
-
-    semestre_repo = providers.Factory(
-        FirebaseSemestreRepository,
-        connection=firebase_connection
-    )
-
-    enseignant_repo = providers.Factory(
-        FirebaseEnseignantRepository,
-        connection=firebase_connection
-    )
-
-    personnel_repo = providers.Factory(
-        FirebasePersonnelRepository,
-        connection=firebase_connection
-    )
-
+    # Repositories (Abstractions - DAP/Turso)
+    evaluation_repo = providers.Factory(SQLiteEvaluationRepository)
+    etudiant_repo = providers.Factory(SQLiteEtudiantRepository)
+    resultat_repo = providers.Factory(SQLiteResultatRepository)
+    absence_repo = providers.Factory(SQLiteAbsenceRepository)
+    matiere_repo = providers.Factory(SQLiteMatiereRepository)
+    ue_repo = providers.Factory(SQLiteUERepository)
+    audit_repo = providers.Factory(SQLiteAuditRepository)
+    semestre_repo = providers.Factory(SQLiteSemestreRepository)
+    enseignant_repo = providers.Factory(SQLiteEnseignantRepository)
+    personnel_repo = providers.Factory(SQLitePersonnelRepository)
     auth_service = providers.Singleton(FirebaseAuthService)
-
-    config_repo = providers.Singleton(
-        FirebaseConfigRepository,
-        connection=firebase_connection
-    )
+    config_repo = providers.Singleton(SQLiteConfigRepository)
     
     # Services métier (Domaine)
     penalite_service = providers.Factory(

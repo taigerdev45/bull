@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     # Local layers (interfaces)
     'interfaces.api.apps.ApiConfig',
+    'infrastructure.persistence.django_models.apps.DjangoModelsConfig',
 ]
 
 MIDDLEWARE = [
@@ -78,13 +79,19 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Firebase Configuration
 FIREBASE_SERVICE_ACCOUNT_KEY = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY_PATH')
 
-# Database (Optionnel si tout est dans Firebase)
+import dj_database_url
+
+# Database (Turso SQLite via libsql ou SQLite local)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
+# Permet de bypasser sqllite si Turso est utilisé
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3' and DATABASES['default']['NAME'].startswith('libsql://'):
+    DATABASES['default']['ENGINE'] = 'django_libsql'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
