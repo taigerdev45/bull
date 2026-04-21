@@ -22,10 +22,6 @@
           <span v-else class="loader"></span>
         </button>
       </form>
-
-      <div class="back-link">
-        <NuxtLink to="/">← Retour à l'accueil</NuxtLink>
-      </div>
     </div>
   </div>
 </template>

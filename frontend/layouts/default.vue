@@ -36,12 +36,16 @@
         <slot />
       </div>
     </main>
+    
+    <!-- Système de notifications global -->
+    <NotificationSystem />
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import NotificationSystem from '~/components/ui/NotificationSystem.vue'
 
 const route = useRoute()
 

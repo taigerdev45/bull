@@ -35,12 +35,20 @@ Le système suit les règles académiques de compensation annuelle.
     - L'UE est alors marquée comme `COMPENSÉE`.
     - L'étudiant obtient tout de même les crédits ECTS.
 
-### Validation du Semestre
-Un semestre est validé si la moyenne pondérée de toutes les UEs du semestre est `>= 10.0`.
+---
+
+## 4. Calcul de la Moyenne Annuelle
+
+La moyenne annuelle est calculée sur la base des deux semestres constituant l'année académique (ex: S5 et S6 pour la terminale).
+
+**Formule :**  
+`Moyenne_Annuelle = (Moyenne_Semestre_1 + Moyenne_Semestre_2) / 2`
+
+Cette moyenne détermine l'admission finale et la mention obtenue.
 
 ---
 
-## 4. Mentions du Jury
+## 5. Mentions du Jury
 
 Les mentions sont calculées sur la base de la Moyenne Générale Annuelle :
 

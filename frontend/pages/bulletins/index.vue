@@ -9,6 +9,13 @@
         </div>
       </div>
       <div class="toggle-container">
+        <!-- Toolbar Secrétariat -->
+        <div v-if="!isEtudiant" class="admin-toolbar no-print">
+          <button class="tool-btn" :class="{ active: editMode === null }" @click="editMode = null">👁️ Vue</button>
+          <button class="tool-btn" :class="{ active: editMode === 'structure' }" @click="editMode = 'structure'">🏗️ Structure</button>
+          <button class="tool-btn" :class="{ active: editMode === 'data' }" @click="editMode = 'data'">📝 Saisie</button>
+        </div>
+        
         <div class="toggle-group">
           <button 
             v-for="sem in ['S5', 'S6', 'Annuel']" 
@@ -26,7 +33,7 @@
 
     <div class="content-wrapper">
       <div class="students-list no-print" v-if="!isEtudiant">
-        <h3>Étudiants ({{ selectedSemester }})</h3>
+        <h3>Liste d'Étudiants </h3>
         <div v-if="isDataLoading" class="mini-loader">Chargement...</div>
         <ul v-else>
           <li v-for="student in etudiantsList" :key="student.id" :class="{ active: selectedStudent === student.id }" @click="selectStudent(student.id)">
@@ -91,10 +98,21 @@
               <tbody>
                 <template v-for="ue in bulletinData?.ues" :key="ue.id">
                   <tr class="ue-header">
-                    <td colspan="5">{{ ue.id }} : {{ ue.libelle }}</td>
+                    <td colspan="5">
+                      <div class="flex-between">
+                        <span>{{ ue.id }} : {{ ue.libelle }}</span>
+                        <div v-if="editMode === 'structure'" class="ue-tools no-print">
+                          <button class="icon-btn" @click="editUE(ue)">✏️</button>
+                          <button class="icon-btn" @click="addMatiere(ue)">➕</button>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                   <tr v-for="matiere in ue.matieres" :key="matiere.libelle">
-                    <td class="matiere">{{ matiere.libelle }}</td>
+                    <td class="matiere">
+                      {{ matiere.libelle }}
+                      <button v-if="editMode === 'structure'" class="icon-btn no-print" @click="editMatiere(ue, matiere)">✏️</button>
+                    </td>
                     <td class="center">{{ matiere.credits || '--' }}</td>
                     <td class="center">{{ matiere.coeff || '1.00' }}</td>
                     <td class="center text-blue font-bold">{{ matiere.moyenne?.toFixed(2) }}</td>
@@ -109,11 +127,15 @@
                   </tr>
                 </template>
 
-                <!-- Pénalités -->
                 <tr class="penalties-row">
                   <td class="matiere">Pénalités d'absences</td>
                   <td colspan="2" class="center text-orange font-bold">0,01/heure</td>
-                  <td class="center">{{ bulletinData?.absences || 0 }} heure(s)</td>
+                  <td class="center">
+                    <div v-if="editMode === 'data'" class="absence-input-wrap">
+                      <input type="number" v-model="bulletinData.absences" class="abs-field" @change="saveAbsence" />
+                    </div>
+                    <span v-else>{{ bulletinData?.absences || 0 }} heure(s)</span>
+                  </td>
                   <td></td>
                 </tr>
                 
@@ -129,14 +151,16 @@
             <!-- Rang & Mention (Table 2x2) -->
             <div class="rank-mention-block mt-2">
               <table class="simple-table center-table">
-                <tr>
-                   <td width="50%">Rang de l'étudiant au Semestre</td>
-                   <td>Mention</td>
-                </tr>
-                <tr class="font-bold">
-                   <td>{{ bulletinData?.rang || 'Non classé' }}</td>
-                   <td>{{ bulletinData?.mention || 'Passable' }}</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td width="50%">Rang de l'étudiant au Semestre</td>
+                    <td>Mention</td>
+                  </tr>
+                  <tr class="font-bold">
+                    <td>{{ bulletinData?.rang || 'Non classé' }}</td>
+                    <td>{{ bulletinData?.mention || 'Passable' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
@@ -144,22 +168,24 @@
             <div class="validation-block mt-4">
               <h4 class="text-center font-bold mb-1">Etat de la Validation des Crédits au {{ selectedSemester }}</h4>
               <table class="validation-table">
-                <tr>
-                  <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">{{ ue.id }}</td>
-                  <td class="center">Crédits validés au {{ selectedSemester }}</td>
-                </tr>
-                <tr>
-                  <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">
-                    {{ ue.credits_acquis }} Crédits / {{ ue.total_credits_ue }}
-                  </td>
-                  <td class="center">{{ bulletinData?.credits_acquis }} Crédits / {{ bulletinData?.total_credits || 30 }}</td>
-                </tr>
-                <tr>
-                  <td :colspan="(bulletinData?.ues?.length || 0)" class="center text-blue font-bold">
-                    {{ bulletinData?.validation_commentaire || 'Semestre Acquis' }}
-                  </td>
-                  <td class="center text-blue font-bold">{{ bulletinData?.valide ? 'Semestre Acquis' : 'NON VALIDE' }}</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">{{ ue.id }}</td>
+                    <td class="center">Crédits validés au {{ selectedSemester }}</td>
+                  </tr>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues" :key="ue.id" class="center">
+                      {{ ue.credits_acquis }} Crédits / {{ ue.total_credits_ue }}
+                    </td>
+                    <td class="center">{{ bulletinData?.credits_acquis }} Crédits / {{ bulletinData?.total_credits || 30 }}</td>
+                  </tr>
+                  <tr>
+                    <td :colspan="(bulletinData?.ues?.length || 0)" class="center text-blue font-bold">
+                      {{ bulletinData?.validation_commentaire || 'Semestre Acquis' }}
+                    </td>
+                    <td class="center text-blue font-bold">{{ bulletinData?.valide ? 'Semestre Acquis' : 'NON VALIDE' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
           </template>
@@ -227,14 +253,16 @@
             <!-- Bilan Annuel par UE -->
             <div class="annual-bilan mt-4">
               <table class="bilan-table">
-                <tr>
-                  <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center font-bold">{{ ue.id }}</td>
-                  <td class="center font-bold bg-light">Bilan annuel</td>
-                </tr>
-                <tr>
-                  <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center">{{ ue.status_annuel || 'VALIDÉ' }}</td>
-                  <td class="center font-bold text-blue">ADMIS</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center font-bold">{{ ue.id }}</td>
+                    <td class="center font-bold bg-light">Bilan annuel</td>
+                  </tr>
+                  <tr>
+                    <td v-for="ue in bulletinData?.ues_annuel" :key="ue.id" class="center">{{ ue.status_annuel || 'VALIDÉ' }}</td>
+                    <td class="center font-bold text-blue">ADMIS</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
@@ -270,6 +298,13 @@
           </div>
         </div>
 
+        <!-- Structure Editor Tools -->
+        <div v-if="editMode === 'structure'" class="structure-tools no-print">
+          <button class="btn btn-dashed" @click="addNewUE">
+            <span class="icon">➕</span> Ajouter une Unité d'Enseignement (UE)
+          </button>
+        </div>
+
         <!-- Action d'impression en bas (Hors feuille A4) -->
         <div class="bulletin-actions no-print">
           <button class="btn btn-primary btn-lg" @click="printBulletin">
@@ -303,10 +338,11 @@ const etudiantsList = ref([
   { id: 'TEST2026003', nom: 'Bernard', prenom: 'Luc' },
 ])
 
+const studentInfo = ref(null)
 const selectedStudent = ref(null)
 const isDataLoading = ref(false)
 const bulletinData = ref(null)
-const studentInfo = ref(null)
+const editMode = ref(null) // null | 'structure' | 'data'
 
 const fetchEtudiants = async () => {
   try {
@@ -397,13 +433,43 @@ const loadBulletin = async (id, semester) => {
         ]
       }
     }
-
-    setTimeout(() => {
-      isDataLoading.value = false
-    }, 400)
   } catch (error) {
     console.error('Failed to load bulletin:', error)
+  } finally {
     isDataLoading.value = false
+  }
+}
+
+// Actions Structure
+const addNewUE = () => {
+  const libelle = prompt("Libellé de la nouvelle UE :")
+  if (libelle) {
+    const code = prompt("Code de l'UE (ex: UE5-3) :")
+    bulletinData.value.ues.push({
+      id: code || 'NEW',
+      libelle: libelle,
+      matieres: []
+    })
+    // NOTE: Ici on devrait appeler l'API pour persister cette structure de modèle
+    alert("Structure modifiée (Modèle Global)")
+  }
+}
+
+const addMatiere = (ue) => {
+  const libelle = prompt(`Ajouter une matière à ${ue.libelle} :`)
+  if (libelle) {
+    ue.matieres.push({ libelle, coefficient: 1, credits: 2, moyenne: 0, moyenne_classe: 0 })
+    alert("Matière ajoutée (Modèle Global)")
+  }
+}
+
+const saveAbsence = async () => {
+  try {
+    // API: /api/resultats/absences/ (PATCH)
+    console.log("Saving absences for", selectedStudent.value, ":", bulletinData.value.absences)
+    // await apiFetch(...) 
+  } catch (e) {
+    console.error("Save failed", e)
   }
 }
 
@@ -603,11 +669,51 @@ const printBulletin = () => {
 .decision-text { flex: 1; padding-top: 1.5rem; padding-left: 0.5rem; color: #000080; }
 .signature-block { width: 300px; text-align: center; color: #000080; }
 .signature-block .direction { margin-top: 0.5rem; }
-.signature-block .name { margin-top: 3.5rem; text-decoration: underline; font-weight: bold; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.ue-tools { display: flex; gap: 0.5rem; }
+.icon-btn { 
+  background: white; 
+  border: 1px solid #cbd5e1; 
+  border-radius: 4px; 
+  padding: 2px 5px; 
+  cursor: pointer; 
+  font-size: 0.8rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.icon-btn:hover { background-color: #f1f5f9; border-color: #000080; }
 
-.footer-note { position: absolute; bottom: 0.5cm; left: 0; width: 100%; text-align: center; font-size: 8pt; font-style: italic; }
+.absence-input-wrap { display: flex; justify-content: center; }
+.abs-field { 
+  width: 60px; 
+  text-align: center; 
+  border: 1px solid #94a3b8; 
+  border-radius: 4px; 
+  padding: 2px;
+  font-weight: bold;
+  color: #e67e22;
+}
 
-.mini-loader { padding: 2rem; text-align: center; color: var(--primary); font-style: italic; }
+.structure-tools {
+  padding: 1.5rem;
+  border-top: 1px dashed var(--border);
+  margin-top: 2rem;
+  text-align: center;
+}
+.btn-dashed {
+  background: transparent;
+  border: 2px dashed #cbd5e1;
+  color: #64748b;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-dashed:hover {
+  border-color: #000080;
+  color: #000080;
+  background-color: #f8fafc;
+}
 
 @media print {
   body * { visibility: hidden; }
