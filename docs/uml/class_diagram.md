@@ -5,7 +5,7 @@ Ce diagramme représente la structure statique du domaine métier et les relatio
 ```mermaid
 classDiagram
     class Etudiant {
-        -String id
+        +String id
         +String nom
         +String prenom
         +String email
@@ -15,7 +15,7 @@ classDiagram
     }
 
     class Enseignant {
-        -String id
+        +String id
         +String nom
         +String prenom
         +String email
@@ -24,73 +24,59 @@ classDiagram
     }
 
     class Semestre {
-        -String id
+        +String id
         +String libelle
-        +valider()
     }
 
     class UE {
-        -String id
+        +String id
         +String code
         +String libelle
         +int credits
-        +float moyenne_min
         +calculerMoyenne()
-        +validerUE()
     }
 
     class Matiere {
-        -String id
+        +String id
         +String libelle
         +float coefficient
         +int credits
-        +float calculerMoyenneMatiere()
     }
 
     class Evaluation {
-        -String id
+        +String id
         +float note
         +String type
         +Date date_evaluation
-        +verifierNote()
     }
 
     class Absence {
-        -String id
+        +String id
         +float heures
         +Date date_absence
         +boolean justifiee
     }
 
     class ResultatUE {
-        -String etudiant_id
-        -String ue_id
-        +Moyenne moyenne
-        +appliquerCompensation()
+        +String etudiant_id
+        +String ue_id
+        +float moyenne
     }
 
     class ResultatSemestre {
-        -String etudiant_id
+        +String etudiant_id
         +int semestre
-        +Moyenne moyenne
-    }
-
-    class ResultatAnnuel {
-        -String etudiant_id
-        +String annee_academique
-        +Moyenne moyenne
-        +determinerMention()
+        +float moyenne
     }
 
     Semestre "1" -- "*" UE : contient
     UE "1" -- "*" Matiere : compose
-    Matiere "1" -- "*" Evaluation : est evaluee par
+    Matiere "1" -- "*" Evaluation : evaluee_par
     Etudiant "1" -- "*" Evaluation : obtient
     Etudiant "1" -- "*" Absence : a
-    Matiere "*" -- "0..1" Enseignant : est enseignée par
+    Matiere "*" -- "0..1" Enseignant : enseignant_par
     
-    Etudiant "1" -- "*" ResultatUE : possède
+    Etudiant "1" -- "*" ResultatUE : possede
     UE "1" -- "*" ResultatUE : concerne
-    Etudiant "1" -- "*" ResultatSemestre : possède
-    Etudiant "1" -- "*" ResultatAnnuel : possède
+    Etudiant "1" -- "*" ResultatSemestre : possede
 ```

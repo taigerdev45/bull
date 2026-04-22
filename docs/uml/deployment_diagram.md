@@ -1,33 +1,39 @@
 # Diagramme de Déploiement (Deployment Diagram)
 
-Ce diagramme représente l'architecture physique et l'exécution de l'application.
+Topologie de l'infrastructure de production sur Cloud PaaS.
 
 ```mermaid
-deploymentDiagram
-    node "Poste Utilisateur" as Client {
-        node "Navigateur Web" as Browser {
-            component "Nuxt 3 App (SPA)"
-        }
-    }
+graph TD
+    subgraph Client [Environnement Client]
+        Browser[Navigateur Web / Mobile]
+    end
 
-    node "Vercel (Cloud)" as Vercel {
-        component "Frontend Static Assets"
-    }
+    subgraph "Render Cloud"
+        subgraph Static_Host [Nuxt Static Hosting]
+            Front[Frontend Assets]
+        end
+        
+        subgraph Compute [Docker Container Web]
+            Django[Backend Django API]
+            Gunicorn[Gunicorn Server]
+        end
+    end
 
-    node "Render (Cloud)" as Render {
-        node "Docker Container" as Backend {
-            component "Django REST API"
-            component "Gunicorn Server"
-        }
-    }
+    subgraph "Supabase Cloud"
+        Auth[Auth Service / GoTrue]
+        subgraph Storage [Database]
+            Postgres[(PostgreSQL Instance)]
+        end
+    end
 
-    node "Supabase (Cloud)" as Supabase {
-        database "PostgreSQL Instance"
-        component "Supabase GoTrue (Auth)"
-    }
+    subgraph "External API"
+        SMTP[Service Email]
+    end
 
-    Browser -- HTTPS : "Protocol (Port 443)"
-    Browser -- Render : "REST API Calls"
-    Render -- Supabase : "JDBC/TCP (Port 5432/6543)"
-    Render -- HTTPS : "JWT Validation"
+    Browser -- HTTPS --> Front
+    Browser -- HTTPS API --> Django
+    Django -- internal --> Gunicorn
+    Django -- TCP 6543/Pooler --> Postgres
+    Django -- HTTPS --> Auth
+    Django -- API --> SMTP
 ```

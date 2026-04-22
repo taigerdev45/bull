@@ -17,7 +17,6 @@ sequenceDiagram
     API->>SVC: enregistrerEvaluation(cmd)
     SVC->>DB: Sauvegarde Note
     
-    rect rgb(240, 240, 240)
     Note over ORC: Trigger Recalcul Cascade
     SVC->>ORC: declencherRecalcul(etudiantId, matiereId)
     ORC->>MAT: calculerMoyenneMatiere()
@@ -27,7 +26,6 @@ sequenceDiagram
     ORC->>SEM: verifierCompensation()
     SEM-->>ORC: Statut Validation
     ORC->>DB: Mise à jour Tables Résultats
-    end
     
     API-->>S: Confirmation (201 Created)
 ```

@@ -3,38 +3,40 @@
 Ce diagramme présente une vue d'ensemble des interactions entre les différents acteurs et le système de gestion des bulletins.
 
 ```mermaid
-useCaseDiagram
-    actor "Administrateur" as Admin
-    actor "Secrétariat" as Sec
-    actor "Enseignant" as Ens
-    actor "Étudiant" as Etu
+graph LR
+    subgraph Acteurs
+        Admin((Administrateur))
+        Sec((Secrétariat))
+        Ens((Enseignant))
+        Etu((Étudiant))
+    end
 
-    package "Système de Gestion des Bulletins" {
-        usecase "Gérer les utilisateurs et rôles" as UC1
-        usecase "Gérer les référentiels (UE/Matières)" as UC2
-        usecase "Gérer les dossiers étudiants" as UC3
-        usecase "Saisir les notes" as UC4
-        usecase "Gérer les absences" as UC5
-        usecase "Calculer les moyennes et résultats" as UC6
-        usecase "Générer les bulletins de notes" as UC7
-        usecase "Consulter son dossier et ses notes" as UC8
-        usecase "Importer/Exporter des données Excel" as UC9
-        usecase "Consulter les audits système" as UC10
-    }
+    subgraph "Système de Gestion des Bulletins"
+        UC1[Gérer les utilisateurs et rôles]
+        UC2[Gérer les référentiels UE/Matières]
+        UC3[Gérer les dossiers étudiants]
+        UC4[Saisir les notes]
+        UC5[Gérer les absences]
+        UC6[Calculer les moyennes et résultats]
+        UC7[Générer les bulletins PDF]
+        UC8[Consulter son dossier et notes]
+        UC9[Importer/Exporter données Excel]
+        UC10[Consulter les audits système]
+    end
 
-    Admin --> UC1
-    Admin --> UC2
-    Admin --> UC10
+    Admin --- UC1
+    Admin --- UC2
+    Admin --- UC10
 
-    Sec --> UC3
-    Sec --> UC4
-    Sec --> UC5
-    Sec --> UC6
-    Sec --> UC7
-    Sec --> UC9
+    Sec --- UC3
+    Sec --- UC4
+    Sec --- UC5
+    Sec --- UC6
+    Sec --- UC7
+    Sec --- UC9
 
-    Ens --> UC4
-    Ens --> UC5
+    Ens --- UC4
+    Ens --- UC5
 
-    Etu --> UC8
+    Etu --- UC8
 ```

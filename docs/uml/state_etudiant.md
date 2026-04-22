@@ -17,7 +17,7 @@ stateDiagram-v2
     
     Delibere --> Admis: Crédits >= 60
     Delibere --> Redoublant: Crédits < 50
-    Delibere --> RepriseSoutenance: 50 <= Crédits < 60 + Stage échoué
+    Delibere --> RepriseSoutenance: 50 <= Crédits < 60 + Stage Échoué
     
     Admis --> [*]: Diplômé
     RepriseSoutenance --> Admis: Soutenance validée

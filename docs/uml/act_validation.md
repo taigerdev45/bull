@@ -1,23 +1,23 @@
-# Diagramme d'Activité - Validation UE / Compensation
+# Diagramme d'Activité - Validation d'UE et Compensation
 
-Ce diagramme explique le processus de validation d'une UE et les règles de compensation.
+Logique de validation des Unités d'Enseignement.
 
 ```mermaid
-activityDiagram
-    start
-    :Calculer moyenne pondérée de l'UE;
-    if (Moyenne >= 10/20) then (Oui)
-        :Statut : VALIDÉE (Acquise);
-        :Attribuer tous les crédits ECTS;
-    else (Non)
-        :Vérifier Moyenne Générale Semestre;
-        if (Moyenne Générale >= 10/20 et pas de note < 07/20) then (Oui)
-            :Statut : COMPENSÉE;
-            :Attribuer tous les crédits ECTS;
-        else (Non)
-            :Statut : NON VALIDÉE (Échec);
-            :Crédits non attribués;
-        endif
-    endif
-    stop
+graph TD
+    Start([Début]) --> CalcUE[Calcul Moyenne UE]
+    CalcUE --> Check10{Moyenne UE >= 10 ?}
+    
+    Check10 -- Oui --> Valid[UE Validée]
+    Check10 -- Non --> Comp{Moyenne >= 7.5 ?}
+    
+    Comp -- Oui --> SemCheck{Moyenne Semestre >= 10 ?}
+    Comp -- Non --> Failing[UE Échouée]
+    
+    SemCheck -- Oui --> Compensated[UE Validée par Compensation]
+    SemCheck -- Non --> Failing
+    
+    Valid --> End([Affecter Crédits])
+    Compensated --> End
+    Failing --> Reprise[Inscrire au Rattrapage]
+    Reprise --> End
 ```

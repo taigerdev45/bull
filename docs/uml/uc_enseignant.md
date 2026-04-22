@@ -3,22 +3,22 @@
 L'enseignant interagit principalement avec ses propres matières.
 
 ```mermaid
-useCaseDiagram
-    actor "Enseignant" as Ens
+graph LR
+    Ens((Enseignant))
     
-    package "Gestion des Évaluations" {
-        usecase "Consulter ses matières assignées" as UC_E1
-        usecase "Consulter la liste de ses étudiants" as UC_E2
-        usecase "Saisir les notes de ses matières" as UC_E3
-        usecase "Signaler des absences" as UC_E4
-        usecase "Consulter les moyennes de sa classe" as UC_E5
+    subgraph "Gestion des Évaluations"
+        UC_E1[Consulter ses matières assignées]
+        UC_E2[Consulter la liste de ses étudiants]
+        UC_E3[Saisir les notes]
+        UC_E4[Signaler des absences]
+        UC_E5[Consulter les moyennes de sa classe]
         
-        UC_E3 ..> UC_E1 : <<depend>>
-    }
+        UC_E3 -.-> UC_E1 : depend
+    end
 
-    Ens --> UC_E1
-    Ens --> UC_E2
-    Ens --> UC_E3
-    Ens --> UC_E4
-    Ens --> UC_E5
+    Ens --- UC_E1
+    Ens --- UC_E2
+    Ens --- UC_E3
+    Ens --- UC_E4
+    Ens --- UC_E5
 ```

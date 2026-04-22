@@ -1,30 +1,23 @@
-# Diagramme de Séquence - Authentification (JWT Supabase)
+# Diagramme de Séquence - Authentification
 
-Ce diagramme illustre le flux d'authentification entre le Frontend, Supabase et le Backend Django.
+Ce diagramme illustre le flux d'authentification entre le Frontend, le Backend et Supabase.
 
 ```mermaid
 sequenceDiagram
-    participant U as Utilisateur (Navigateur)
-    participant F as Frontend (Nuxt 3)
-    participant S as Supabase (Auth)
+    participant U as Utilisateur
+    participant F as Frontend (Nuxt)
     participant B as Backend (Django)
+    participant S as Supabase Auth
 
-    U->>F: Saisit Email / Mot de passe
-    F->>S: signInWithPassword(email, pass)
-    S-->>F: Retourne Session (Access Token JWT)
+    U->>F: Saisir Email/Password
+    F->>S: signInWithPassword(email, pwd)
+    S-->>F: Session (Access Token JWT)
     
-    U->>F: Accède à une ressource protégée
-    F->>B: Requête API (Header: Bearer JWT)
+    F->>B: Request API (Header Bearer Token)
+    B->>B: Middleware SupabaseAuthentication
+    B->>S: Valider JWT (.get_user)
+    S-->>B: User Context (role, email)
     
-    B->>B: Middleware: Valide Signature JWT
-    B->>B: Extrait user_metadata (role)
-    B->>B: Vérifie Permissions DRF
-    
-    alt Succès
-        B-->>F: Retourne Données JSON (200 OK)
-    else Échec
-        B-->>F: Retourne Erreur (401 / 403)
-    end
-    
-    F-->>U: Affiche Résultat
+    B-->>F: Données autorisées
+    F-->>U: Affichage Dashboard
 ```

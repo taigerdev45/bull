@@ -1,25 +1,24 @@
 # Diagramme d'Activité - Calcul des Moyennes
 
-Ce diagramme détaille l'algorithme de calcul des moyennes selon les règles du cahier des charges (Section 4).
+Ce diagramme détaille l'algorithme de calcul des moyennes selon les règles du cahier des charges.
 
 ```mermaid
-activityDiagram
-    start
-    :Identifier Etudiant et Matière;
-    :Récupérer les notes (CC, EXAM, RATTRAPAGE);
+graph TD
+    Start([Début]) --> ID[Identifier Etudiant et Matière]
+    ID --> GetData[Récupérer les notes CC, EXAM, RAT]
     
-    if (Rattrapage existe ?) then (Oui)
-        :La note de rattrapage devient la moyenne;
-    else (Non)
-        if (CC et EXAM existent ?) then (Oui)
-            :Calculer (CC * 0.4) + (EXAM * 0.6);
-        else (Une seule note)
-            :La note disponible est la moyenne;
-        endif
-    endif
-
-    :Appliquer pénalités d'absence (-0.01/h);
-    :Fixer la moyenne finale de la matière;
-    :Pousser vers le calcul de l'UE;
-    stop
+    GetData --> CheckRAT{Rattrapage existe ?}
+    CheckRAT -- Oui --> RAT_Rule[Moyenne = Note Rattrapage]
+    CheckRAT -- Non --> CheckCCEX{CC et EXAM existent ?}
+    
+    CheckCCEX -- Oui --> CCEX_Rule[Moyenne = CC*0.4 + EXAM*0.6]
+    CheckCCEX -- Non --> Single_Rule[Moyenne = Note disponible]
+    
+    RAT_Rule --> Penalty[Appliquer pénalités d'absence -0.01/h]
+    CCEX_Rule --> Penalty
+    Single_Rule --> Penalty
+    
+    Penalty --> Final[Fixer la moyenne finale de la matière]
+    Final --> UE[Transmettre au calcul de l'UE]
+    UE --> End([Fin])
 ```

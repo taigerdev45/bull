@@ -1,17 +1,17 @@
-# Diagramme de Séquence - Génération Bulletin
+# Diagramme de Séquence - Génération de Bulletin
 
-Ce diagramme illustre le flux de génération d'un bulletin de notes individuel.
+Ce diagramme illustre la production d'un bulletin PDF pour un étudiant.
 
 ```mermaid
 sequenceDiagram
-    participant S as Acteur (Sec/Etu)
+    participant S as Secrétariat
     participant B as Backend API
     participant SVC as BulletinService
-    participant REP as Repository (Results)
-    participant GEN as PDFGenerator (Weasyprint)
+    participant REP as ResultatRepository
+    participant GEN as PDFGenerator (WeasyPrint)
 
-    S->>B: GET /api/bulletins/{id}/pdf/
-    B->>SVC: genererFichierBulletin(id)
+    S->>B: GET /api/bulletins/{etudiantId}
+    B->>SVC: genererBulletin(etudiantId)
     SVC->>REP: getResultatsComplets(id)
     REP-->>SVC: Data (JSON/Entity)
     

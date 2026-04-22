@@ -1,36 +1,54 @@
 # Diagramme de Composants (Component Diagram)
 
-Ce diagramme représente l'architecture logicielle de l'application "Bull ASUR" et les dépendances entre les modules.
+Architecture modulaire du système Bulletin Notes.
 
 ```mermaid
-componentDiagram
-    package "Frontend (Nuxt 3)" {
-        [Interface Utilisateur (UI)] as UI
-        [Store / État Local] as Store
-    }
+graph TD
+    subgraph Frontend [Nuxt.3 Application]
+        UI[User Interface]
+        Store[Pinia Store / Auth]
+        API_Client[Supabase JS Client]
+    end
 
-    package "Backend (Django / DDD)" {
-        [API REST (Controllers)] as API
-        [Module Authentification (Supabase JWT)] as Auth
-        [Module Gestion des Référentiels] as Ref
-        [Module Calcul des Moyennes & Règles Métier] as Calc
-        [Module Import/Export (Excel/JSON)] as IE
-        [Module Génération des Bulletins (Logic)] as Bull
-        [Couche d'Accès aux Données (ORM)] as ORM
-    }
+    subgraph Backend [Django Application]
+        subgraph Interfaces
+            REST[REST API Views]
+            Middle[Supabase Auth Middleware]
+        end
+        
+        subgraph Application
+            AppSvc[Services Applicatifs]
+            Cmd[Command Handlers]
+        end
+        
+        subgraph Domain [Core Logic]
+            Entities[Entities & Value Objects]
+            Rules[Domain Services / Calc]
+        end
+        
+        subgraph "Infrastructure Layer"
+            Repo[Django Repositories]
+            Auth[Supabase Auth Adapter]
+            PDF[PDF Generators / WeasyPrint]
+        end
+    end
 
-    database "Supabase" {
-        [Base de Données PostgreSQL] as DB
-        [Service d'Auth (GoTrue)] as SAuth
-    }
+    subgraph External [Supabase Services]
+        SupaAuth[Supabase Auth]
+        Postgres[(PostgreSQL DB)]
+    end
 
-    UI ..> API : Appel REST (HTTPS)
-    API ..> Auth : Vérifie Identité
-    Auth ..> SAuth : Valide JWT
-    API ..> Ref : Orchestre
-    Ref ..> Calc : Fournit Données
-    Calc ..> ORM : Persiste
-    IE ..> ORM : Lit/Écrit
-    Bull ..> Calc : Utilise Résultats
-    ORM ..> DB : SQL
+    UI --> Store
+    Store --> API_Client
+    API_Client ----> REST
+    
+    REST --> Middle
+    Middle --> Auth
+    REST --> AppSvc
+    AppSvc --> Cmd
+    Cmd --> Rules
+    Rules --> Entities
+    Cmd --> Repo
+    Repo --> Postgres
+    Auth --> SupaAuth
 ```
