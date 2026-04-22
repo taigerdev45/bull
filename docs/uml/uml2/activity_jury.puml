@@ -1,0 +1,26 @@
+@startuml ActivityJury
+start
+:Calcul des Moyennes et Crédits;
+
+if (Crédits >= 60 ?) then (Oui)
+    :Admis d'office;
+else (Non)
+    if (Crédits >= 50 ?) then (Oui)
+        partition "Délibération Jury" {
+            if (Décision Jury ?) then (Favorable)
+                :Admis;
+            else (Défavorable)
+                if (Stage / Mémoire validé ?) then (Non)
+                    :Reprise Soutenance;
+                else (Oui)
+                    :Redoublement;
+                endif
+            endif
+        }
+    else (Moins de 50)
+        :Redoublement;
+    endif
+endif
+
+stop
+@enduml

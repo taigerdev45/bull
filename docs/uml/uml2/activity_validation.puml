@@ -1,0 +1,26 @@
+@startuml ActivityValidation
+start
+:Calcul Moyenne UE;
+
+if (Moyenne UE >= 10 ?) then (Oui)
+    :UE Validée;
+else (Non)
+    if (Moyenne UE >= 7.5 ?) then (Oui)
+        if (Moyenne Semestre >= 10 ?) then (Oui)
+            :UE Validée par Compensation;
+        else (Non)
+            :UE Échouée;
+        endif
+    else (Inférieure à 7.5)
+        :UE Échouée;
+    endif
+endif
+
+if (UE validée ?) then (Oui)
+    :Affecter Crédits;
+else (Non)
+    :Inscription au Rattrapage;
+endif
+
+stop
+@enduml

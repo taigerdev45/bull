@@ -1,0 +1,38 @@
+@startuml UseCaseGlobal
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+actor Administrateur as Admin
+actor Secrétariat as Sec
+actor Enseignant as Ens
+actor Étudiant as Etu
+
+package "Système de Gestion des Bulletins" {
+    usecase "Gérer les utilisateurs et rôles" as UC1
+    usecase "Gérer les référentiels (UE/Matières)" as UC2
+    usecase "Gérer les dossiers étudiants" as UC3
+    usecase "Saisir les notes" as UC4
+    usecase "Gérer les absences" as UC5
+    usecase "Calculer les moyennes et résultats" as UC6
+    usecase "Générer les bulletins de notes" as UC7
+    usecase "Consulter son dossier et ses notes" as UC8
+    usecase "Importer/Exporter des données Excel" as UC9
+    usecase "Consulter les audits système" as UC10
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC10
+
+Sec --> UC3
+Sec --> UC4
+Sec --> UC5
+Sec --> UC6
+Sec --> UC7
+Sec --> UC9
+
+Ens --> UC4
+Ens --> UC5
+
+Etu --> UC8
+@enduml

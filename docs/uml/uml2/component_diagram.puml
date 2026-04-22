@@ -1,0 +1,46 @@
+@startuml ComponentDiagram
+skinparam componentStyle uml2
+
+package "Navigateur Web" {
+  [Interface Utilisateur (Nuxt3)] as UI
+  [Pinia Store / Client API] as Store
+}
+
+package "Backend Django (AWS/Render)" {
+  folder "Interfaces" {
+    [API Controllers] as API
+    [Supabase Auth Middleware] as AuthMid
+  }
+  
+  folder "Application" {
+    [Services Applicatifs] as Svc
+    [Command Handlers] as Cmd
+  }
+  
+  folder "Domaine" {
+    [Entités & Value Objects] as Domain
+    [Domaine Services (Orchestre)] as Calc
+  }
+  
+  folder "Infrastructure" {
+    [Django Repositories] as Repo
+    [Auth Adapter (Supabase)] as AuthSvc
+    [Generator (WeasyPrint)] as PDF
+  }
+}
+
+database "PostgreSQL (Supabase)" as DB
+cloud "Supabase Auth" as SupaAuth
+
+UI --> Store
+Store --> API
+API --> AuthMid
+AuthMid --> AuthSvc
+API --> Svc
+Svc --> Cmd
+Cmd --> Calc
+Calc --> Domain
+Cmd --> Repo
+Repo --> DB
+AuthSvc --> SupaAuth
+@enduml

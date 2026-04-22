@@ -1,0 +1,21 @@
+@startuml SequenceAuth
+skinparam participantPadding 20
+skinparam boxPadding 10
+
+actor Utilisateur as U
+participant "Frontend (Nuxt)" as F
+participant "Backend (Django)" as B
+participant "Supabase Auth" as S
+
+U -> F : Saisir Email/Password
+F -> S : signInWithPassword()
+S -->> F : Session (Access Token JWT)
+
+F -> B : Request API (Header Bearer Token)
+note right of B : Middleware validation JWT
+B -> S : Valider JWT (.get_user)
+S -->> B : User Context (role, email)
+
+B -->> F : Données autorisées
+F -->> U : Affichage Dashboard
+@enduml

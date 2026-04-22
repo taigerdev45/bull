@@ -1,0 +1,19 @@
+@startuml StateUE
+[*] --> Ouverte : Création session
+Ouverte --> EnCours : Inscriptions matières effectuée
+
+state EnCours {
+  [*] --> SaisieNotes
+  SaisieNotes --> CalculMoyenne : Notes complètes
+}
+
+EnCours --> Cloturee : Fermeture des saisies
+
+Cloturee --> Validee : Moyenne >= 10
+Cloturee --> Compensee : Moyenne < 10 mais compensation OK
+Cloturee --> Echouee : Moyenne < 10 et pas de compensation
+
+Validee --> [*]
+Compensee --> [*]
+Echouee --> [*] : Rattrapage possible
+@enduml

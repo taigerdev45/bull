@@ -1,0 +1,26 @@
+@startuml SequenceNote
+skinparam participantPadding 20
+
+actor "Secrétariat" as S
+participant "Evaluation API" as API
+participant "EvaluationService" as SVC
+participant "OrchestreCalcul" as ORC
+participant "Calculateur UE/Matière" as CALC
+database "Postgres (Supabase)" as DB
+
+S -> API : POST /api/evaluations/ (Note)
+API -> SVC : enregistrerEvaluation(cmd)
+SVC -> DB : Sauvegarde Note
+
+rect rgb(240, 240, 240)
+    note right of ORC : Trigger Recalcul Cascade
+    SVC -> ORC : declencherRecalcul(etudiantId, matiereId)
+    ORC -> CALC : calculerMoyenneMatiere()
+    CALC -->> ORC : Nouvelle Moyenne
+    ORC -> CALC : recalculerMoyenneUE()
+    CALC -->> ORC : Nouvelle Moyenne UE
+    ORC -> DB : Mise à jour Tables Résultats
+end
+
+API -->> S : Confirmation (201 Created)
+@enduml

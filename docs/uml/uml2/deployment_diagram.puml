@@ -1,0 +1,41 @@
+@startuml DeploymentDiagram
+skinparam componentStyle uml2
+
+node "Client Browser" {
+  [Nuxt 3 App] as Nuxt
+}
+
+node Port "Cloud PaaS (Render)" {
+  node "Static Origin" {
+    [Front Assets]
+  }
+  
+  node "Docker Service (Backend)" {
+    [Django API] <<Python/Gunicorn>>
+  }
+}
+
+node "Supabase Cloud" {
+  node Auth_Node "Auth Service" {
+    [Supabase Auth]
+  }
+  
+  node DB_Node "Database Engine" {
+    database "PostgreSQL" as PG
+  }
+}
+
+node "External" {
+  [SMTP Service]
+}
+
+Nuxt -- HTTPS : "Interaction UI"
+Nuxt -- API_HTTPS : "REST Requests"
+API_HTTPS -- [Django API]
+
+[Django API] -- DB_Pooler : "TCP 6543"
+DB_Pooler -- PG
+[Django API] -- HTTPS_Auth : "API calls"
+HTTPS_Auth -- [Supabase Auth]
+[Django API] -- SMTP : "Notifications"
+@enduml
