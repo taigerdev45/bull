@@ -19,9 +19,15 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") # Pour les actions Admin
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET") # Pour la validation des tokens
 
-# CORS Configuration for Vercel
+# CORS Configuration
+default_origins = 'http://localhost:3000,http://127.0.0.1:3000'
 CORS_ALLOWED_ORIGINS = [
-    origin.rstrip('/') for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin
+    origin.rstrip('/') for origin in os.getenv('CORS_ALLOWED_ORIGINS', default_origins).split(',') if origin
+]
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    origin.rstrip('/') for origin in os.getenv('CSRF_TRUSTED_ORIGINS', default_origins).split(',') if origin
 ]
 
 # Autoriser les prévisualisations Vercel via Regex
