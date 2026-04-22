@@ -45,11 +45,14 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         if not uid:
             raise exceptions.AuthenticationFailed('UID (sub) manquant dans le token Supabase.')
 
-        # Récupération des custom claims (metadata)
-        # Dans Supabase, les métadonnées sont souvent dans 'user_metadata' 
-        # ou injectées via des hooks dans 'app_metadata'
+        # Récupération des custom claims
+        # Dans Supabase, les rôles système sont souvent dans 'app_metadata'
+        # et les rôles utilisateurs dans 'user_metadata'
+        app_metadata = payload.get('app_metadata', {})
         user_metadata = payload.get('user_metadata', {})
-        role = user_metadata.get('role', 'etudiant') # Default role
+        
+        # Priorité : app_metadata > user_metadata > default
+        role = app_metadata.get('role') or user_metadata.get('role', 'etudiant')
 
         # Récupération ou création de l'utilisateur Django local
         user, created = User.objects.get_or_create(username=uid)
