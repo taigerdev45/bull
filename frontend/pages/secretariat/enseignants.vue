@@ -111,6 +111,14 @@
             </div>
           </div>
 
+          <div class="alert-info-credentials">
+            <p><strong>Note :</strong> Les identifiants de connexion par défaut seront :</p>
+            <ul>
+              <li><strong>Identifiant :</strong> {{ formData.prenom || 'Prénom' }}</li>
+              <li><strong>Mot de passe :</strong> {{ formData.matricule || 'Matricule' }}</li>
+            </ul>
+          </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="telephone">Téléphone</label>
@@ -132,6 +140,26 @@
               placeholder="Réseaux, Développement, Mathématiques..."
               class="form-control"
             >
+          </div>
+
+          <div class="form-group mt-3">
+            <label for="matieres">Matières assignées</label>
+            <select 
+              id="matieres" 
+              v-model="formData.matieres" 
+              multiple 
+              class="form-control"
+              size="4"
+            >
+              <template v-for="ue in availableUEs" :key="ue.id">
+                <optgroup :label="ue.libelle">
+                  <option v-for="mat in ue.matieres" :key="mat.id" :value="mat.id">
+                    {{ mat.libelle }}
+                  </option>
+                </optgroup>
+              </template>
+            </select>
+            <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs matières.</small>
           </div>
 
           <div class="form-actions">
@@ -198,6 +226,7 @@ const showAssignModal = ref(false)
 const selectedTeacher = ref(null)
 const selectedMatieres = ref([])
 const availableUEs = ref([])
+const allMatieres = ref([])
 
 // Formulaire
 const formData = ref({
@@ -206,7 +235,8 @@ const formData = ref({
   email: '',
   matricule: '',
   telephone: '',
-  specialite: ''
+  specialite: '',
+  matieres: []
 })
 
 // Colonnes du tableau
@@ -254,7 +284,40 @@ const resetForm = () => {
     email: '',
     matricule: '',
     telephone: '',
-    specialite: ''
+    specialite: '',
+    matieres: []
+  }
+}
+
+const loadTeachers = async () => {
+  try {
+    const response = await $fetch(`${$config.public.apiBase}/enseignants`)
+    teachers.value = response
+  } catch (error) {
+    console.error('Erreur API, fallback sur LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    teachers.value = db.getCollection('enseignants')
+  }
+}
+
+const loadAvailableMatieres = async () => {
+  try {
+    const response = await $fetch(`${$config.public.apiBase}/matieres-with-ue`)
+    availableUEs.value = response
+  } catch (error) {
+    console.error('Erreur API, fallback sur LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    
+    // Construction de l'arbre UEs -> Matières pour l'affichage
+    const ues = db.getCollection('ues')
+    const matieres = db.getCollection('matieres')
+    
+    availableUEs.value = ues.map(ue => ({
+      ...ue,
+      matieres: matieres.filter(m => m.ue_id === ue.id)
+    }))
   }
 }
 
@@ -283,10 +346,24 @@ const saveTeacher = async () => {
     }
     
     closeModal()
-    console.log('Enseignant enregistré avec succès')
+    console.log('Enseignant enregistré avec succès via API')
     
   } catch (error) {
-    console.error('Erreur lors de l\'enregistrement:', error)
+    console.error('Erreur API, utilisation du LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    
+    if (modalMode.value === 'add') {
+      const newTeacher = db.addDoc('enseignants', { ...formData.value, matieres: [] })
+      teachers.value.push(newTeacher)
+    } else {
+      const updatedTeacher = db.updateDoc('enseignants', currentTeacher.value.id, formData.value)
+      if (updatedTeacher) {
+        const index = teachers.value.findIndex(t => t.id === currentTeacher.value.id)
+        if (index !== -1) teachers.value[index] = updatedTeacher
+      }
+    }
+    closeModal()
   } finally {
     loading.value = false
   }
@@ -306,14 +383,18 @@ const deleteTeacher = async (teacherId) => {
     console.log('Enseignant supprimé avec succès')
     
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
+    console.error('Erreur API, utilisation du LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    db.deleteDoc('enseignants', teacherId)
+    teachers.value = teachers.value.filter(t => t.id !== teacherId)
   }
 }
 
 // Gestion des assignations
 const openAssignModal = (teacher) => {
   selectedTeacher.value = teacher
-  selectedMatieres.value = teacher.matieres?.map(m => m.id) || []
+  selectedMatieres.value = teacher.matieres || []
   showAssignModal.value = true
 }
 
@@ -330,45 +411,25 @@ const assignMatieres = async () => {
       body: { matiere_ids: selectedMatieres.value }
     })
     
-    // Mettre à jour localement
-    const teacher = teachers.value.find(t => t.id === selectedTeacher.value.id)
-    if (teacher) {
-      teacher.matieres = selectedMatieres.value.map(id => {
-        for (const ue of availableUEs.value) {
-          const mat = ue.matieres.find(m => m.id === id)
-          if (mat) return mat
-        }
-        return null
-      }).filter(Boolean)
-    }
-    
-    closeAssignModal()
-    console.log('Matières assignées avec succès')
+    // Mettre à jour localement (API)
+    updateLocalTeacherMatieres()
     
   } catch (error) {
-    console.error('Erreur lors de l\'assignation:', error)
+    console.error('Erreur API, utilisation du LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    
+    db.updateDoc('enseignants', selectedTeacher.value.id, { matieres: selectedMatieres.value })
+    updateLocalTeacherMatieres()
   }
 }
 
-// Chargement des données
-const loadTeachers = async () => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/enseignants`)
-    teachers.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des enseignants:', error)
-    teachers.value = []
+const updateLocalTeacherMatieres = () => {
+  const teacher = teachers.value.find(t => t.id === selectedTeacher.value.id)
+  if (teacher) {
+    teacher.matieres = [...selectedMatieres.value]
   }
-}
-
-const loadAvailableMatieres = async () => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/matieres-with-ue`)
-    availableUEs.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des matières:', error)
-    availableUEs.value = []
-  }
+  closeAssignModal()
 }
 
 onMounted(() => {
@@ -628,6 +689,30 @@ onMounted(() => {
 .btn-sm {
   padding: 0.5rem;
   font-size: 0.85rem;
+}
+
+.alert-info-credentials {
+  background-color: #f0f9ff;
+  border-left: 4px solid #0ea5e9;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.alert-info-credentials p {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.alert-info-credentials ul {
+  list-style: none;
+  padding-left: 0.5rem;
+}
+
+.alert-info-credentials li {
+  font-size: 0.9rem;
+  color: #0c4a6e;
 }
 
 @media (max-width: 768px) {

@@ -111,6 +111,14 @@
             </div>
           </div>
 
+          <div class="alert-info-credentials">
+            <p><strong>Note :</strong> Les identifiants de connexion par défaut seront :</p>
+            <ul>
+              <li><strong>Identifiant :</strong> {{ formData.prenom || 'Prénom' }}</li>
+              <li><strong>Mot de passe :</strong> {{ formData.matricule || 'Matricule' }}</li>
+            </ul>
+          </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="date_naissance">Date de naissance *</label>
@@ -254,6 +262,18 @@ const resetForm = () => {
   }
 }
 
+const loadStudents = async () => {
+  try {
+    const response = await $fetch(`${$config.public.apiBase}/etudiants`)
+    students.value = response
+  } catch (error) {
+    console.error('Erreur API, fallback sur LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    students.value = db.getCollection('etudiants')
+  }
+}
+
 const saveStudent = async () => {
   loading.value = true
   
@@ -279,12 +299,29 @@ const saveStudent = async () => {
     }
     
     closeModal()
-    // Notification de succès
-    console.log('Étudiant enregistré avec succès')
+    console.log('Étudiant enregistré avec succès via API')
     
   } catch (error) {
-    console.error('Erreur lors de l\'enregistrement:', error)
-    // Notification d'erreur
+    console.error('Erreur API, utilisation du LocalStorage')
+    try {
+      const { useMockDb } = await import('~/composables/useMockDb.js')
+      const db = useMockDb()
+      
+      if (modalMode.value === 'add') {
+        const newStudent = db.addDoc('etudiants', formData.value)
+        students.value.push(newStudent)
+      } else {
+        const updatedStudent = db.updateDoc('etudiants', currentStudent.value.id, formData.value)
+        if (updatedStudent) {
+          const index = students.value.findIndex(s => s.id === currentStudent.value.id)
+          if (index !== -1) students.value[index] = updatedStudent
+        }
+      }
+      closeModal()
+    } catch (mockError) {
+      console.error(mockError)
+      alert("Erreur lors de l'enregistrement")
+    }
   } finally {
     loading.value = false
   }
@@ -301,22 +338,14 @@ const deleteStudent = async (studentId) => {
     })
     
     students.value = students.value.filter(s => s.id !== studentId)
-    // Notification de succès
     console.log('Étudiant supprimé avec succès')
     
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
-    // Notification d'erreur
-  }
-}
-
-const loadStudents = async () => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/etudiants`)
-    students.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des étudiants:', error)
-    students.value = []
+    console.error('Erreur API, utilisation du LocalStorage')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    db.deleteDoc('etudiants', studentId)
+    students.value = students.value.filter(s => s.id !== studentId)
   }
 }
 
@@ -500,6 +529,30 @@ onMounted(() => {
 .btn-sm {
   padding: 0.5rem;
   font-size: 0.85rem;
+}
+
+.alert-info-credentials {
+  background-color: #f0f9ff;
+  border-left: 4px solid #0ea5e9;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.alert-info-credentials p {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #0369a1;
+}
+
+.alert-info-credentials ul {
+  list-style: none;
+  padding-left: 0.5rem;
+}
+
+.alert-info-credentials li {
+  font-size: 0.9rem;
+  color: #0c4a6e;
 }
 
 @media (max-width: 768px) {
