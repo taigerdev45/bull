@@ -57,20 +57,44 @@ const username = ref('')
 const password = ref('')
 const loading = ref(false)
 
-const handleLogin = () => {
+const handleLogin = async () => {
   loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    // Sauvegarde en global du rôle (Reactif avec Nuxt 3)
-    const authRole = useCookie('authRole', { default: () => 'etudiant' })
-    authRole.value = userRole.value
+  
+  try {
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    
+    // Essayer d'authentifier l'utilisateur
+    const authResult = db.authenticate(username.value, password.value, userRole.value)
+    
+    if (authResult) {
+      // Succès: Sauvegarde des infos dans les cookies
+      const authRole = useCookie('authRole', { default: () => 'etudiant' })
+      const authUsername = useCookie('authUsername')
+      const authEmail = useCookie('authEmail')
+      const authFullName = useCookie('authFullName')
+      const authId = useCookie('authId')
 
-    // Redirection dynamisée selon le rôle
-    if (userRole.value === 'admin') router.push('/admin')
-    else if (userRole.value === 'secretariat') router.push('/secretariat')
-    else if (userRole.value === 'enseignant') router.push('/enseignant')
-    else router.push('/etudiant')
-  }, 1000)
+      authRole.value = authResult.role
+      authUsername.value = authResult.prenom
+      authEmail.value = authResult.email
+      authFullName.value = authResult.name
+      authId.value = authResult.id
+
+      // Redirection dynamisée selon le rôle
+      if (authResult.role === 'admin') router.push('/admin')
+      else if (authResult.role === 'secretariat') router.push('/secretariat')
+      else if (authResult.role === 'enseignant') router.push('/enseignant')
+      else router.push('/etudiant')
+    } else {
+      alert("Identifiant ou mot de passe incorrect pour ce rôle.")
+    }
+  } catch (e) {
+    console.error(e)
+    alert("Erreur lors de la connexion.")
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

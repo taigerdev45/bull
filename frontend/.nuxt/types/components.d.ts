@@ -14,6 +14,7 @@ type HydrationStrategies = {
 type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }> & T
 
 interface _GlobalComponents {
+  PdfBulletinGenerator: typeof import("../../components/pdf/BulletinGenerator.vue")['default']
   UiDataTable: typeof import("../../components/ui/DataTable.vue")['default']
   UiNotificationSystem: typeof import("../../components/ui/NotificationSystem.vue")['default']
   NuxtWelcome: typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
@@ -39,6 +40,7 @@ interface _GlobalComponents {
   Html: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   Body: typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
   NuxtIsland: typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
+  LazyPdfBulletinGenerator: LazyComponent<typeof import("../../components/pdf/BulletinGenerator.vue")['default']>
   LazyUiDataTable: LazyComponent<typeof import("../../components/ui/DataTable.vue")['default']>
   LazyUiNotificationSystem: LazyComponent<typeof import("../../components/ui/NotificationSystem.vue")['default']>
   LazyNuxtWelcome: LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>

@@ -6,11 +6,11 @@
         <p>Semestre 5 - Anglais technique (UE5-1)</p>
       </div>
       <div class="header-actions">
-        <!-- Selecteur de matière (mocked pour la vue) -->
-        <select class="matiere-select">
-          <option>S5 - Anglais technique</option>
-          <option>S5 - Management d'équipe</option>
-          <option>S5 - Virtualisation</option>
+        <!-- Selecteur de matière -->
+        <select class="matiere-select" v-model="selectedMatiere" @change="onMatiereChange">
+          <option v-for="matiere in availableMatieres" :key="matiere.id" :value="matiere.id">
+            {{ matiere.libelle }}
+          </option>
         </select>
         <button class="btn btn-primary" @click="saveGrades" :disabled="isSaving">
           <span v-if="!isSaving">Enregistrer les Notes</span>
@@ -84,14 +84,55 @@ const { apiFetch } = useApi()
 const authRole = useCookie('authRole', { default: () => 'etudiant' })
 const isEnseignant = computed(() => authRole.value === 'enseignant')
 
-const selectedMatiere = ref('MAT-001') // Mock for payload demo
+const selectedMatiere = ref('M1') // M1 correspond à 'Architecture Réseaux' dans le mock
+const availableMatieres = ref([])
+const etudiants = ref([])
+const isSaving = ref(false)
 
-const etudiants = ref([
-  { id: 'TEST2026001', nom: 'Dupont', prenom: 'Jean', cc: 14, exam: null, ratrap: null, absences: 0 },
-  { id: 'TEST2026002', nom: 'Martin', prenom: 'Sophie', cc: 16.75, exam: 15, ratrap: 0, absences: 2 },
-  { id: 'TEST2026003', nom: 'Bernard', prenom: 'Luc', cc: 8, exam: 6, ratrap: null, absences: 4 },
-  { id: 'TEST2026004', nom: 'Dubois', prenom: 'Marie', cc: 12, exam: null, ratrap: null, absences: 0 },
-])
+const loadInitialData = async () => {
+  try {
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    
+    // Charger les matières
+    availableMatieres.value = db.getCollection('matieres')
+    if (availableMatieres.value.length > 0 && !availableMatieres.value.find(m => m.id === selectedMatiere.value)) {
+      selectedMatiere.value = availableMatieres.value[0].id
+    }
+
+    // Charger les étudiants et leurs notes
+    const allStudents = db.getCollection('etudiants')
+    const allNotes = db.getCollection('notes')
+    
+    etudiants.value = allStudents.map(student => {
+      // Trouver les notes de cet étudiant pour la matière sélectionnée
+      const notes = allNotes.filter(n => n.etudiant_id === student.id && n.matiere_id === selectedMatiere.value)
+      const cc = notes.find(n => n.type === 'CC')?.note ?? null
+      const exam = notes.find(n => n.type === 'Examen')?.note ?? null
+      const ratrap = notes.find(n => n.type === 'Rattrapage')?.note ?? null
+      
+      return {
+        id: student.id,
+        nom: student.nom,
+        prenom: student.prenom,
+        cc,
+        exam,
+        ratrap,
+        absences: 0 // Simplifié pour le mock
+      }
+    })
+  } catch (error) {
+    console.error('Erreur chargement données:', error)
+  }
+}
+
+onMounted(() => {
+  loadInitialData()
+})
+
+const onMatiereChange = () => {
+  loadInitialData() // Recharger les notes quand la matière change
+}
 
 const isRattrapageEligible = (etudiant) => {
   const cc = etudiant.cc !== null && etudiant.cc !== '' ? Number(etudiant.cc) : null;
@@ -153,38 +194,46 @@ const calculateMoyenne = (etudiant) => {
   return '-';
 }
 
-const isSaving = ref(false)
-
 const saveGrades = async () => {
   try {
     isSaving.value = true;
     
-    // Formatage des objets pour POST /api/evaluations/bulk/
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    let allNotes = db.getCollection('notes')
+    
+    // Formatage des objets pour POST /api/evaluations/bulk/ et MockDB
     const payload = [];
+    
+    // Nettoyer les anciennes notes pour cette matière
+    allNotes = allNotes.filter(n => n.matiere_id !== selectedMatiere.value)
+
     etudiants.value.forEach(etudiant => {
       if (etudiant.cc !== null && etudiant.cc !== '') {
-        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "CC", note: Number(etudiant.cc) });
+        const note = { etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "CC", note: Number(etudiant.cc), id: Math.random().toString(36).substring(2, 9) }
+        payload.push(note);
+        allNotes.push(note);
       }
       if (etudiant.exam !== null && etudiant.exam !== '') {
-        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Examen", note: Number(etudiant.exam) });
+        const note = { etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Examen", note: Number(etudiant.exam), id: Math.random().toString(36).substring(2, 9) }
+        payload.push(note);
+        allNotes.push(note);
       }
       if (etudiant.ratrap !== null && etudiant.ratrap !== '') {
-        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Rattrapage", note: Number(etudiant.ratrap) });
+        const note = { etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Rattrapage", note: Number(etudiant.ratrap), id: Math.random().toString(36).substring(2, 9) }
+        payload.push(note);
+        allNotes.push(note);
       }
     });
 
     console.log('Simulation POST vers /api/evaluations/bulk/ avec ce payload:', payload);
 
-    /* Décommenter pour un vrai appel backend
-    await apiFetch('/api/evaluations/bulk/', {
-      method: 'POST',
-      body: payload
-    });
-    */
+    // Sauvegarde dans la fausse BDD
+    db.setCollection('notes', allNotes)
 
     setTimeout(() => {
       isSaving.value = false;
-      alert('Simulation: Les notes ont été structurées selon la documentation API.');
+      alert('Notes enregistrées avec succès dans la base de données locale !');
     }, 800);
 
   } catch (error) {

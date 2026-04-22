@@ -349,14 +349,19 @@ const fetchEtudiants = async () => {
     const result = await apiFetch('/api/etudiants/')
     if (result) etudiantsList.value = result
   } catch (e) {
-    console.error('Failed to fetch etudiants:', e)
+    console.error('API failed, using Mock DB')
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    etudiantsList.value = db.getCollection('etudiants')
   }
 }
 
 onMounted(() => {
   if (isEtudiant.value) {
-    selectedStudent.value = etudiantMonId
-    loadBulletin(etudiantMonId, selectedSemester.value)
+    // Si étudiant, on essaie de récupérer son ID depuis les cookies de mock
+    const authId = useCookie('authId')
+    selectedStudent.value = authId.value || etudiantMonId
+    loadBulletin(selectedStudent.value, selectedSemester.value)
   } else {
     fetchEtudiants()
   }
@@ -377,12 +382,18 @@ const loadBulletin = async (id, semester) => {
   isDataLoading.value = true
   try {
     const detailedStudent = await apiFetch(`/api/etudiants/${id}/`).catch(() => null)
-    studentInfo.value = detailedStudent || etudiantsList.value.find(s => s.id === id)
+    
+    const { useMockDb } = await import('~/composables/useMockDb.js')
+    const db = useMockDb()
+    
+    studentInfo.value = detailedStudent || db.getCollection('etudiants').find(s => s.id === id) || etudiantsList.value.find(s => s.id === id)
+    
     if (!studentInfo.value?.date_naissance) {
-      studentInfo.value.date_naissance = '05/05/1989' // Mock pour démo
+      studentInfo.value = { ...studentInfo.value, date_naissance: '05/05/1989', lieu_naissance: 'Libreville' }
     }
 
     if (semester === 'Annuel') {
+      // Garder le mock statique pour l'annuel pour l'instant
       bulletinData.value = {
         rang_annuel: '5ème',
         mention_annuelle: 'Assez Bien',
@@ -395,42 +406,66 @@ const loadBulletin = async (id, semester) => {
     } else {
       const response = await apiFetch(`/api/resultats/semestre/${id}/`, { params: { semestre: semester.replace('S', '') } }).catch(() => null)
       
-      bulletinData.value = response || {
-        moyenne_generale: 10.66,
-        moyenne_classe_generale: 11.80,
-        mention: 'Passable',
-        rang: 'Non classé',
-        absences: 0,
-        credits_acquis: 30,
-        total_credits: 30,
-        valide: true,
-        validation_commentaire: 'Semestre Acquis par Compensation',
-        decision: `${semester} validé`,
-        ues: [
-          {
-            id: 'UE5-1',
-            libelle: 'ENSEIGNEMENT GENERAL',
-            total_credits_ue: 12,
-            credits_acquis: 13,
-            moyenne_ue: 11.45,
-            matieres: [
-              { libelle: 'Anglais technique', credits: 2, coeff: '1,00', moyenne: 10.75, moyenne_classe: 12.49 },
-              { libelle: 'Management d\'équipe', credits: 1, coeff: '1,00', moyenne: 14.00, moyenne_classe: 14.19 },
-              { libelle: 'Communication', credits: 1, coeff: '2,00', moyenne: 11.80, moyenne_classe: 11.63 }
-            ]
-          },
-          {
-            id: 'UE5-2',
-            libelle: 'CONNAISSANCES DE BASE ET OUTILS',
-            total_credits_ue: 18,
-            credits_acquis: 17,
-            moyenne_ue: 10.07,
-            matieres: [
-              { libelle: 'Remise à niveau IOS', credits: 2, coeff: '2,00', moyenne: 6.00, moyenne_classe: 8.50 },
-              { libelle: 'Connaissance des réseaux LAN', credits: 2, coeff: '2,00', moyenne: 15.00, moyenne_classe: 12.96 }
-            ]
+      if (response) {
+        bulletinData.value = response
+      } else {
+        // Calcul dynamique depuis Mock DB
+        const ues = db.getCollection('ues')
+        const matieres = db.getCollection('matieres')
+        const notes = db.getCollection('notes').filter(n => n.etudiant_id === id)
+        
+        const uesData = ues.map(ue => {
+          const ueMatieres = matieres.filter(m => m.ue_id === ue.id).map(m => {
+            const matiereNotes = notes.filter(n => n.matiere_id === m.id)
+            const cc = matiereNotes.find(n => n.type === 'CC')?.note || 0
+            const exam = matiereNotes.find(n => n.type === 'Examen')?.note || 0
+            const ratrap = matiereNotes.find(n => n.type === 'Rattrapage')?.note || null
+            
+            let moyenne = (cc * 0.4) + (exam * 0.6)
+            if (ratrap !== null && ratrap > moyenne) {
+              moyenne = ratrap
+            }
+            
+            return {
+              libelle: m.libelle,
+              credits: m.credits,
+              coeff: m.coefficient.toFixed(2),
+              moyenne: moyenne,
+              moyenne_classe: 12.00
+            }
+          })
+          
+          const totalCredits = ueMatieres.reduce((acc, m) => acc + m.credits, 0)
+          const sumMoyennes = ueMatieres.reduce((acc, m) => acc + (m.moyenne * parseFloat(m.coeff)), 0)
+          const totalCoeffs = ueMatieres.reduce((acc, m) => acc + parseFloat(m.coeff), 0)
+          const moyenne_ue = totalCoeffs > 0 ? sumMoyennes / totalCoeffs : 0
+          
+          return {
+            id: ue.code,
+            libelle: ue.libelle,
+            total_credits_ue: totalCredits,
+            credits_acquis: moyenne_ue >= 10 ? totalCredits : 0,
+            moyenne_ue: moyenne_ue,
+            matieres: ueMatieres
           }
-        ]
+        })
+        
+        const sumUeMoyennes = uesData.reduce((acc, ue) => acc + ue.moyenne_ue, 0)
+        const moyenne_generale = uesData.length > 0 ? sumUeMoyennes / uesData.length : 0
+        
+        bulletinData.value = {
+          moyenne_generale,
+          moyenne_classe_generale: 11.50,
+          mention: moyenne_generale >= 16 ? 'Très Bien' : moyenne_generale >= 14 ? 'Bien' : moyenne_generale >= 12 ? 'Assez Bien' : moyenne_generale >= 10 ? 'Passable' : 'Insuffisant',
+          rang: 'Non classé',
+          absences: 0,
+          credits_acquis: uesData.reduce((acc, ue) => acc + ue.credits_acquis, 0),
+          total_credits: uesData.reduce((acc, ue) => acc + ue.total_credits_ue, 0),
+          valide: moyenne_generale >= 10,
+          validation_commentaire: moyenne_generale >= 10 ? 'Semestre Acquis' : 'Semestre Non Acquis',
+          decision: moyenne_generale >= 10 ? `${semester} validé` : `${semester} non validé`,
+          ues: uesData
+        }
       }
     }
   } catch (error) {
