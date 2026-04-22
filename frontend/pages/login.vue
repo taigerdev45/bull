@@ -8,13 +8,27 @@
       
       <form class="login-form" @submit.prevent="handleLogin">
         <div class="form-group">
-          <label for="username">Identifiant</label>
-          <input type="text" id="username" v-model="username" placeholder="Entrez votre identifiant" required />
+          <label for="username">Identifiant (Email)</label>
+          <input 
+            type="email" 
+            id="username" 
+            v-model="username" 
+            placeholder="Entrez votre email" 
+            required 
+            autocomplete="username"
+          />
         </div>
         
         <div class="form-group">
           <label for="password">Mot de passe</label>
-          <input type="password" id="password" v-model="password" placeholder="Entrez votre mot de passe" required />
+          <input 
+            type="password" 
+            id="password" 
+            v-model="password" 
+            placeholder="Entrez votre mot de passe" 
+            required 
+            autocomplete="current-password"
+          />
         </div>
         
         <button type="submit" class="login-btn" :disabled="loading">
@@ -36,6 +50,14 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
+const { fetchApi } = useApi()
+
+// Initialisation des cookies au niveau racine pour éviter les erreurs de contexte Nuxt
+const authToken = useCookie('auth_token')
+const authRole = useCookie('authRole')
+const authEmail = useCookie('authEmail')
+const authFullName = useCookie('authFullName')
+const authId = useCookie('authId')
 
 const userRole = computed(() => route.query.role || 'etudiant')
 
@@ -58,33 +80,30 @@ const password = ref('')
 const loading = ref(false)
 
 const handleLogin = async () => {
+  if (loading.value) return
   loading.value = true
   
   try {
-    const { fetchApi } = useApi()
-    
     // Appel à l'API réelle
+    console.log("Tentative de connexion pour:", username.value)
+    
     const authResult = await fetchApi('/auth/login/', {
       method: 'POST',
       body: {
-        email: username.value, // On utilise l'email comme identifiant
+        email: username.value,
         password: password.value
       }
     })
     
     if (authResult && authResult.access_token) {
       // Succès: Sauvegarde des infos dans les cookies
-      const authToken = useCookie('auth_token')
-      const authRole = useCookie('authRole')
-      const authEmail = useCookie('authEmail')
-      const authFullName = useCookie('authFullName')
-      const authId = useCookie('authId')
-
       authToken.value = authResult.access_token
       authRole.value = authResult.user.role
       authEmail.value = authResult.user.email
       authFullName.value = authResult.user.name
       authId.value = authResult.user.id
+
+      console.log("Connexion réussie, rôle:", authResult.user.role)
 
       // Redirection selon le rôle retourné par le backend
       const role = authResult.user.role
@@ -92,10 +111,13 @@ const handleLogin = async () => {
       else if (role === 'secretariat') router.push('/secretariat')
       else if (role === 'enseignant') router.push('/enseignant')
       else router.push('/etudiant')
+    } else {
+      throw new Error("Réponse invalide du serveur d'authentification.")
     }
   } catch (e) {
-    console.error(e)
-    alert(e.data?.error || "Identifiant ou mot de passe incorrect.")
+    console.error("Erreur login détail:", e)
+    const errorMsg = e.data?.error || e.message || "Identifiant ou mot de passe incorrect."
+    alert(errorMsg)
   } finally {
     loading.value = false
   }
