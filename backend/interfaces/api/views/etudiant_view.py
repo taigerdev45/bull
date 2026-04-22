@@ -1,10 +1,12 @@
 from rest_framework import viewsets, status, views
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.serializers.etudiant_serializer import EtudiantSerializer
 from interfaces.api.serializers.evaluation_serializer import EvaluationSerializer
 from interfaces.api.permissions.role_permissions import IsSecretariat, IsEnseignant
 from infrastructure.config.dependency_injection import Container
 
+@extend_schema(tags=['Étudiants'])
 class EtudiantViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion CRUD des étudiants via le repository."""
     permission_classes = [IsSecretariat]
@@ -81,6 +83,7 @@ class EtudiantViewSet(viewsets.ViewSet):
         repo.delete(pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+@extend_schema(tags=['Évaluations'])
 class EvaluationView(views.APIView):
     """Vue pour la saisie de notes déclenchant les commandes applicatives."""
     permission_classes = [IsEnseignant]

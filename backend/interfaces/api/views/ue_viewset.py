@@ -1,10 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from interfaces.api.serializers.ue_serializer import UESerializer, MatiereSerializer
 
+@extend_schema(tags=['Académique'])
 class UEViewSet(viewsets.ViewSet):
     """ViewSet pour les Unités d'Enseignement (UE)."""
     
@@ -76,6 +78,7 @@ class UEViewSet(viewsets.ViewSet):
         except ValueError:
             return Response({"error": "Semestre invalide"}, status=status.HTTP_400_BAD_REQUEST)
 
+@extend_schema(tags=['Académique'])
 class MatiereViewSet(viewsets.ViewSet):
     """ViewSet pour les Matières."""
 

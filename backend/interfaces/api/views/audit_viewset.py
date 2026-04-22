@@ -1,10 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from datetime import datetime
 
+@extend_schema(tags=['Administration'])
 class AuditViewSet(viewsets.ViewSet):
     """ViewSet pour la consultation des logs d'audit."""
 

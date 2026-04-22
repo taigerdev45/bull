@@ -1,8 +1,16 @@
 from rest_framework import views, status
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.serializers.resultat_serializer import BulletinSerializer
 from infrastructure.config.dependency_injection import Container
 
+@extend_schema(
+    tags=['Résultats'],
+    parameters=[
+        OpenApiParameter("type", OpenApiTypes.STR, OpenApiParameter.QUERY, enum=['SEMESTRIEL', 'ANNUEL']),
+        OpenApiParameter("semestre", OpenApiTypes.INT, OpenApiParameter.QUERY)
+    ]
+)
 class BulletinView(views.APIView):
     """Vue pour récupérer les données complètes d'un bulletin."""
 

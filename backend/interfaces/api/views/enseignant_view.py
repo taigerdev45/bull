@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from rest_framework import serializers
@@ -12,6 +13,7 @@ class EnseignantSerializer(serializers.Serializer):
     matricule = serializers.CharField(max_length=50)
     password = serializers.CharField(write_only=True)
 
+@extend_schema(tags=['Administration'])
 class EnseignantViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion des Enseignants."""
 

@@ -1,10 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.permissions.role_permissions import IsAdmin, IsSuperAdmin
 from application.commands.create_staff_command import CreateStaffCommand, CreateStaffHandler
 from infrastructure.config.dependency_injection import Container
 from dependency_injector.wiring import inject, Provide
 
+@extend_schema(tags=['Administration'])
 class PersonnelViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion du personnel par les admins."""
 

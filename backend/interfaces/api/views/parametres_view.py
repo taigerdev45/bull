@@ -1,9 +1,11 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 
+@extend_schema(tags=['Administration'])
 class ParametresView(APIView):
     """Gère la configuration globale du système (Admin only)."""
 

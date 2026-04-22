@@ -1,10 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from infrastructure.config.dependency_injection import Container
 from dependency_injector.wiring import inject, Provide
 
 
+@extend_schema(tags=['Authentification'])
 class ChangePasswordView(APIView):
     """View pour permettre à un utilisateur connecté de modifier son mot de passe."""
     

@@ -1,9 +1,11 @@
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http import HttpResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.serializers.import_excel_serializer import ImportExcelSerializer
 from infrastructure.config.dependency_injection import Container
 
+@extend_schema(tags=['Évaluations'], summary="Importation massive de notes via Excel")
 class ImportEvaluationsView(views.APIView):
     """Vue pour l'importation massive des notes."""
 
@@ -20,6 +22,11 @@ class ImportEvaluationsView(views.APIView):
             return Response(resultat, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@extend_schema(
+    tags=['Résultats'], 
+    summary="Exportation des résultats en Excel",
+    parameters=[OpenApiParameter("promotion", OpenApiTypes.STR, OpenApiParameter.QUERY)]
+)
 class ExportResultatsView(views.APIView):
     """Vue pour l'exportation des résultats en Excel."""
 

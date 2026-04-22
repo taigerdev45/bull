@@ -129,10 +129,33 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Bulletin API',
-    'DESCRIPTION': 'API de gestion des bulletins de notes (DDD Architecture)',
+    'TITLE': 'Bull-Asur Notes API',
+    'DESCRIPTION': (
+        'API Enterprise de gestion des bulletins de notes (DDD Architecture).\n\n'
+        '### Authentification\n'
+        'Cette API utilise des tokens JWT fournis par Supabase. \n'
+        '1. Récupérez un token sur `/api/auth/login/` (ou via le frontend).\n'
+        '2. Cliquez sur le bouton **Authorize** en haut à droite.\n'
+        '3. Saisissez votre token dans le champ `Value` (format: `your_token_here`).'
+    ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'CONTACT': {
+        'name': 'Support Technique Bull',
+        'url': 'https://github.com/taigerdev45/bull',
+    },
+    'LICENSE': {
+        'name': 'Proprietary',
+    },
+    'TAGS': [
+        {'name': 'Authentification', 'description': 'Gestion des comptes et tokens'},
+        {'name': 'Étudiants', 'description': 'Gestion des dossiers scolaires'},
+        {'name': 'Évaluations', 'description': 'Saisie et gestion des notes'},
+        {'name': 'Absences', 'description': 'Gestion de l\'assiduité'},
+        {'name': 'Académique', 'description': 'Référentiels UE, Matières, Semestres'},
+        {'name': 'Résultats', 'description': 'Consultation des moyennes et bulletins'},
+        {'name': 'Administration', 'description': 'Audit et configuration système'},
+    ],
     'SECURITY': [
         {
             'bearerAuth': [],
@@ -148,3 +171,4 @@ SPECTACULAR_SETTINGS = {
         }
     },
 }
+

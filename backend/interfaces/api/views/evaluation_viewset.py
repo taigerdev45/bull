@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.serializers.evaluation_serializer import EvaluationSerializer
 from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat, IsEnseignant, IsEtudiant
 from interfaces.api.permissions.enseignant_matiere_permission import IsEnseignantMatiere
@@ -10,6 +11,7 @@ from application.commands.supprimer_evaluation_command import SupprimerEvaluatio
 from application.handlers.evaluation_command_handler import EvaluationCommandHandler
 from infrastructure.config.dependency_injection import Container
 
+@extend_schema(tags=['Évaluations'])
 class EvaluationViewSet(viewsets.ModelViewSet):
     """
     ViewSet pour la gestion des évaluations.
@@ -74,6 +76,12 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         )
         self._get_handler().handle_supprimer(cmd)
 
+    @extend_schema(
+        summary="Saisie groupée de notes",
+        description="Permet d'envoyer une liste d'évaluations en une seule requête.",
+        request=EvaluationSerializer(many=True),
+        responses={201: OpenApiTypes.OBJECT}
+    )
     @action(detail=False, methods=['post'], url_path='bulk')
     def bulk_creer(self, request):
         """Action pour la saisie multiple de notes."""
@@ -95,6 +103,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         self._get_handler().handle_bulk_creer(commands)
         return Response({"status": "Notes enregistrées avec succès"}, status=status.HTTP_201_CREATED)
 
+    @extend_schema(
+        summary="Lister les notes d'un étudiant",
+        parameters=[OpenApiParameter("etudiant_id", OpenApiTypes.STR, OpenApiParameter.PATH)]
+    )
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     def list_par_etudiant(self, request, etudiant_id=None):
         """Notes d'un étudiant spécifique."""
@@ -102,6 +114,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(evals, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        summary="Lister les notes d'une matière",
+        parameters=[OpenApiParameter("matiere_id", OpenApiTypes.STR, OpenApiParameter.PATH)]
+    )
     @action(detail=False, methods=['get'], url_path='matiere/(?P<matiere_id>[^/.]+)')
     def list_par_matiere(self, request, matiere_id=None):
         """Notes d'une matière spécifique."""

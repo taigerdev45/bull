@@ -2,12 +2,14 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat, IsEtudiant
 from interfaces.api.serializers.absence_serializer import AbsenceSerializer
 from application.commands.creer_absence_command import CreerAbsenceCommand, CreerAbsenceHandler
 from infrastructure.config.dependency_injection import Container
 from dependency_injector.wiring import inject, Provide
 
+@extend_schema(tags=['Absences'])
 class AbsenceViewSet(viewsets.ViewSet):
     """
     API pour la gestion des absences.

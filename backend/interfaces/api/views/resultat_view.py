@@ -1,9 +1,14 @@
 from rest_framework import viewsets, views, status
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.serializers.resultat_serializer import ResultatSemestreSerializer, ResultatAnnuelSerializer
 from infrastructure.config.dependency_injection import Container
 from application.queries.obtenir_stats_promotion_query import ObtenirStatsPromotionQuery
 
+@extend_schema(
+    tags=['Résultats'],
+    parameters=[OpenApiParameter("semestre", OpenApiTypes.INT, OpenApiParameter.QUERY)]
+)
 class ResultatSemestreView(views.APIView):
     def get(self, request, etudiant_id):
         semestre = request.query_params.get('semestre')
@@ -16,6 +21,7 @@ class ResultatSemestreView(views.APIView):
         serializer = ResultatSemestreSerializer(resultat)
         return Response(serializer.data)
 
+@extend_schema(tags=['Résultats'])
 class ResultatAnnuelView(views.APIView):
     def get(self, request, etudiant_id):
         handler = Container.resultat_query_handler()
@@ -25,6 +31,13 @@ class ResultatAnnuelView(views.APIView):
         serializer = ResultatAnnuelSerializer(resultat)
         return Response(serializer.data)
 
+@extend_schema(
+    tags=['Résultats'],
+    parameters=[
+        OpenApiParameter("promo_id", OpenApiTypes.STR, OpenApiParameter.QUERY),
+        OpenApiParameter("semestre", OpenApiTypes.INT, OpenApiParameter.QUERY)
+    ]
+)
 class PromotionStatsView(views.APIView):
     """Vue pour les statistiques globales d'une promotion."""
 
