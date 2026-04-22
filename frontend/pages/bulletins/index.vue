@@ -321,22 +321,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { useApi } from '~/composables/useApi'
-
-useHead({ title: 'Bulletins | Bull ASUR' })
-
-const { apiFetch } = useApi()
+const { fetchApi } = useApi()
 const authRole = useCookie('authRole', { default: () => 'etudiant' })
 const isEtudiant = computed(() => authRole.value === 'etudiant')
-const etudiantMonId = 'TEST2026001' // ID statique de l'étudiant connecté (demo)
 
 const selectedSemester = ref('S5')
-const etudiantsList = ref([
-  { id: 'TEST2026001', nom: 'MBA NSOME', prenom: 'Yannick Lionel' },
-  { id: 'TEST2026002', nom: 'Martin', prenom: 'Sophie' },
-  { id: 'TEST2026003', nom: 'Bernard', prenom: 'Luc' },
-])
+const etudiantsList = ref([])
 
 const studentInfo = ref(null)
 const selectedStudent = ref(null)
@@ -346,24 +336,20 @@ const editMode = ref(null) // null | 'structure' | 'data'
 
 const fetchEtudiants = async () => {
   try {
-    const result = await apiFetch('/api/etudiants/')
+    const result = await fetchApi('/etudiants/')
     if (result) etudiantsList.value = result
   } catch (e) {
-    console.error('API failed, using Mock DB')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    etudiantsList.value = db.getCollection('etudiants')
+    console.error('Erreur lors du chargement des étudiants', e)
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  const authId = useCookie('authId')
   if (isEtudiant.value) {
-    // Si étudiant, on essaie de récupérer son ID depuis les cookies de mock
-    const authId = useCookie('authId')
-    selectedStudent.value = authId.value || etudiantMonId
-    loadBulletin(selectedStudent.value, selectedSemester.value)
+    selectedStudent.value = authId.value
+    await loadBulletin(selectedStudent.value, selectedSemester.value)
   } else {
-    fetchEtudiants()
+    await fetchEtudiants()
   }
 })
 
@@ -381,95 +367,28 @@ const selectStudent = (id) => {
 const loadBulletin = async (id, semester) => {
   isDataLoading.value = true
   try {
-    const detailedStudent = await apiFetch(`/api/etudiants/${id}/`).catch(() => null)
+    // 1. Informations de l'étudiant
+    const detailedStudent = await fetchApi(`/etudiants/${id}/`)
+    studentInfo.value = detailedStudent
+
+    // 2. Données du bulletin (calculées par le backend)
+    let endpoint = `/resultats/semestre/${id}/`
+    let params = { semestre: semester.replace('S', '') }
     
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    
-    studentInfo.value = detailedStudent || db.getCollection('etudiants').find(s => s.id === id) || etudiantsList.value.find(s => s.id === id)
-    
-    if (!studentInfo.value?.date_naissance) {
-      studentInfo.value = { ...studentInfo.value, date_naissance: '05/05/1989', lieu_naissance: 'Libreville' }
+    if (semester === 'Annuel') {
+      endpoint = `/resultats/annuel/${id}/`
+      params = {}
     }
 
-    if (semester === 'Annuel') {
-      // Garder le mock statique pour l'annuel pour l'instant
-      bulletinData.value = {
-        rang_annuel: '5ème',
-        mention_annuelle: 'Assez Bien',
-        decision: 'ADMIS',
-        ues_annuel: [
-          { id: 'UE1', libelle: 'Communication / Management', coeff_s1: '4,50', note_s1: '12,00', rang_s1: '5', moy_classe_s1: '11,06', coeff_s2: '9,00', note_s2: '11,27', rang_s2: '1', moy_classe_s2: '12,12', coeff_annuel: '13,50', note_annuel: '11,45', rang_annuel: '2', moy_classe_annuel: '11,67', status_annuel: 'VALIDÉ' },
-          { id: 'UE2', libelle: 'Sciences de base (Réseaux)', coeff_s1: '6,00', note_s1: '12,40', rang_s1: '1', moy_classe_s1: '9,34', coeff_s2: '3,00', note_s2: '11,14', rang_s2: '1', moy_classe_s2: '10,30', coeff_annuel: '9,00', note_annuel: '12,05', rang_annuel: '1', moy_classe_annuel: '9,66', status_annuel: 'VALIDÉ' }
-        ]
-      }
-    } else {
-      const response = await apiFetch(`/api/resultats/semestre/${id}/`, { params: { semestre: semester.replace('S', '') } }).catch(() => null)
-      
-      if (response) {
-        bulletinData.value = response
-      } else {
-        // Calcul dynamique depuis Mock DB
-        const ues = db.getCollection('ues')
-        const matieres = db.getCollection('matieres')
-        const notes = db.getCollection('notes').filter(n => n.etudiant_id === id)
-        
-        const uesData = ues.map(ue => {
-          const ueMatieres = matieres.filter(m => m.ue_id === ue.id).map(m => {
-            const matiereNotes = notes.filter(n => n.matiere_id === m.id)
-            const cc = matiereNotes.find(n => n.type === 'CC')?.note || 0
-            const exam = matiereNotes.find(n => n.type === 'Examen')?.note || 0
-            const ratrap = matiereNotes.find(n => n.type === 'Rattrapage')?.note || null
-            
-            let moyenne = (cc * 0.4) + (exam * 0.6)
-            if (ratrap !== null && ratrap > moyenne) {
-              moyenne = ratrap
-            }
-            
-            return {
-              libelle: m.libelle,
-              credits: m.credits,
-              coeff: m.coefficient.toFixed(2),
-              moyenne: moyenne,
-              moyenne_classe: 12.00
-            }
-          })
-          
-          const totalCredits = ueMatieres.reduce((acc, m) => acc + m.credits, 0)
-          const sumMoyennes = ueMatieres.reduce((acc, m) => acc + (m.moyenne * parseFloat(m.coeff)), 0)
-          const totalCoeffs = ueMatieres.reduce((acc, m) => acc + parseFloat(m.coeff), 0)
-          const moyenne_ue = totalCoeffs > 0 ? sumMoyennes / totalCoeffs : 0
-          
-          return {
-            id: ue.code,
-            libelle: ue.libelle,
-            total_credits_ue: totalCredits,
-            credits_acquis: moyenne_ue >= 10 ? totalCredits : 0,
-            moyenne_ue: moyenne_ue,
-            matieres: ueMatieres
-          }
-        })
-        
-        const sumUeMoyennes = uesData.reduce((acc, ue) => acc + ue.moyenne_ue, 0)
-        const moyenne_generale = uesData.length > 0 ? sumUeMoyennes / uesData.length : 0
-        
-        bulletinData.value = {
-          moyenne_generale,
-          moyenne_classe_generale: 11.50,
-          mention: moyenne_generale >= 16 ? 'Très Bien' : moyenne_generale >= 14 ? 'Bien' : moyenne_generale >= 12 ? 'Assez Bien' : moyenne_generale >= 10 ? 'Passable' : 'Insuffisant',
-          rang: 'Non classé',
-          absences: 0,
-          credits_acquis: uesData.reduce((acc, ue) => acc + ue.credits_acquis, 0),
-          total_credits: uesData.reduce((acc, ue) => acc + ue.total_credits_ue, 0),
-          valide: moyenne_generale >= 10,
-          validation_commentaire: moyenne_generale >= 10 ? 'Semestre Acquis' : 'Semestre Non Acquis',
-          decision: moyenne_generale >= 10 ? `${semester} validé` : `${semester} non validé`,
-          ues: uesData
-        }
-      }
-    }
+    const response = await fetchApi(endpoint, { params })
+    
+    // On adapte la réponse si nécessaire ou on l'assigne directement
+    // Le backend (ResultatSemestreView) est censé renvoyer la structure DDD complète
+    bulletinData.value = response
+    
   } catch (error) {
     console.error('Failed to load bulletin:', error)
+    alert("Erreur lors du chargement du bulletin.")
   } finally {
     isDataLoading.value = false
   }
@@ -477,32 +396,19 @@ const loadBulletin = async (id, semester) => {
 
 // Actions Structure
 const addNewUE = () => {
-  const libelle = prompt("Libellé de la nouvelle UE :")
-  if (libelle) {
-    const code = prompt("Code de l'UE (ex: UE5-3) :")
-    bulletinData.value.ues.push({
-      id: code || 'NEW',
-      libelle: libelle,
-      matieres: []
-    })
-    // NOTE: Ici on devrait appeler l'API pour persister cette structure de modèle
-    alert("Structure modifiée (Modèle Global)")
-  }
+  // Optionnel: implémenter la modification de structure via API
+  alert("La modification de structure doit être effectuée via les paramètres académiques.")
 }
 
 const addMatiere = (ue) => {
-  const libelle = prompt(`Ajouter une matière à ${ue.libelle} :`)
-  if (libelle) {
-    ue.matieres.push({ libelle, coefficient: 1, credits: 2, moyenne: 0, moyenne_classe: 0 })
-    alert("Matière ajoutée (Modèle Global)")
-  }
+  alert("L'ajout de matière doit être effectué via les paramètres académiques.")
 }
 
 const saveAbsence = async () => {
   try {
-    // API: /api/resultats/absences/ (PATCH)
+    // Note: Le backend devrait avoir un endpoint dédié aux absences
     console.log("Saving absences for", selectedStudent.value, ":", bulletinData.value.absences)
-    // await apiFetch(...) 
+    // await fetchApi(`/absences/`, { method: 'POST', body: { ... } })
   } catch (e) {
     console.error("Save failed", e)
   }

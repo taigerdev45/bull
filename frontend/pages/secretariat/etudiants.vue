@@ -183,51 +183,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-
-useHead({ title: 'Gestion des Étudiants | Bull ASUR' })
-
-// État
-const students = ref([])
-const searchTerm = ref('')
-const filterBac = ref('')
-const showModal = ref(false)
-const modalMode = ref('add')
-const loading = ref(false)
-const currentStudent = ref(null)
-
-// Formulaire
-const formData = ref({
-  nom: '',
-  prenom: '',
-  email: '',
-  matricule: '',
-  date_naissance: '',
-  lieu_naissance: '',
-  bac: '',
-  provenance: ''
-})
-
-// Colonnes du tableau
-const studentColumns = [
-  { key: 'nom', label: 'Nom' },
-  { key: 'prenom', label: 'Prénom' },
-  { key: 'email', label: 'Email' },
-  { key: 'matricule', label: 'Matricule' },
-  { key: 'date_naissance', label: 'Date de naissance' },
-  { key: 'lieu_naissance', label: 'Lieu de naissance' },
-  { key: 'bac', label: 'Bac' },
-  { key: 'provenance', label: 'Provenance' }
-]
-
-// Filtrage
-const filteredStudents = computed(() => {
-  return students.value.filter(student => {
-    const matchesSearch = `${student.nom} ${student.prenom} ${student.email} ${student.matricule}`.toLowerCase().includes(searchTerm.value.toLowerCase())
-    const matchesBac = !filterBac.value || student.bac === filterBac.value
-    return matchesSearch && matchesBac
-  })
-})
+const { fetchApi } = useApi()
 
 // Méthodes
 const openModal = (mode, student = null) => {
@@ -264,13 +220,10 @@ const resetForm = () => {
 
 const loadStudents = async () => {
   try {
-    const response = await $fetch(`${$config.public.apiBase}/etudiants`)
+    const response = await fetchApi('/etudiants/')
     students.value = response
   } catch (error) {
-    console.error('Erreur API, fallback sur LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    students.value = db.getCollection('etudiants')
+    console.error('Erreur lors du chargement des étudiants', error)
   }
 }
 
@@ -279,49 +232,23 @@ const saveStudent = async () => {
   
   try {
     const url = modalMode.value === 'add' 
-      ? `${$config.public.apiBase}/etudiants`
-      : `${$config.public.apiBase}/etudiants/${currentStudent.value.id}`
+      ? '/etudiants/'
+      : `/etudiants/${currentStudent.value.id}/`
     
-    const method = modalMode.value === 'add' ? 'POST' : 'PUT'
+    const method = modalMode.value === 'add' ? 'POST' : 'PATCH'
     
-    const response = await $fetch(url, {
+    const response = await fetchApi(url, {
       method,
       body: formData.value
     })
     
-    if (modalMode.value === 'add') {
-      students.value.push(response)
-    } else {
-      const index = students.value.findIndex(s => s.id === currentStudent.value.id)
-      if (index !== -1) {
-        students.value[index] = response
-      }
-    }
-    
+    await loadStudents()
     closeModal()
     console.log('Étudiant enregistré avec succès via API')
     
   } catch (error) {
-    console.error('Erreur API, utilisation du LocalStorage')
-    try {
-      const { useMockDb } = await import('~/composables/useMockDb.js')
-      const db = useMockDb()
-      
-      if (modalMode.value === 'add') {
-        const newStudent = db.addDoc('etudiants', formData.value)
-        students.value.push(newStudent)
-      } else {
-        const updatedStudent = db.updateDoc('etudiants', currentStudent.value.id, formData.value)
-        if (updatedStudent) {
-          const index = students.value.findIndex(s => s.id === currentStudent.value.id)
-          if (index !== -1) students.value[index] = updatedStudent
-        }
-      }
-      closeModal()
-    } catch (mockError) {
-      console.error(mockError)
-      alert("Erreur lors de l'enregistrement")
-    }
+    console.error('Erreur lors de l\'enregistrement', error)
+    alert(error.data?.error || "Erreur lors de l'enregistrement")
   } finally {
     loading.value = false
   }
@@ -333,19 +260,16 @@ const deleteStudent = async (studentId) => {
   }
   
   try {
-    await $fetch(`${$config.public.apiBase}/etudiants/${studentId}`, {
+    await fetchApi(`/etudiants/${studentId}/`, {
       method: 'DELETE'
     })
     
-    students.value = students.value.filter(s => s.id !== studentId)
+    await loadStudents()
     console.log('Étudiant supprimé avec succès')
     
   } catch (error) {
-    console.error('Erreur API, utilisation du LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    db.deleteDoc('etudiants', studentId)
-    students.value = students.value.filter(s => s.id !== studentId)
+    console.error('Erreur lors de la suppression', error)
+    alert("Erreur lors de la suppression")
   }
 }
 

@@ -80,33 +80,36 @@ useHead({
   title: 'Saisie | Bull ASUR'
 })
 
-const { apiFetch } = useApi()
+const { fetchApi } = useApi()
 const authRole = useCookie('authRole', { default: () => 'etudiant' })
 const isEnseignant = computed(() => authRole.value === 'enseignant')
 
-const selectedMatiere = ref('M1') // M1 correspond à 'Architecture Réseaux' dans le mock
+const selectedMatiere = ref('')
 const availableMatieres = ref([])
 const etudiants = ref([])
 const isSaving = ref(false)
 
 const loadInitialData = async () => {
   try {
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
+    // 1. Charger les matières
+    const matieresData = await fetchApi('/matieres/')
+    availableMatieres.value = matieresData || []
     
-    // Charger les matières
-    availableMatieres.value = db.getCollection('matieres')
-    if (availableMatieres.value.length > 0 && !availableMatieres.value.find(m => m.id === selectedMatiere.value)) {
+    if (availableMatieres.value.length > 0 && !selectedMatiere.value) {
       selectedMatiere.value = availableMatieres.value[0].id
     }
 
-    // Charger les étudiants et leurs notes
-    const allStudents = db.getCollection('etudiants')
-    const allNotes = db.getCollection('notes')
+    if (!selectedMatiere.value) return
+
+    // 2. Charger les étudiants
+    const studentsData = await fetchApi('/etudiants/')
     
-    etudiants.value = allStudents.map(student => {
-      // Trouver les notes de cet étudiant pour la matière sélectionnée
-      const notes = allNotes.filter(n => n.etudiant_id === student.id && n.matiere_id === selectedMatiere.value)
+    // 3. Charger les notes existantes pour cette matière
+    const evaluationsData = await fetchApi(`/evaluations/matiere/${selectedMatiere.value}/`)
+    
+    etudiants.value = studentsData.map(student => {
+      // Filtrer les notes de cet étudiant
+      const notes = evaluationsData.filter(n => n.etudiant_id === student.id || n.etudiant === student.id)
       const cc = notes.find(n => n.type === 'CC')?.note ?? null
       const exam = notes.find(n => n.type === 'Examen')?.note ?? null
       const ratrap = notes.find(n => n.type === 'Rattrapage')?.note ?? null
@@ -118,7 +121,7 @@ const loadInitialData = async () => {
         cc,
         exam,
         ratrap,
-        absences: 0 // Simplifié pour le mock
+        absences: 0 // À lier au service d'absences plus tard
       }
     })
   } catch (error) {
@@ -131,115 +134,68 @@ onMounted(() => {
 })
 
 const onMatiereChange = () => {
-  loadInitialData() // Recharger les notes quand la matière change
-}
-
-const isRattrapageEligible = (etudiant) => {
-  const cc = etudiant.cc !== null && etudiant.cc !== '' ? Number(etudiant.cc) : null;
-  const ex = etudiant.exam !== null && etudiant.exam !== '' ? Number(etudiant.exam) : null;
-  if (cc === null || ex === null) return true; // S'il manque une note, rattrapage ouvert
-  return (cc * 0.4 + ex * 0.6) < 10; // Ouvert si la note est inférieure à 10
+  loadInitialData()
 }
 
 const calculateMoyenne = (etudiant) => {
-  let cc = etudiant.cc !== null && etudiant.cc !== '' ? Number(etudiant.cc) : null;
-  let ex = etudiant.exam !== null && etudiant.exam !== '' ? Number(etudiant.exam) : null;
-  let rat = etudiant.ratrap !== null && etudiant.ratrap !== '' ? Number(etudiant.ratrap) : null;
+  const cc = parseFloat(etudiant.cc)
+  const exam = parseFloat(etudiant.exam)
+  const ratrap = parseFloat(etudiant.ratrap)
 
-  // Force le nettoyage du rattrapage si l'étudiant a >= 10
-  if (!isRattrapageEligible(etudiant)) {
-    rat = null;
-  }
-  
-  let baseMoyenne = null;
-  
-  if (rat !== null) {
-    if (cc === null && ex !== null) {
-      baseMoyenne = (rat * 0.4) + (ex * 0.6); // Le rattrapage remplace le CC
-    } else if (ex === null && cc !== null) {
-      baseMoyenne = (cc * 0.4) + (rat * 0.6); // Le rattrapage remplace l'Examen
-    } else if (cc !== null && ex !== null) {
-      // Les 3 notes sont présentes : on conserve les 2 meilleures
-      let finalCC = cc;
-      let finalEx = ex;
-      
-      if (rat > Math.min(cc, ex)) {
-        if (cc < ex) {
-          finalCC = rat; // Le rattrapage remplace le CC
-        } else {
-          finalEx = rat; // Le rattrapage remplace l'Exam
-        }
-      }
-      baseMoyenne = (finalCC * 0.4) + (finalEx * 0.6);
-    } else {
-      baseMoyenne = rat; // Seulement le rattrapage
-    }
-  } else {
-    // Calcul normal
-    if (cc !== null && ex !== null) {
-      baseMoyenne = (cc * 0.4) + (ex * 0.6);
-    } else if (cc !== null) {
-      baseMoyenne = cc;
-    } else if (ex !== null) {
-      baseMoyenne = ex;
-    }
+  if (isNaN(cc) && isNaN(exam)) return '-'
+
+  let baseMoyenne = 0
+  if (!isNaN(cc) && !isNaN(exam)) {
+    baseMoyenne = (cc * 0.4) + (exam * 0.6)
+  } else if (!isNaN(cc)) {
+    baseMoyenne = cc * 0.4
+  } else if (!isNaN(exam)) {
+    baseMoyenne = exam * 0.6
   }
 
-  if (baseMoyenne !== null) {
-    const absenceMalus = (etudiant.absences || 0) * 0.01;
-    let finalGrade = baseMoyenne - absenceMalus;
-    return Math.max(0, finalGrade).toFixed(2);
+  // Si rattrapage, on prend le max entre la moyenne initiale et le rattrapage
+  if (!isNaN(ratrap)) {
+    return Math.max(baseMoyenne, ratrap).toFixed(2)
   }
-  
-  return '-';
+
+  return baseMoyenne.toFixed(2)
+}
+
+const isRattrapageEligible = (etudiant) => {
+  const moy = calculateMoyenne(etudiant)
+  if (moy === '-') return false
+  return parseFloat(moy) < 10
 }
 
 const saveGrades = async () => {
   try {
     isSaving.value = true;
-    
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    let allNotes = db.getCollection('notes')
-    
-    // Formatage des objets pour POST /api/evaluations/bulk/ et MockDB
     const payload = [];
     
-    // Nettoyer les anciennes notes pour cette matière
-    allNotes = allNotes.filter(n => n.matiere_id !== selectedMatiere.value)
-
     etudiants.value.forEach(etudiant => {
       if (etudiant.cc !== null && etudiant.cc !== '') {
-        const note = { etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "CC", note: Number(etudiant.cc), id: Math.random().toString(36).substring(2, 9) }
-        payload.push(note);
-        allNotes.push(note);
+        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "CC", note: Number(etudiant.cc) });
       }
       if (etudiant.exam !== null && etudiant.exam !== '') {
-        const note = { etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Examen", note: Number(etudiant.exam), id: Math.random().toString(36).substring(2, 9) }
-        payload.push(note);
-        allNotes.push(note);
+        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Examen", note: Number(etudiant.exam) });
       }
       if (etudiant.ratrap !== null && etudiant.ratrap !== '') {
-        const note = { etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Rattrapage", note: Number(etudiant.ratrap), id: Math.random().toString(36).substring(2, 9) }
-        payload.push(note);
-        allNotes.push(note);
+        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Rattrapage", note: Number(etudiant.ratrap) });
       }
     });
 
-    console.log('Simulation POST vers /api/evaluations/bulk/ avec ce payload:', payload);
+    await fetchApi('/evaluations/bulk/', {
+      method: 'POST',
+      body: payload
+    })
 
-    // Sauvegarde dans la fausse BDD
-    db.setCollection('notes', allNotes)
-
-    setTimeout(() => {
-      isSaving.value = false;
-      alert('Notes enregistrées avec succès dans la base de données locale !');
-    }, 800);
-
+    alert('Notes enregistrées avec succès !');
+    await loadInitialData(); // Recharger pour confirmer
   } catch (error) {
     console.error(error);
+    alert('Erreur lors de l\'enregistrement des notes : ' + (error.data?.error || 'Erreur inconnue'));
+  } finally {
     isSaving.value = false;
-    alert('Erreur lors de l\'enregistrement des notes.');
   }
 }
 </script>

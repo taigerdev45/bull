@@ -58,30 +58,27 @@ import { useApi } from '~/composables/useApi'
 
 useHead({ title: 'Délibérations | LP ASUR' })
 
-const { apiFetch } = useApi()
+const { fetchApi } = useApi()
 const isLoading = ref(true)
-
 const resultats = ref([])
 
 const loadResultats = async () => {
+  isLoading.value = true
   try {
-    console.log("Appel simulé vers GET /api/resultats/semestre/S5/ pour le jury")
-    // Appel réel
-    // const response = await apiFetch('/api/resultats/semestre/S5/')
-    // resultats.value = response
+    const response = await fetchApi('/resultats/promotion/stats/', {
+      params: { 
+        semestre: 5, // Par défaut S5 pour cette page
+        promo_id: 'LP_ASUR_2026' 
+      }
+    })
     
-    setTimeout(() => {
-      resultats.value = [
-        { id: 'TEST2026001', nom: 'Dupont', prenom: 'Jean', moyS5: '12.45', ue1: '11.50', ue2: '13.20', credits: 30, decision: 'Validé' },
-        { id: 'TEST2026002', nom: 'Martin', prenom: 'Sophie', moyS5: '14.80', ue1: '15.00', ue2: '14.65', credits: 30, decision: 'Validé' },
-        { id: 'TEST2026003', nom: 'Bernard', prenom: 'Luc', moyS5: '9.20', ue1: '8.50', ue2: '9.80', credits: 0, decision: 'Ajourné' },
-        { id: 'TEST2026004', nom: 'Dubois', prenom: 'Marie', moyS5: '10.15', ue1: '8.90', ue2: '11.20', credits: 30, decision: 'Validé' },
-      ]
-      isLoading.value = false
-    }, 600)
-
+    if (response && response.resultats) {
+      resultats.value = response.resultats
+    }
   } catch(error) {
     console.error('Failed to load resultats:', error)
+    alert("Erreur lors du chargement des délibérations.")
+  } finally {
     isLoading.value = false
   }
 }

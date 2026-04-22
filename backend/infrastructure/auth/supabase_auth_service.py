@@ -83,6 +83,36 @@ class SupabaseAuthService:
         except Exception as e:
             raise Exception(f"Erreur lors de la mise à jour du mot de passe Supabase: {str(e)}")
 
+    def authenticate(self, email: str, password: str) -> Dict[str, Any]:
+        """
+        Authentifie un utilisateur auprès de Supabase et retourne la session (incluant le JWT).
+        """
+        if not self.client:
+            raise Exception("Supabase non configuré.")
+            
+        try:
+            # Login via GoTrue
+            res = self.client.auth.sign_in_with_password({
+                "email": email,
+                "password": password
+            })
+            
+            if not res.session:
+                raise Exception("Authentification réussie mais aucune session retournée.")
+                
+            return {
+                "access_token": res.session.access_token,
+                "refresh_token": res.session.refresh_token,
+                "user": {
+                    "id": res.user.id,
+                    "email": res.user.email,
+                    "role": res.user.user_metadata.get("role", "etudiant"),
+                    "name": res.user.user_metadata.get("display_name", "")
+                }
+            }
+        except Exception as e:
+            raise Exception(f"Échec de l'authentification : {str(e)}")
+
     def delete_user(self, uid: str):
         """Supprime un utilisateur Supabase via Admin API."""
         if not self.client:

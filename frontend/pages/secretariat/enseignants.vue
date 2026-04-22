@@ -257,6 +257,8 @@ const filteredTeachers = computed(() => {
   })
 })
 
+const { fetchApi } = useApi()
+
 // Méthodes CRUD
 const openModal = (mode, teacher = null) => {
   modalMode.value = mode
@@ -291,33 +293,20 @@ const resetForm = () => {
 
 const loadTeachers = async () => {
   try {
-    const response = await $fetch(`${$config.public.apiBase}/enseignants`)
+    const response = await fetchApi('/enseignants/')
     teachers.value = response
   } catch (error) {
-    console.error('Erreur API, fallback sur LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    teachers.value = db.getCollection('enseignants')
+    console.error('Erreur lors du chargement des enseignants', error)
   }
 }
 
 const loadAvailableMatieres = async () => {
   try {
-    const response = await $fetch(`${$config.public.apiBase}/matieres-with-ue`)
+    // Dans le backend, UEViewSet.list renvoie déjà les UEs avec leurs matières
+    const response = await fetchApi('/ues/')
     availableUEs.value = response
   } catch (error) {
-    console.error('Erreur API, fallback sur LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    
-    // Construction de l'arbre UEs -> Matières pour l'affichage
-    const ues = db.getCollection('ues')
-    const matieres = db.getCollection('matieres')
-    
-    availableUEs.value = ues.map(ue => ({
-      ...ue,
-      matieres: matieres.filter(m => m.ue_id === ue.id)
-    }))
+    console.error('Erreur lors du chargement des UEs/Matières', error)
   }
 }
 
@@ -326,44 +315,29 @@ const saveTeacher = async () => {
   
   try {
     const url = modalMode.value === 'add' 
-      ? `${$config.public.apiBase}/enseignants`
-      : `${$config.public.apiBase}/enseignants/${currentTeacher.value.id}`
+      ? '/enseignants/'
+      : `/enseignants/${currentTeacher.value.id}/`
     
-    const method = modalMode.value === 'add' ? 'POST' : 'PUT'
+    const method = modalMode.value === 'add' ? 'POST' : 'PATCH'
     
-    const response = await $fetch(url, {
+    // Pour la création, on génère un mot de passe par défaut
+    const payload = { ...formData.value }
+    if (modalMode.value === 'add') {
+      payload.password = formData.value.matricule || 'Password123!'
+    }
+
+    await fetchApi(url, {
       method,
-      body: formData.value
+      body: payload
     })
     
-    if (modalMode.value === 'add') {
-      teachers.value.push({ ...response, matieres: [] })
-    } else {
-      const index = teachers.value.findIndex(t => t.id === currentTeacher.value.id)
-      if (index !== -1) {
-        teachers.value[index] = { ...response, matieres: teachers.value[index].matieres }
-      }
-    }
-    
+    await loadTeachers()
     closeModal()
     console.log('Enseignant enregistré avec succès via API')
     
   } catch (error) {
-    console.error('Erreur API, utilisation du LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    
-    if (modalMode.value === 'add') {
-      const newTeacher = db.addDoc('enseignants', { ...formData.value, matieres: [] })
-      teachers.value.push(newTeacher)
-    } else {
-      const updatedTeacher = db.updateDoc('enseignants', currentTeacher.value.id, formData.value)
-      if (updatedTeacher) {
-        const index = teachers.value.findIndex(t => t.id === currentTeacher.value.id)
-        if (index !== -1) teachers.value[index] = updatedTeacher
-      }
-    }
-    closeModal()
+    console.error('Erreur lors de l\'enregistrement', error)
+    alert(error.data?.error || "Erreur lors de l'enregistrement")
   } finally {
     loading.value = false
   }
@@ -375,19 +349,16 @@ const deleteTeacher = async (teacherId) => {
   }
   
   try {
-    await $fetch(`${$config.public.apiBase}/enseignants/${teacherId}`, {
+    await fetchApi(`/enseignants/${teacherId}/`, {
       method: 'DELETE'
     })
     
-    teachers.value = teachers.value.filter(t => t.id !== teacherId)
+    await loadTeachers()
     console.log('Enseignant supprimé avec succès')
     
   } catch (error) {
-    console.error('Erreur API, utilisation du LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    db.deleteDoc('enseignants', teacherId)
-    teachers.value = teachers.value.filter(t => t.id !== teacherId)
+    console.error('Erreur lors de la suppression', error)
+    alert("Erreur lors de la suppression")
   }
 }
 
@@ -406,30 +377,19 @@ const closeAssignModal = () => {
 
 const assignMatieres = async () => {
   try {
-    await $fetch(`${$config.public.apiBase}/enseignants/${selectedTeacher.value.id}/assign-matieres`, {
+    await fetchApi(`/enseignants/${selectedTeacher.value.id}/assign-matieres/`, {
       method: 'POST',
       body: { matiere_ids: selectedMatieres.value }
     })
     
-    // Mettre à jour localement (API)
-    updateLocalTeacherMatieres()
+    await loadTeachers()
+    closeAssignModal()
+    alert('Matières assignées avec succès')
     
   } catch (error) {
-    console.error('Erreur API, utilisation du LocalStorage')
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    
-    db.updateDoc('enseignants', selectedTeacher.value.id, { matieres: selectedMatieres.value })
-    updateLocalTeacherMatieres()
+    console.error('Erreur lors de l\'assignation', error)
+    alert("Erreur lors de l'assignation")
   }
-}
-
-const updateLocalTeacherMatieres = () => {
-  const teacher = teachers.value.find(t => t.id === selectedTeacher.value.id)
-  if (teacher) {
-    teacher.matieres = [...selectedMatieres.value]
-  }
-  closeAssignModal()
 }
 
 onMounted(() => {

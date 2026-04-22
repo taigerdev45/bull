@@ -61,37 +61,41 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
+    const { fetchApi } = useApi()
     
-    // Essayer d'authentifier l'utilisateur
-    const authResult = db.authenticate(username.value, password.value, userRole.value)
+    // Appel à l'API réelle
+    const authResult = await fetchApi('/auth/login/', {
+      method: 'POST',
+      body: {
+        email: username.value, // On utilise l'email comme identifiant
+        password: password.value
+      }
+    })
     
-    if (authResult) {
+    if (authResult && authResult.access_token) {
       // Succès: Sauvegarde des infos dans les cookies
-      const authRole = useCookie('authRole', { default: () => 'etudiant' })
-      const authUsername = useCookie('authUsername')
+      const authToken = useCookie('auth_token')
+      const authRole = useCookie('authRole')
       const authEmail = useCookie('authEmail')
       const authFullName = useCookie('authFullName')
       const authId = useCookie('authId')
 
-      authRole.value = authResult.role
-      authUsername.value = authResult.prenom
-      authEmail.value = authResult.email
-      authFullName.value = authResult.name
-      authId.value = authResult.id
+      authToken.value = authResult.access_token
+      authRole.value = authResult.user.role
+      authEmail.value = authResult.user.email
+      authFullName.value = authResult.user.name
+      authId.value = authResult.user.id
 
-      // Redirection dynamisée selon le rôle
-      if (authResult.role === 'admin') router.push('/admin')
-      else if (authResult.role === 'secretariat') router.push('/secretariat')
-      else if (authResult.role === 'enseignant') router.push('/enseignant')
+      // Redirection selon le rôle retourné par le backend
+      const role = authResult.user.role
+      if (role === 'admin') router.push('/admin')
+      else if (role === 'secretariat') router.push('/secretariat')
+      else if (role === 'enseignant') router.push('/enseignant')
       else router.push('/etudiant')
-    } else {
-      alert("Identifiant ou mot de passe incorrect pour ce rôle.")
     }
   } catch (e) {
     console.error(e)
-    alert("Erreur lors de la connexion.")
+    alert(e.data?.error || "Identifiant ou mot de passe incorrect.")
   } finally {
     loading.value = false
   }

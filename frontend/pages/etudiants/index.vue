@@ -102,18 +102,18 @@ import { useApi } from '~/composables/useApi'
 
 useHead({ title: 'Étudiants | LP ASUR' })
 
-const { apiFetch } = useApi()
+const { fetchApi } = useApi()
 const students = ref([])
 const pending = ref(true)
 const saving = ref(false)
 
 const columns = [
-  { key: 'id', label: 'ID', width: '100px' },
+  { key: 'matricule', label: 'Matricule' },
   { key: 'nom', label: 'Nom' },
   { key: 'prenom', label: 'Prénom' },
+  { key: 'email', label: 'Email' },
   { key: 'bac', label: 'Baccalauréat' },
-  { key: 'provenance', label: 'Étab. Provenance' },
-  { key: 'status', label: 'Statut', width: '120px' }
+  { key: 'provenance', label: 'Étab. Provenance' }
 ]
 
 // Modal State
@@ -135,13 +135,10 @@ const form = ref({
 const fetchStudents = async () => {
   pending.value = true
   try {
-    const data = await apiFetch('/api/etudiants/')
+    const data = await fetchApi('/etudiants/')
     if (data) students.value = data
   } catch (e) {
-    console.error('Fetch failed, using mock', e)
-    const { useMockDb } = await import('~/composables/useMockDb.js')
-    const db = useMockDb()
-    students.value = db.getCollection('etudiants')
+    console.error('Fetch failed', e)
   } finally {
     pending.value = false
   }
@@ -167,9 +164,9 @@ const saveStudent = async () => {
   saving.value = true
   try {
     const method = modalMode.value === 'add' ? 'POST' : 'PATCH'
-    const url = modalMode.value === 'add' ? '/api/etudiants/' : `/api/etudiants/${form.value.id}/`
+    const url = modalMode.value === 'add' ? '/etudiants/' : `/etudiants/${form.value.id}/`
     
-    await apiFetch(url, {
+    await fetchApi(url, {
       method,
       body: form.value
     })
@@ -177,26 +174,8 @@ const saveStudent = async () => {
     await fetchStudents()
     closeModal()
   } catch (e) {
-    console.error('Erreur API, utilisation du LocalStorage')
-    try {
-      const { useMockDb } = await import('~/composables/useMockDb.js')
-      const db = useMockDb()
-      
-      if (modalMode.value === 'add') {
-        const newStudent = db.addDoc('etudiants', form.value)
-        students.value.push(newStudent)
-      } else {
-        const updatedStudent = db.updateDoc('etudiants', form.value.id, form.value)
-        if (updatedStudent) {
-          const index = students.value.findIndex(s => s.id === form.value.id)
-          if (index !== -1) students.value[index] = updatedStudent
-        }
-      }
-      closeModal()
-    } catch (mockError) {
-      console.error(mockError)
-      alert('Erreur lors de l\'enregistrement')
-    }
+    console.error('Erreur lors de l\'enregistrement', e)
+    alert(e.data?.error || 'Erreur lors de l\'enregistrement')
   } finally {
     saving.value = false
   }
@@ -205,14 +184,11 @@ const saveStudent = async () => {
 const confirmDelete = async (student) => {
   if (confirm(`Êtes-vous sûr de vouloir supprimer l'étudiant ${student.nom}?`)) {
     try {
-      await apiFetch(`/api/etudiants/${student.id}/`, { method: 'DELETE' })
+      await fetchApi(`/etudiants/${student.id}/`, { method: 'DELETE' })
       await fetchStudents()
     } catch (e) {
-      console.error('Erreur API, utilisation du LocalStorage')
-      const { useMockDb } = await import('~/composables/useMockDb.js')
-      const db = useMockDb()
-      db.deleteDoc('etudiants', student.id)
-      students.value = students.value.filter(s => s.id !== student.id)
+      console.error('Erreur lors de la suppression', e)
+      alert('Erreur lors de la suppression')
     }
   }
 }

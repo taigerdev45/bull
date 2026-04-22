@@ -405,24 +405,37 @@ function getRouteRules(arg) {
     return {};
   }
 }
+const __nuxt_page_meta$2 = {
+  layout: "empty"
+};
 const __nuxt_page_meta$1 = {
   layout: "empty"
 };
-const __nuxt_page_meta = {
-  layout: "empty"
-};
+const __nuxt_page_meta = null;
 const _routes = [
   {
     name: "index",
     path: "/",
-    meta: __nuxt_page_meta$1 || {},
-    component: () => import('./index-DDX6OPu2.mjs')
+    meta: __nuxt_page_meta$2 || {},
+    component: () => import('./index-Br9CvL48.mjs')
   },
   {
     name: "login",
     path: "/login",
-    meta: __nuxt_page_meta || {},
-    component: () => import('./login-CtPeTJCj.mjs')
+    meta: __nuxt_page_meta$1 || {},
+    component: () => import('./login-jGfPzZXc.mjs')
+  },
+  {
+    name: __nuxt_page_meta?.name,
+    path: "/bulletins",
+    component: () => import('./bulletins-Bcr5vKSy.mjs'),
+    children: [
+      {
+        name: "bulletins",
+        path: "",
+        component: () => import('./index-CJW0Eky3.mjs')
+      }
+    ]
   },
   {
     name: "admin",
@@ -432,12 +445,12 @@ const _routes = [
   {
     name: "profil",
     path: "/profil",
-    component: () => import('./index-D4KJ8Utb.mjs')
+    component: () => import('./index-qxYYJCw8.mjs')
   },
   {
     name: "saisie",
     path: "/saisie",
-    component: () => import('./index-LLZDjKEX.mjs')
+    component: () => import('./index-DidtHJ-i.mjs')
   },
   {
     name: "etudiant",
@@ -445,14 +458,9 @@ const _routes = [
     component: () => import('./index-Cgxpipph.mjs')
   },
   {
-    name: "bulletins",
-    path: "/bulletins",
-    component: () => import('./index-b4hAfFWD.mjs')
-  },
-  {
     name: "etudiants",
     path: "/etudiants",
-    component: () => import('./index-_BgbAtI2.mjs')
+    component: () => import('./index-DUfWcKv2.mjs')
   },
   {
     name: "enseignant",
@@ -462,7 +470,7 @@ const _routes = [
   {
     name: "secretariat",
     path: "/secretariat",
-    component: () => import('./index-BccCjmrZ.mjs')
+    component: () => import('./index-DTd_uZa2.mjs')
   },
   {
     name: "referentiels",
@@ -473,6 +481,31 @@ const _routes = [
     name: "deliberations",
     path: "/deliberations",
     component: () => import('./index-DXkRkL0y.mjs')
+  },
+  {
+    name: "secretariat-bulletins",
+    path: "/secretariat/bulletins",
+    component: () => import('./bulletins-bEsXQMd5.mjs')
+  },
+  {
+    name: "secretariat-etudiants",
+    path: "/secretariat/etudiants",
+    component: () => import('./etudiants-CSDlkgvc.mjs')
+  },
+  {
+    name: "secretariat-enseignants",
+    path: "/secretariat/enseignants",
+    component: () => import('./enseignants-DEh6xNDK.mjs')
+  },
+  {
+    name: "secretariat-edition-bulletins",
+    path: "/secretariat/edition-bulletins",
+    component: () => import('./edition-bulletins-Cak2FtBo.mjs')
+  },
+  {
+    name: "secretariat-modification-notes",
+    path: "/secretariat/modification-notes",
+    component: () => import('./modification-notes-C3As8nJh.mjs')
   }
 ];
 const _wrapInTransition = (props, children) => {
@@ -848,7 +881,7 @@ const plugins = [
   components_plugin_z4hgvsiddfKkfXTP6M8M4zG5Cb7sGnDhcryKVM45Di4
 ];
 const layouts = {
-  default: defineAsyncComponent(() => import('./default-Bu8p3l7S.mjs').then((m) => m.default || m)),
+  default: defineAsyncComponent(() => import('./default-C-wpDJvq.mjs').then((m) => m.default || m)),
   empty: defineAsyncComponent(() => import('./empty-CHhYCKP5.mjs').then((m) => m.default || m))
 };
 const routeRulesMatcher = _routeRulesMatcher;

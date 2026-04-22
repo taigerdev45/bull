@@ -39,3 +39,28 @@ class ChangePasswordView(APIView):
                 {"error": f"Impossible de modifier le mot de passe : {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+@extend_schema(tags=['Authentification'])
+class LoginView(APIView):
+    """View pour authentifier un utilisateur et retourner un token JWT."""
+    permission_classes = [] # Public
+
+    @inject
+    def post(self, request, auth_service=Provide[Container.auth_service]):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        if not email or not password:
+            return Response(
+                {"error": "Email et mot de passe sont obligatoires."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            session_data = auth_service.authenticate(email, password)
+            return Response(session_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )

@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from dependency_injector.wiring import inject, Provide
@@ -63,6 +64,48 @@ class EnseignantViewSet(viewsets.ViewSet):
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        enseignant = self.repo.get_by_id(pk)
+        if not enseignant:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = EnseignantSerializer(data=request.data)
+        if serializer.is_valid():
+            enseignant._nom = serializer.validated_data['nom']
+            enseignant._prenom = serializer.validated_data['prenom']
+            enseignant._email = serializer.validated_data['email']
+            enseignant._matricule = serializer.validated_data['matricule']
+            self.repo.save(enseignant)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk=None):
+        enseignant = self.repo.get_by_id(pk)
+        if not enseignant:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        for key, value in request.data.items():
+            if hasattr(enseignant, f"_{key}"):
+                setattr(enseignant, f"_{key}", value)
+        
+        self.repo.save(enseignant)
+        return Response(EnseignantSerializer(enseignant).data)
+
+    @action(detail=True, methods=['post'], url_path='assign-matieres')
+    def assign_matieres(self, request, pk=None):
+        """Assigne plusieurs matières à un enseignant."""
+        matiere_ids = request.data.get('matiere_ids', [])
+        if not isinstance(matiere_ids, list):
+            return Response({"error": "liste attendue"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Le repository ou un service devrait gérer ça
+        # Pour l'instant, on boucle sur les matières (approche simple)
+        matiere_repo = Container.matiere_repo()
+        for m_id in matiere_ids:
+            matiere_repo.attribuer_enseignant(m_id, pk)
+            
+        return Response({"status": "matières assignées"})
 
     def destroy(self, request, pk=None):
         self.repo.delete(pk)

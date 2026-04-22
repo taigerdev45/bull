@@ -16,9 +16,9 @@
         </NuxtLink>
       </nav>
       <div class="sidebar-footer">
-        <NuxtLink to="/" class="nav-link logout-btn">
+        <button @click="logout" class="nav-link logout-btn w-full">
           Déconnexion
-        </NuxtLink>
+        </button>
       </div>
     </aside>
     
@@ -67,6 +67,18 @@ const allLinks = [
   { path: '/bulletins', label: 'Bulletins', roles: ['admin', 'secretariat', 'etudiant'] },
   { path: '/profil', label: 'Profil', roles: ['admin', 'secretariat', 'enseignant', 'etudiant'] }
 ]
+
+const logout = () => {
+  const token = useCookie('auth_token')
+  const role = useCookie('authRole')
+  const id = useCookie('authId')
+  
+  token.value = null
+  role.value = null
+  id.value = null
+  
+  navigateTo('/login')
+}
 
 // Filtrage basé sur le profil
 const allowedLinks = computed(() => {
