@@ -4,28 +4,28 @@
     <div class="content-wrapper">
       <header class="landing-header">
         <h1>Bienvenue sur Bull ASUR</h1>
-        <p>Le portail de gestion des bulletins de notes - LP ASUR (INPTIC)</p>
+        <p>Le portail de gestion des bulletins de notes <strong>DAR 3</strong></p>
       </header>
 
       <div class="roles-grid">
         <NuxtLink to="/login?role=etudiant" class="role-card etudiant-theme">
           <h2>Espace Étudiant</h2>
-          <p>Consultez vos notes, absences et téléchargez vos bulletins officiels.</p>
+          <p>Consultez vos notes officielles.</p>
         </NuxtLink>
 
         <NuxtLink to="/login?role=enseignant" class="role-card enseignant-theme">
           <h2>Espace Enseignant</h2>
-          <p>Saisissez les notes de vos évaluations (CC, Examens, Rattrapages).</p>
+          <p>Gerez vos evaluations simplement.</p>
         </NuxtLink>
 
         <NuxtLink to="/login?role=secretariat" class="role-card secretariat-theme">
           <h2>Secrétariat Pédagogique</h2>
-          <p>Gérez les élèves, les inscriptions, la saisie administrative et générez les bulletins.</p>
+          <p>Gestion administrative de l'ensemble du personnel.</p>
         </NuxtLink>
 
         <NuxtLink to="/login?role=admin" class="role-card admin-theme">
-          <h2>Administration</h2>
-          <p>Configuration complète, gestion des référentiels (UEs, Matières), audits système.</p>
+          <h2>Administrateur</h2>
+          <p>Management système.</p>
         </NuxtLink>
       </div>
     </div>

@@ -9,19 +9,19 @@
       <div class="profil-header">
         <div class="avatar-large">{{ initial }}</div>
         <div class="profil-main-info">
-          <h3>MBA NSOME Yannick Lionel</h3>
+          <h3>{{ fullName }}</h3>
           <p class="role-badge">{{ currentRole.toUpperCase() }}</p>
         </div>
       </div>
 
       <form class="profil-form" @submit.prevent>
         <div class="form-group">
-          <label>Identifiant (Login)</label>
-          <input type="text" value="yannick.mba" disabled />
+          <label>Identifiant (Prénom)</label>
+          <input type="text" :value="username" disabled />
         </div>
         <div class="form-group">
           <label>Adresse Email</label>
-          <input type="email" value="yannick.mba@inptic.ga" />
+          <input type="email" :value="email" disabled />
         </div>
         
         <div class="form-group mt-2">
@@ -48,10 +48,13 @@ useHead({ title: 'Profil | Bull ASUR' })
 
 const route = useRoute()
 
-// Lecture globale du rôle pour le Profil
+// Lecture globale du rôle et des informations utilisateur
 const currentRole = useCookie('authRole', { default: () => 'etudiant' })
+const username = useCookie('authUsername', { default: () => 'Yannick' })
+const email = useCookie('authEmail', { default: () => 'yannick.mba@inptic.ga' })
+const fullName = useCookie('authFullName', { default: () => 'MBA NSOME Yannick Lionel' })
 
-const initial = computed(() => 'M')
+const initial = computed(() => fullName.value.charAt(0).toUpperCase() || 'U')
 </script>
 
 <style scoped>

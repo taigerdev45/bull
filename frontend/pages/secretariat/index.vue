@@ -8,7 +8,7 @@
     <div class="shortcut-grid">
       <NuxtLink to="/etudiants" class="shortcut-card">
         <h4>Gestion des Étudiants</h4>
-        <p>Inscriptions, matricules, types de BAC, établissements.</p>
+        <p>Inscriptions et liste officielle.</p>
       </NuxtLink>
 
       <NuxtLink to="/saisie" class="shortcut-card">
@@ -18,12 +18,22 @@
 
       <NuxtLink to="/deliberations" class="shortcut-card">
         <h4>Préparation du Jury</h4>
-        <p>Consultation des résultats annuels et décisions.</p>
+        <p>Résultats annuels et décisions finale.</p>
       </NuxtLink>
 
-      <NuxtLink to="/bulletins" class="shortcut-card">
+      <NuxtLink to="/secretariat/enseignants" class="shortcut-card">
+        <h4>Gestion des Enseignants</h4>
+        <p>Assignation des matières et gestion du personnel.</p>
+      </NuxtLink>
+
+      <NuxtLink to="/secretariat/edition-bulletins" class="shortcut-card">
         <h4>Édition des Bulletins</h4>
-        <p>Aperçu et impression des relevés officiels par semestre.</p>
+        <p>Gestion de la structure : semestres, UE, matières, absences.</p>
+      </NuxtLink>
+
+      <NuxtLink to="/secretariat/modification-notes" class="shortcut-card">
+        <h4>Modification des Notes</h4>
+        <p>Consultation et correction des notes par matière.</p>
       </NuxtLink>
     </div>
   </div>

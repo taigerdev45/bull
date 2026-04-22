@@ -1,85 +1,118 @@
 @startuml ClassDiagram
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
+skinparam packageStyle rectangle
 
-class Etudiant {
-    -String id
-    +String nom
-    +String prenom
-    +String email
-    +String matricule
-    +Date date_naissance
-    +String user_id
-    +valider()
+package "Domain Layer" {
+    package "Entities" {
+        class Etudiant {
+            -String id
+            +String nom
+            +String prenom
+            +String email
+            +String matricule
+            +Date date_naissance
+            +String lieu_naissance
+            +String bac
+            +String provenance
+            +String user_id
+            +valider()
+        }
+
+        class Enseignant {
+            -String id
+            +String nom
+            +String prenom
+            +String email
+            +String matricule
+            +String user_id
+            +valider()
+        }
+
+        class Personnel {
+            -String id
+            +String nom
+            +String prenom
+            +String email
+            +String role
+            +String user_id
+            +valider()
+        }
+
+        class Semestre {
+            -String id
+            +String libelle
+            +String annee_universitaire
+        }
+
+        class UE {
+            -String id
+            +String code
+            +String libelle
+            +int credits
+            +calculerMoyennePonderee()
+        }
+
+        class Matiere {
+            -String id
+            +String libelle
+            +float coefficient
+            +int credits
+        }
+
+        class Evaluation {
+            -String id
+            +Note note
+            +TypeEvaluation type
+            +Date date_saisie
+            +String saisie_par
+            +boolean verrouille
+            +modifierNote()
+        }
+
+        class Absence {
+            -String id
+            +float heures
+            +Date date_absence
+            +boolean justifiee
+        }
+    }
+
+    package "ValueObjects" {
+        class Note {
+            +float valeur
+        }
+        class Moyenne {
+            +float valeur
+            +Map details
+        }
+        enum TypeEvaluation {
+            CC
+            EXAMEN
+            RATTRAPAGE
+        }
+    }
 }
 
-class Enseignant {
-    -String id
-    +String nom
-    +String prenom
-    +String email
-    +String matricule
-    +String user_id
-    +valider()
+package "Infrastructure Layer" {
+    package "Django Models" {
+        class EtudiantModel
+        class EvaluationModel
+        class UEModel
+        class ResultatUEModel
+    }
 }
 
-class Semestre {
-    -String id
-    +String libelle
-    +String annee_universitaire
-}
-
-class UE {
-    -String id
-    +String code
-    +String libelle
-    +int credits
-    +calculerMoyenne()
-}
-
-class Matiere {
-    -String id
-    +String libelle
-    +float coefficient
-    +int credits
-}
-
-class Evaluation {
-    -String id
-    +float note
-    +String type
-    +Date date_evaluation
-    +boolean verrouille
-}
-
-class Absence {
-    -String id
-    +float heures
-    +Date date_absence
-    +boolean justifiee
-}
-
-class ResultatUE {
-    -String etudiant_id
-    -String ue_id
-    +float moyenne
-    +Map details
-}
-
-class ResultatSemestre {
-    -String etudiant_id
-    +int semestre
-    +float moyenne
-}
-
+' Relations
 Semestre "1" *-- "*" UE : contient
 UE "1" *-- "*" Matiere : compose
 Matiere "1" *-- "*" Evaluation : evaluee_par
 Etudiant "1" -- "*" Evaluation : obtient
 Etudiant "1" -- "*" Absence : a
-Matiere "*" -- "0..1" Enseignant : enseignant_par
+Matiere "*" -- "0..1" Enseignant : enseigne_par
 
-Etudiant "1" -- "*" ResultatUE : possede
-UE "1" -- "*" ResultatUE : concerne
-Etudiant "1" -- "*" ResultatSemestre : possede
+Evaluation ..> Note : utilise
+UE ..> Moyenne : produit
+Evaluation ..> TypeEvaluation : type
+
 @enduml

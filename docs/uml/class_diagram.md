@@ -1,6 +1,6 @@
 # Diagramme de Classes (Class Diagram)
 
-Ce diagramme représente la structure statique du domaine métier et les relations entre les entités.
+Ce diagramme représente la structure statique du domaine métier et les relations entre les entités, conformément à l'implémentation backend (Clean Architecture / DDD).
 
 ```mermaid
 classDiagram
@@ -11,6 +11,10 @@ classDiagram
         +String email
         +String matricule
         +Date date_naissance
+        +String lieu_naissance
+        +String bac
+        +String provenance
+        +String user_id
         +valider()
     }
 
@@ -20,12 +24,24 @@ classDiagram
         +String prenom
         +String email
         +String matricule
+        +String user_id
+        +valider()
+    }
+
+    class Personnel {
+        +String id
+        +String nom
+        +String prenom
+        +String email
+        +String role
+        +String user_id
         +valider()
     }
 
     class Semestre {
         +String id
         +String libelle
+        +String annee_universitaire
     }
 
     class UE {
@@ -33,7 +49,7 @@ classDiagram
         +String code
         +String libelle
         +int credits
-        +calculerMoyenne()
+        +calculerMoyennePonderee()
     }
 
     class Matiere {
@@ -41,13 +57,18 @@ classDiagram
         +String libelle
         +float coefficient
         +int credits
+        +String ue_id
+        +String enseignant_id
     }
 
     class Evaluation {
         +String id
-        +float note
-        +String type
-        +Date date_evaluation
+        +Note note
+        +TypeEvaluation type
+        +Date date_saisie
+        +String saisie_par
+        +boolean verrouille
+        +modifierNote()
     }
 
     class Absence {
@@ -57,16 +78,13 @@ classDiagram
         +boolean justifiee
     }
 
-    class ResultatUE {
-        +String etudiant_id
-        +String ue_id
-        +float moyenne
+    class Note {
+        +float valeur
     }
 
-    class ResultatSemestre {
-        +String etudiant_id
-        +int semestre
-        +float moyenne
+    class Moyenne {
+        +float valeur
+        +Map details
     }
 
     Semestre "1" -- "*" UE : contient
@@ -74,9 +92,8 @@ classDiagram
     Matiere "1" -- "*" Evaluation : evaluee_par
     Etudiant "1" -- "*" Evaluation : obtient
     Etudiant "1" -- "*" Absence : a
-    Matiere "*" -- "0..1" Enseignant : enseignant_par
+    Matiere "*" -- "0..1" Enseignant : enseigne_par
     
-    Etudiant "1" -- "*" ResultatUE : possede
-    UE "1" -- "*" ResultatUE : concerne
-    Etudiant "1" -- "*" ResultatSemestre : possede
+    Evaluation ..> Note : utilise
+    UE ..> Moyenne : produit
 ```
