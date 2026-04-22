@@ -77,7 +77,7 @@ const logout = () => {
   role.value = null
   id.value = null
   
-  navigateTo('/login')
+  navigateTo('/')
 }
 
 // Filtrage basé sur le profil

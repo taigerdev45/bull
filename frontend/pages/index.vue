@@ -105,20 +105,31 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 definePageMeta({
   layout: 'empty'
 })
 
 const router = useRouter()
+const route = useRoute()
 const { fetchApi } = useApi()
 
 // États
+const selectedRole = ref(null)
 const showLoginForm = ref(false)
-const selectedRole = ref('etudiant')
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
+
+// Détection automatique du rôle via l'URL (compatibilité anciens liens)
+onMounted(() => {
+  const roleQuery = route.query.role
+  if (roleQuery && ['etudiant', 'enseignant', 'secretariat', 'admin'].includes(roleQuery)) {
+    selectRole(roleQuery)
+  }
+})
 
 // Cookies
 const authToken = useCookie('auth_token')

@@ -2,17 +2,17 @@ export default defineNuxtRouteMiddleware((to, from) => {
   const token = useCookie('auth_token')
 
   // Pages publiques qui ne nécessitent pas d'auth
-  const publicPages = ['/login']
+  const publicPages = ['/']
   const isPublicPage = publicPages.includes(to.path)
 
   if (!token.value && !isPublicPage) {
-    return navigateTo('/login')
+    return navigateTo('/')
   }
 
   if (token.value && isPublicPage) {
-    // Si déjà loggé, redirection vers le dashboard par défaut (ou selon rôle)
+    // Si déjà loggé, redirection vers le dashboard selon rôle
     const role = useCookie('authRole')
-    const dashboard = role.value ? `/${role.value}` : '/secretariat'
+    const dashboard = role.value ? `/${role.value}` : '/etudiant'
     return navigateTo(dashboard)
   }
 })
