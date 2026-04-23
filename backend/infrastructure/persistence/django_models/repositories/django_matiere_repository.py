@@ -6,7 +6,14 @@ from infrastructure.persistence.django_models.models import MatiereModel, UEMode
 
 class DjangoMatiereRepository(IMatiereRepository):
     def save(self, matiere: Matiere) -> None:
-        ue = UEModel.objects.get(id=matiere._ue_id)
+        # Recherche robuste de l'UE (par ID ou par Code) pour éviter le crash 500
+        try:
+            ue = UEModel.objects.get(id=matiere._ue_id)
+        except (UEModel.DoesNotExist, Exception):
+            try:
+                ue = UEModel.objects.get(code=matiere._ue_id)
+            except UEModel.DoesNotExist:
+                raise ValueError(f"Unité d'Enseignement '{matiere._ue_id}' introuvable.")
         
         MatiereModel.objects.update_or_create(
             id=matiere.id,

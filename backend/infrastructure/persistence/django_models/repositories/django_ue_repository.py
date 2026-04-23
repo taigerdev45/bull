@@ -5,7 +5,18 @@ from infrastructure.persistence.django_models.models import UEModel, SemestreMod
 
 class DjangoUERepository(IUERepository):
     def save(self, ue: UE) -> None:
-        semestre = SemestreModel.objects.get(id=ue._semestre_id)
+        # Recherche robuste du semestre (par ID ou par Code)
+        sem_id = str(ue._semestre_id)
+        try:
+            semestre = SemestreModel.objects.get(id=sem_id)
+        except (SemestreModel.DoesNotExist, Exception):
+            try:
+                semestre = SemestreModel.objects.get(libelle=sem_id)
+            except SemestreModel.DoesNotExist:
+                semestre = SemestreModel.objects.create(
+                    id=sem_id,
+                    libelle=f"Semestre {sem_id}"
+                )
         
         UEModel.objects.update_or_create(
             id=ue.id,

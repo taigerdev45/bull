@@ -45,8 +45,11 @@ class UEViewSet(viewsets.ViewSet):
                 credits=serializer.validated_data['credits'],
                 semestre_id=serializer.validated_data['semestre_id']
             )
-            self.ue_repo.save(ue)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                self.ue_repo.save(ue)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
@@ -115,8 +118,11 @@ class MatiereViewSet(viewsets.ViewSet):
                 ue_id=serializer.validated_data['ue_id'],
                 enseignant_id=serializer.validated_data.get('enseignant_id')
             )
-            self.matiere_repo.save(matiere)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                self.matiere_repo.save(matiere)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
