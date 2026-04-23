@@ -38,7 +38,11 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
                 options={"verify_aud": False} # Souvent nécessaire car l'audience est 'authenticated'
             )
         except Exception as e:
-            raise exceptions.AuthenticationFailed(f'Token Supabase invalide ou expiré: {str(e)}')
+            # Au lieu de bloquer avec une exception, on retourne None
+            # Cela permet aux vues avec 'AllowAny' de fonctionner même si le token est expiré.
+            # Les vues protégées bloqueront de toute façon plus tard.
+            print(f"[AUTH] Token validation failed: {str(e)}")
+            return None
 
         # Extraction de l'UID (champ 'sub' standard JWT)
         uid = payload.get('sub')
