@@ -36,3 +36,12 @@
 Le backend est **Production-Ready**. L'ensemble du cahier des charges académique est couvert techniquement. La consolidation sur Supabase offre une plateforme robuste, évolutive et facile à maintenir.
 
 *Dernier point mineur à finaliser : Intégration formelle d'un moteur de rendu PDF standardisé (type Weasyprint) pour l'impression directe des bulletins si les données JSON ne suffisent pas après les tests frontend.*
+
+## 📈 4. Stabilisation de Production (23 Avril 2026)
+
+| Élément | Statut | Résultat |
+| :--- | :---: | :--- |
+| **Robustesse API** | ✅ **OK** | Correction des crashs JSON (null checks) et uniformisation des endpoints (404/403 résolus). |
+| **Gestion Personnel** | ✅ **100%** | Interface administrative complète pour la gestion des rôles et la création de comptes synchronisée Supabase. |
+| **Intégrité DDD** | ✅ **OK** | Entité Étudiant complétée (nom/prenom) et découplage de l'auth pour les inscriptions souples. |
+| **Module Saisie** | ✅ **OK** | Refonte ergonomique du formulaire d'évaluation avec sélection intelligente des référentiels. |

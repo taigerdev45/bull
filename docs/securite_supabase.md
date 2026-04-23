@@ -14,11 +14,11 @@ L'authentification est gérée par **Supabase Auth (GoTrue)**.
 
 ## 2. Validation au Backend (Django)
 
-Le middleware `SupabaseAuthentication` dans le backend :
-- Valide la signature du JWT en utilisant le `SUPABASE_JWT_SECRET`.
-- Vérifie l'expiration du token.
-- Extrait l'UID et le rôle du payload.
-- Associe ces informations à l'objet `request.user`.
+Le middleware `SupabaseAuthentication` dans le backend assure une validation rigoureuse :
+- **Validation Signature** : Utilisation du `SUPABASE_JWT_SECRET` pour garantir l'intégrité des jetons.
+- **Authentification Résiliente** : Le système ne bloque pas les requêtes si le jeton est invalide tant que la vue cible est configurée en `AllowAny`. Cela évite les erreurs 403 inutiles sur les routes publiques.
+- **Compatibilité Claims** : Pour assurer la compatibilité avec l'ancien code (Firebase), le middleware injecte automatiquement les claims dans `user.firebase_claims`.
+- **Bypass Administrateur** : Sécurisation par email pour le compte propriétaire (`taigermboumba@gmail.com`) garantissant un accès super-utilisateur constant.
 
 ## 3. Row Level Security (RLS) - La Défense en Profondeur
 

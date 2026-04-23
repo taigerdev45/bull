@@ -7,12 +7,11 @@ Ce guide détaille les opérations critiques réservées aux administrateurs du 
 L'administrateur est le seul habilité à créer des comptes pour le Secrétariat et les autres Administrateurs.
 
 ### Création d'un compte personnel
-1. Accédez au menu **Administration > Équipe**.
-2. Remplissez les informations (Nom, Prénom, Email).
-3. **Sélection du Rôle** :
-   - `admin` : Accès total à la configuration et aux logs d'audit.
-   - `secretariat` : Accès à la gestion des étudiants et à la saisie des notes.
-4. Le système crée l'utilisateur dans **Supabase Auth** et lui envoie un email de confirmation.
+1. Accédez au menu **Personnel** (icône 👥) dans la barre latérale.
+2. Cliquez sur le bouton **➕ Nouveau Membre**.
+3. Remplissez les champs nécessaires : Nom, Prénom, Email, Rôle et Téléphone.
+4. Saisissez un **Mot de passe provisoire** (minimum 8 caractères). Ce mot de passe permettra à l'utilisateur de se connecter immédiatement.
+5. Le système crée automatiquement l'utilisateur dans **Supabase Auth** et enregistre sa fiche dans le registre du personnel.
 
 ### Modification des permissions
 Si vous changez le rôle d'un utilisateur, informez-le qu'il doit se **déconnecter et se reconnecter**. Son nouveau token (JWT) contiendra ses nouveaux privilèges.

@@ -1,25 +1,25 @@
 # Documentation API - Bulletin de Notes
 
-Toutes les requêtes API doivent être authentifiées via un Token Firebase JWT. Base URL : https://api.lp-asur.ga/api/.
+Toutes les requêtes API doivent être authentifiées via un Access Token (JWT) émis par Supabase. Base URL : `https://bull-api.onrender.com/api/`.
 
 ## Authentification
 Format du header :  
-Authorization: Bearer <FIREBASE_ID_TOKEN>
+`Authorization: Bearer <SUPABASE_ACCESS_TOKEN>`
 
 ---
 
 ## Liste des Endpoints Principaux
 
-| Methode | Endpoint | Description | Roles Autorises |
+| Methode | Endpoint | Description | Roles Autorisés |
 |---------|----------|-------------|-----------------|
 | GET | /etudiants/ | Liste des étudiants. | Admin, Secrétariat |
+| POST | /etudiants/ | Inscription (password optionnel). | Admin, Secrétariat |
+| GET | /personnel/ | Liste des membres du personnel. | Admin |
+| POST | /personnel/ | Création Enseignant/Secrétaire. | Admin |
+| GET | /ues/ | Liste des Unités d'Enseignement (UE). | Tous |
 | GET | /evaluations/ | Historique des notes (filtré par rôle). | Tous |
 | POST | /evaluations/ | Saisie d'une nouvelle note. | Enseignant, Admin |
-| POST | /evaluations/bulk/ | Saisie rapide par lot (liste d'objets). | Enseignant, Admin |
-| GET | /resultats/semestre/{id}/ | Moyennes et crédits d'un semestre. | Tous (filtré) |
 | GET | /bulletins/donnees/{id}/ | Données complètes pour génération PDF. | Étudiant, Admin |
-| POST | /import/evaluations/ | Import via fichier Excel (.xlsx). | Secrétariat, Admin |
-| GET | /audit/etudiant/{id}/ | Historique des modifications de notes. | Admin, Secrétariat |
 
 ---
 

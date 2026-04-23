@@ -6,9 +6,10 @@
 |:---|:---|:---|
 | **Import Excel** | Ajout massif d'étudiants via fichier Excel. | ✅ |
 | **Profil Étudiant** | Vue détaillée des notes et absences. | ✅ |
-| **CRUD Étudiants** | Gestion des fiches administratives et suivis de parcours. | Admin, Secrétariat |
+| **CRUD Étudiants** | Gestion des fiches administratives (inscription avec ou sans compte Auth). | Admin, Secrétariat |
+| **Gestion du Personnel**| Création et gestion des comptes Enseignant, Secrétariat et Admin. | Admin |
 | **Référentiel LP ASUR** | Configuration des Coefficients et Crédits ECTS. | Admin |
-| **Saisie des notes** | Entrée des notes CC, Examen et Rattrapage par matière. | Enseignant, Secrétariat |
+| **Saisie des notes** | Entrée des notes CC, Examen et Rattrapage avec sélection intelligente. | Enseignant, Secrétariat |
 | **Gestion des absences** | Suivi et pénalités automatiques sur la moyenne matière. | Secrétariat |
 
 ## Moteur de Calcul (DDD)
