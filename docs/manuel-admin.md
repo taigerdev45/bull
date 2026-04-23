@@ -17,12 +17,17 @@ L'administrateur est le seul habilité à créer des comptes pour le Secrétaria
 Si vous changez le rôle d'un utilisateur, informez-le qu'il doit se **déconnecter et se reconnecter**. Son nouveau token (JWT) contiendra ses nouveaux privilèges.
 
 ## 2. Configuration du Référentiel Académique
+Accédez au menu **Référentiels** (icône 📚) pour gérer la structure pédagogique.
 
-Avant chaque semestre, l'administrateur doit vérifier la structure :
-- **Semestres** : S5, S6 (ou plus si nécessaire).
-- **UE (Unités d'Enseignement)** : Doivent avoir un code unique et un volume de crédits ECTS défini.
-- **Matières** : Chaque matière doit être rattachée à une UE et posséder un coefficient de pondération.
-- **Enseignants** : Liez chaque matière à son enseignant responsable pour lui donner l'accès à la saisie.
+### Unités d'Enseignement (UE)
+- **Création** : Cliquez sur **➕ Créer une UE**. Le système créera automatiquement le semestre associé (S5, S6) s'il n'existe pas.
+- **Code** : Utilisez un format standardisé (ex: `UE5-1`). C'est ce code qui sert de référence pour lier les matières.
+- **Crédits** : Définissez le poids ECTS (généralement entre 2 et 8).
+
+### Matières
+- Chaque matière doit être rattachée à une UE.
+- **Coefficients** : Utilisés pour le calcul de la moyenne de l'UE.
+- **Résilience** : Lors de la création d'une matière dans le portail admin, vous pouvez utiliser soit le **UUID interne** de l'UE, soit son **Code court**. Le système fera la correspondance automatiquement.
 
 ## 3. Paramètres Système & Seuils
 

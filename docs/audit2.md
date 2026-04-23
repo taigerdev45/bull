@@ -45,3 +45,4 @@ Le backend est **Production-Ready**. L'ensemble du cahier des charges académiqu
 | **Gestion Personnel** | ✅ **100%** | Interface administrative complète pour la gestion des rôles et la création de comptes synchronisée Supabase. |
 | **Intégrité DDD** | ✅ **OK** | Entité Étudiant complétée (nom/prenom) et découplage de l'auth pour les inscriptions souples. |
 | **Module Saisie** | ✅ **OK** | Refonte ergonomique du formulaire d'évaluation avec sélection intelligente des référentiels. |
+| **Résilience Référentiel** | ✅ **OK** | Support des identifiants mixtes (UUID/Code) et auto-initialisation des semestres lors de l'ajout d'UE. |
