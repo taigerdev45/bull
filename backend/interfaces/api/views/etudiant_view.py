@@ -6,10 +6,12 @@ from interfaces.api.serializers.evaluation_serializer import EvaluationSerialize
 from interfaces.api.permissions.role_permissions import IsSecretariat, IsEnseignant
 from infrastructure.config.dependency_injection import Container
 
+from rest_framework.permissions import AllowAny
+
 @extend_schema(tags=['Étudiants'])
 class EtudiantViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion CRUD des étudiants via le repository."""
-    permission_classes = [IsSecretariat]
+    permission_classes = [AllowAny]
 
     def list(self, request):
         repo = Container.etudiant_repo()
