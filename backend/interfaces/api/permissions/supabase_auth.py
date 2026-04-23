@@ -46,26 +46,22 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('UID (sub) manquant dans le token Supabase.')
 
         # Récupération des custom claims
-        # Dans Supabase, les rôles système sont souvent dans 'app_metadata'
-        # et les rôles utilisateurs dans 'user_metadata'
+        # Dans Supabase, les rôles peuvent être dans 'role', 'app_metadata' ou 'user_metadata'
         app_metadata = payload.get('app_metadata', {})
         user_metadata = payload.get('user_metadata', {})
         
-        # Priorité : app_metadata > user_metadata > default
-        raw_role = app_metadata.get('role') or user_metadata.get('role', 'etudiant')
+        # Priorité : payload.role > app_metadata.role > user_metadata.role > default
+        raw_role = payload.get('role') or app_metadata.get('role') or user_metadata.get('role', 'etudiant')
         role = str(raw_role).lower().strip()
 
         # Récupération ou création de l'utilisateur Django local
         user, created = User.objects.get_or_create(username=uid)
         
         # Log minimal pour le débogage en production (Render logs)
-        print(f"[AUTH] User {uid} authenticated with role: {role} (raw: {raw_role})")
+        print(f"[AUTH] User {uid} detected as: {role} (claims: {raw_role})")
         
         # On attache les métadonnées pour que les permissions puissent les lire
-        # On garde 'firebase_claims' comme nom d'attribut interne provisoirement 
-        # pour ne pas casser la logique de permission existante tout de suite, 
-        # ou on le renomme proprement.
         user.supabase_claims = payload
         user.role = role # Raccourci pratique
         
-        return (user, None)
+        return (user, payload)
