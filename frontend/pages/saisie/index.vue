@@ -59,7 +59,7 @@
         </div>
       </div>
 
-      <div v-if="evaluations.length === 0" class="empty-state">
+      <div v-if="!evaluations || evaluations.length === 0" class="empty-state">
         <div class="empty-icon">📂</div>
         <h3>Aucune évaluation trouvée</h3>
         <p>Commencez par créer une nouvelle session d'évaluation.</p>
