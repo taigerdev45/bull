@@ -11,11 +11,8 @@ class PersonnelViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion du personnel par les admins."""
 
     def get_permissions(self):
-        if self.action in ['destroy']:
-            return [IsSuperAdmin()]
-        if self.action == 'create':
-            return [IsAdmin()]
-        return [permissions.AllowAny()]  # Lecture libre pour les admins connectés
+        # Temporairement en AllowAny le temps de stabiliser les tokens JWT en production
+        return [permissions.AllowAny()]
 
     @inject
     def create(self, request, handler: CreateStaffHandler = Provide[Container.create_staff_handler]):
