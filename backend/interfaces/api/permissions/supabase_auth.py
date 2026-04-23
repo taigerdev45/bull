@@ -52,13 +52,17 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         
         # Priorité : payload.role > app_metadata.role > user_metadata.role > default
         raw_role = payload.get('role') or app_metadata.get('role') or user_metadata.get('role', 'etudiant')
-        role = str(raw_role).lower().strip()
+        
+        if isinstance(raw_role, list):
+            role = str(raw_role[0]).lower().strip() if raw_role else 'etudiant'
+        else:
+            role = str(raw_role).lower().strip()
 
         # Récupération ou création de l'utilisateur Django local
         user, created = User.objects.get_or_create(username=uid)
         
         # Log minimal pour le débogage en production (Render logs)
-        print(f"[AUTH] User {uid} detected as: {role} (claims: {raw_role})")
+        print(f"[AUTH] User {uid} detected as: {role} (raw type: {type(raw_role)})")
         
         # On attache les métadonnées pour que les permissions puissent les lire
         user.supabase_claims = payload
