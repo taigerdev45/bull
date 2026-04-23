@@ -100,6 +100,7 @@ const allLinks = [
   { path: '/referentiels', label: 'Référentiels', icon: '📚', roles: ['admin'] },
   { path: '/deliberations', label: 'Délibérations', icon: '⚖️', roles: ['admin', 'secretariat'] },
   { path: '/bulletins', label: 'Bulletins', icon: '📄', roles: ['admin', 'secretariat', 'etudiant', 'enseignant'] },
+  { path: '/personnel', label: 'Personnel', icon: '👥', roles: ['admin', 'super_admin'] },
   { path: '/profil', label: 'Profil', icon: '👤', roles: ['admin', 'secretariat', 'enseignant', 'etudiant'] }
 ]
 

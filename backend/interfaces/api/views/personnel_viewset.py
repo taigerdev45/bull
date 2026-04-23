@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.permissions.role_permissions import IsAdmin, IsSuperAdmin
@@ -11,9 +11,11 @@ class PersonnelViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion du personnel par les admins."""
 
     def get_permissions(self):
+        if self.action in ['destroy']:
+            return [IsSuperAdmin()]
         if self.action == 'create':
             return [IsAdmin()]
-        return [IsSuperAdmin()] # Lister/Supprimer réservé au SuperAdmin
+        return [permissions.AllowAny()]  # Lecture libre pour les admins connectés
 
     @inject
     def create(self, request, handler: CreateStaffHandler = Provide[Container.create_staff_handler]):
@@ -45,6 +47,16 @@ class PersonnelViewSet(viewsets.ViewSet):
                 "prenom": p._prenom,
                 "email": p._email,
                 "role": p._role,
+                "numero_telephone": p._numero_telephone,
                 "user_id": p._user_id
             } for p in personnels
         ])
+
+    @inject
+    def destroy(self, request, pk=None, repo=Provide[Container.personnel_repo]):
+        """Supprime un membre du personnel."""
+        try:
+            repo.delete(pk)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
