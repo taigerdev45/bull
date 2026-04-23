@@ -2,25 +2,25 @@ from rest_framework import permissions
 
 class IsSuperAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and \
-               getattr(request.user, 'role', None) == 'super_admin'
+        role = str(getattr(request.user, 'role', '')).lower().strip()
+        return request.user.is_authenticated and role == 'super_admin'
 
 class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and \
-               getattr(request.user, 'role', None) in ['super_admin', 'admin']
+        role = str(getattr(request.user, 'role', '')).lower().strip()
+        return request.user.is_authenticated and role in ['super_admin', 'admin']
 
 class IsSecretariat(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and \
-               getattr(request.user, 'role', None) in ['super_admin', 'admin', 'secretariat']
+        role = str(getattr(request.user, 'role', '')).lower().strip()
+        return request.user.is_authenticated and role in ['super_admin', 'admin', 'secretariat']
 
 class IsEnseignant(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and \
-               getattr(request.user, 'role', None) in ['super_admin', 'admin', 'enseignant']
+        role = str(getattr(request.user, 'role', '')).lower().strip()
+        return request.user.is_authenticated and role in ['super_admin', 'admin', 'enseignant']
 
 class IsEtudiant(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and \
-               getattr(request.user, 'role', None) == 'etudiant'
+        role = str(getattr(request.user, 'role', '')).lower().strip()
+        return request.user.is_authenticated and role == 'etudiant'

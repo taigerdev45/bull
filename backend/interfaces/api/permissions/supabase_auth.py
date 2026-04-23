@@ -52,10 +52,14 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         user_metadata = payload.get('user_metadata', {})
         
         # Priorité : app_metadata > user_metadata > default
-        role = app_metadata.get('role') or user_metadata.get('role', 'etudiant')
+        raw_role = app_metadata.get('role') or user_metadata.get('role', 'etudiant')
+        role = str(raw_role).lower().strip()
 
         # Récupération ou création de l'utilisateur Django local
         user, created = User.objects.get_or_create(username=uid)
+        
+        # Log minimal pour le débogage en production (Render logs)
+        print(f"[AUTH] User {uid} authenticated with role: {role} (raw: {raw_role})")
         
         # On attache les métadonnées pour que les permissions puissent les lire
         # On garde 'firebase_claims' comme nom d'attribut interne provisoirement 

@@ -106,7 +106,7 @@ class SupabaseAuthService:
                 "user": {
                     "id": res.user.id,
                     "email": res.user.email,
-                    "role": res.user.user_metadata.get("role", "etudiant"),
+                    "role": str(res.user.user_metadata.get("role", "etudiant")).lower().strip(),
                     "name": res.user.user_metadata.get("display_name", "")
                 }
             }
