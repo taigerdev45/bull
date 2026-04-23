@@ -96,10 +96,12 @@ const currentRoute = computed(() => {
 
 const allLinks = [
   { path: '/etudiants', label: 'Étudiants', icon: '🎓', roles: ['admin', 'secretariat'] },
-  { path: '/saisie', label: 'Saisie Notes', icon: '📝', roles: ['admin', 'secretariat', 'enseignant'] },
-  { path: '/referentiels', label: 'Référentiels', icon: '📚', roles: ['admin'] },
+  { path: '/secretariat/absences', label: 'Absences', icon: '🕒', roles: ['admin', 'secretariat'] },
+  { path: '/secretariat/enseignants', label: 'Enseignants', icon: '👨‍🏫', roles: ['admin', 'secretariat'] },
   { path: '/deliberations', label: 'Délibérations', icon: '⚖️', roles: ['admin', 'secretariat'] },
+  { path: '/referentiels', label: 'Référentiels', icon: '⚙️', roles: ['admin', 'secretariat'] },
   { path: '/bulletins', label: 'Bulletins', icon: '📄', roles: ['admin', 'secretariat', 'etudiant', 'enseignant'] },
+  { path: '/saisie', label: 'Saisie Notes', icon: '📝', roles: ['admin', 'secretariat', 'enseignant'] },
   { path: '/personnel', label: 'Personnel', icon: '👥', roles: ['admin', 'super_admin'] },
   { path: '/profil', label: 'Profil', icon: '👤', roles: ['admin', 'secretariat', 'enseignant', 'etudiant'] }
 ]
