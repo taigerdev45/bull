@@ -85,7 +85,7 @@ const pending = ref(true)
 const fetchReferentiel = async () => {
   pending.value = true
   try {
-    const data = await fetchApi('/referentiels/ue/')
+    const data = await fetchApi('/ues/')
     if (data) ues.value = data
   } catch (e) {
     console.error('Fetch referentiel error', e)

@@ -191,9 +191,10 @@ const loadData = async () => {
   loading.value = true
   try {
     const data = await fetchApi('/etudiants/')
-    students.value = data || []
+    students.value = Array.isArray(data) ? data : []
   } catch (err) {
-    console.error('Failed to load students', err)
+    console.error('Fetch error', err)
+    students.value = []
   } finally {
     loading.value = false
   }
