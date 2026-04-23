@@ -1,10 +1,11 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from rest_framework import serializers
+from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat
 
 class EnseignantSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
@@ -17,6 +18,11 @@ class EnseignantSerializer(serializers.Serializer):
 @extend_schema(tags=['Administration'])
 class EnseignantViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion des Enseignants."""
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'assign_matieres']:
+            return [IsSecretariat()]
+        return [permissions.IsAuthenticated()]
 
     @inject
     def __init__(self, repo=Provide[Container.enseignant_repo], **kwargs):
@@ -24,7 +30,18 @@ class EnseignantViewSet(viewsets.ViewSet):
         self.repo = repo
 
     def list(self, request):
-        enseignants = self.repo.list_all()
+        auth = request.auth if isinstance(request.auth, dict) else {}
+        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        
+        if role == 'etudiant':
+            return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
+            
+        if role == 'enseignant':
+            enseignants = [self.repo.get_by_id(request.user.username)]
+            enseignants = [e for e in enseignants if e]
+        else:
+            enseignants = self.repo.list_all()
+            
         serializer = EnseignantSerializer(enseignants, many=True)
         return Response(serializer.data)
 
@@ -99,8 +116,6 @@ class EnseignantViewSet(viewsets.ViewSet):
         if not isinstance(matiere_ids, list):
             return Response({"error": "liste attendue"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Le repository ou un service devrait gérer ça
-        # Pour l'instant, on boucle sur les matières (approche simple)
         matiere_repo = Container.matiere_repo()
         for m_id in matiere_ids:
             matiere_repo.attribuer_enseignant(m_id, pk)

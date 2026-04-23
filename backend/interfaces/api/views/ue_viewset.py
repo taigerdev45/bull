@@ -1,12 +1,11 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from interfaces.api.serializers.ue_serializer import UESerializer, MatiereSerializer
-from rest_framework.permissions import AllowAny
-
+from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat
 
 def ue_to_dict(ue, matieres=None):
     """Convertit une entité UE en dict JSON-serializable."""
@@ -19,7 +18,6 @@ def ue_to_dict(ue, matieres=None):
         "matieres": [matiere_to_dict(m) for m in (matieres or [])],
     }
 
-
 def matiere_to_dict(m):
     """Convertit une entité Matiere en dict JSON-serializable."""
     return {
@@ -31,11 +29,14 @@ def matiere_to_dict(m):
         "enseignant_id": m.enseignant_id,
     }
 
-
 @extend_schema(tags=['Académique'])
 class UEViewSet(viewsets.ViewSet):
     """ViewSet pour les Unités d'Enseignement (UE)."""
-    permission_classes = [AllowAny]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'destroy']:
+            return [IsSecretariat()]
+        return [permissions.IsAuthenticated()]
 
     @inject
     def __init__(self, ue_repo=Provide[Container.ue_repo], matiere_repo=Provide[Container.matiere_repo], **kwargs):
@@ -119,11 +120,14 @@ class UEViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 @extend_schema(tags=['Académique'])
 class MatiereViewSet(viewsets.ViewSet):
     """ViewSet pour les Matières."""
-    permission_classes = [AllowAny]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'destroy', 'attribuer_enseignant']:
+            return [IsSecretariat()]
+        return [permissions.IsAuthenticated()]
 
     @inject
     def __init__(self, matiere_repo=Provide[Container.matiere_repo], **kwargs):
@@ -132,7 +136,15 @@ class MatiereViewSet(viewsets.ViewSet):
 
     def list(self, request):
         try:
-            matieres = self.matiere_repo.list_all()
+            auth = request.auth if isinstance(request.auth, dict) else {}
+            role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+            
+            # Si c'est un enseignant, on peut filtrer ses matières
+            if role == 'enseignant':
+                matieres = self.matiere_repo.get_by_enseignant(request.user.username)
+            else:
+                matieres = self.repo.list_all() if hasattr(self, 'repo') else self.matiere_repo.list_all()
+                
             return Response([matiere_to_dict(m) for m in matieres])
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -18,8 +18,9 @@ class AbsenceViewSet(viewsets.ViewSet):
     """
 
     def get_permissions(self):
-        # On passe en AllowAny temporairement pour stabiliser les tests sur Render
-        return [permissions.AllowAny()]
+        if self.action in ['create', 'update', 'destroy']:
+            return [IsSecretariat()]
+        return [permissions.IsAuthenticated()]
 
     @inject
     def create(self, request, handler: CreerAbsenceHandler = Provide[Container.creer_absence_handler]):

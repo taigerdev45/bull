@@ -1,10 +1,10 @@
-from rest_framework import viewsets, status, views
+from rest_framework import viewsets, status, views, permissions
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema
 from interfaces.api.serializers.etudiant_serializer import EtudiantSerializer
 from interfaces.api.serializers.evaluation_serializer import EvaluationSerializer
-from interfaces.api.permissions.role_permissions import IsEnseignant
+from interfaces.api.permissions.role_permissions import IsEnseignant, IsAdmin, IsSecretariat, IsEtudiant
 from infrastructure.config.dependency_injection import Container
 
 
@@ -12,21 +12,37 @@ from infrastructure.config.dependency_injection import Container
 class EtudiantViewSet(viewsets.ViewSet):
     """
     ViewSet CRUD étudiants.
-    La création est en deux modes :
-      1. Avec 'password' → crée aussi un compte Supabase Auth
-      2. Sans 'password'  → inscription administrative directe (dossier uniquement)
     """
-    permission_classes = [AllowAny]
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsSecretariat()]
+        return [permissions.IsAuthenticated()]
 
     # ─── LIST ────────────────────────────────────────────────────────────────
     def list(self, request):
         repo = Container.etudiant_repo()
-        etudiants = repo.list_all()
+        
+        # Sécurité : un étudiant ne doit pas pouvoir lister tous les autres
+        auth = request.auth if isinstance(request.auth, dict) else {}
+        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        
+        if role == 'etudiant':
+            etudiants = [repo.get_by_id(request.user.username)]
+            etudiants = [e for e in etudiants if e]
+        else:
+            etudiants = repo.list_all()
+            
         serializer = EtudiantSerializer(etudiants, many=True)
         return Response(serializer.data)
 
     # ─── RETRIEVE ────────────────────────────────────────────────────────────
     def retrieve(self, request, pk=None):
+        # Sécurité: un étudiant ne peut voir que son propre profil
+        auth = request.auth if isinstance(request.auth, dict) else {}
+        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        if role == 'etudiant' and request.user.username != pk:
+            return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
+
         repo = Container.etudiant_repo()
         etudiant = repo.get_by_id(pk)
         if not etudiant:
