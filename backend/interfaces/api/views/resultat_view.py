@@ -53,7 +53,7 @@ class ResultatAnnuelView(views.APIView):
 )
 class PromotionStatsView(views.APIView):
     """Vue pour les statistiques globales d'une promotion."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsSecretariat | IsAdmin]
 
     def get(self, request):
         promo_id = request.query_params.get('promo_id')

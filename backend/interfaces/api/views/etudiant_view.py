@@ -150,24 +150,3 @@ class EtudiantViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-
-@extend_schema(tags=['Évaluations'])
-class EvaluationView(views.APIView):
-    """Vue pour la saisie de notes déclenchant les commandes applicatives."""
-    permission_classes = [IsEnseignant]
-
-    def post(self, request):
-        serializer = EvaluationSerializer(data=request.data)
-        if serializer.is_valid():
-            service = Container.evaluation_service()
-            try:
-                eval_id = service.saisir_note(
-                    etudiant_id=serializer.validated_data['etudiant_id'],
-                    matiere_id=serializer.validated_data['matiere_id'],
-                    type_eval=serializer.validated_data['type'],
-                    note=serializer.validated_data['note']
-                )
-                return Response({'id': eval_id, 'status': 'Calculé'}, status=status.HTTP_201_CREATED)
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

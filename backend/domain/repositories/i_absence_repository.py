@@ -39,3 +39,8 @@ class IAbsenceRepository(ABC):
     def calculer_total_heures(self, etudiant_id: str, matiere_id: str) -> int:
         """Calcule le nombre total d'heures d'absence pour un étudiant dans une matière."""
         pass
+
+    @abstractmethod
+    def obtenir_tout(self) -> List[Absence]:
+        """Récupère l'intégralité des absences du système."""
+        pass

@@ -37,3 +37,8 @@ class IEvaluationRepository(ABC):
     @abstractmethod
     def supprimer(self, id: str) -> None:
         pass
+
+    @abstractmethod
+    def obtenir_tout(self) -> List[Evaluation]:
+        """Récupère toutes les évaluations du système."""
+        pass

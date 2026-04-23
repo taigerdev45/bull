@@ -54,7 +54,7 @@ class AbsenceViewSet(viewsets.ViewSet):
             if etudiant_id:
                 absences = repo.obtenir_par_etudiant(etudiant_id)
             else:
-                absences = repo.obtenir_tout() if hasattr(repo, 'obtenir_tout') else []
+                absences = repo.obtenir_tout()
         
         serializer = AbsenceSerializer([a.to_dict() for a in absences], many=True)
         return Response(serializer.data)
@@ -62,9 +62,9 @@ class AbsenceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     @inject
     def par_etudiant(self, request, etudiant_id=None, repo=Provide[Container.absence_repo]):
-        claims = getattr(request.user, 'firebase_claims', {})
-        role = claims.get('role')
-        uid = getattr(request.user, 'username', None)
+        auth = request.auth if isinstance(request.auth, dict) else {}
+        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        uid = request.user.username
         
         if role == 'etudiant' and uid != etudiant_id:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
@@ -75,7 +75,7 @@ class AbsenceViewSet(viewsets.ViewSet):
 
     @inject
     def update(self, request, pk=None, repo=Provide[Container.absence_repo]):
-        absence = repo.get_by_id(pk)
+        absence = repo.obtenir_par_id(pk)
         if not absence:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
@@ -85,11 +85,11 @@ class AbsenceViewSet(viewsets.ViewSet):
             absence._matiere_id = serializer.validated_data['matiere_id']
             absence._nombre_heures = serializer.validated_data['nombre_heures']
             absence._date_absence = serializer.validated_data['date_absence']
-            repo.save(absence)
+            repo.modifier(absence)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @inject
     def destroy(self, request, pk=None, repo=Provide[Container.absence_repo]):
-        repo.delete(pk)
+        repo.supprimer(pk)
         return Response(status=status.HTTP_204_NO_CONTENT)

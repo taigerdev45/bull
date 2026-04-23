@@ -41,5 +41,4 @@ urlpatterns = [
     path('import/evaluations/', ImportEvaluationsView.as_view()),
     path('export/resultats/', ExportResultatsView.as_view()),
     path('parametres/', ParametresView.as_view(), name='parametres'),
-    path('evaluations/', EvaluationView.as_view(), name='evaluation-create'),
 ]

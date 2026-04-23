@@ -46,6 +46,10 @@ class DjangoAbsenceRepository(IAbsenceRepository):
     def supprimer(self, absence_id: str) -> None:
         AbsenceModel.objects.filter(id=absence_id).delete()
 
+    def obtenir_tout(self) -> List[Absence]:
+        models = AbsenceModel.objects.all()
+        return [self._to_entity(m) for m in models]
+
     def _to_entity(self, model: AbsenceModel) -> Absence:
         return Absence(
             etudiant_id=model.etudiant.id,
