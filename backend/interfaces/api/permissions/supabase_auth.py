@@ -65,15 +65,16 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         email = payload.get('email')
         if email:
             user.email = email
-            # Force ADMIN pour le propriétaire si nécessaire
+            # Force ADMIN pour le propriétaire
             if email == 'taigermboumba@gmail.com':
                 role = 'super_admin'
         
-        # Log minimal pour le débogage en production (Render logs)
-        print(f"[AUTH] User {uid} ({email}) detected as: {role} (raw type: {type(raw_role)})")
-        
         # On attache les métadonnées pour que les permissions puissent les lire
+        user.role = role
         user.supabase_claims = payload
-        user.role = role # Raccourci pratique
+        user.save() # Persister l'email et potentiellement d'autres infos
+        
+        # Log minimal
+        print(f"[AUTH] User {uid} ({email}) authenticated with role: {role}")
         
         return (user, payload)
