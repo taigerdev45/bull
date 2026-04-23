@@ -1,43 +1,74 @@
 <template>
   <div class="app-layout">
+    <!-- Sidebar Premium -->
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <h1>Bull ASUR</h1>
+      <div class="sidebar-brand">
+        <div class="logo-box">
+          <span class="logo-text">B</span>
+        </div>
+        <div class="brand-text">
+          <h1>Bull ASUR</h1>
+          <p>Gestion Académique</p>
+        </div>
       </div>
-      <nav class="sidebar-nav">
-        <!-- Lien Dashboard (adapté au rôle) -->
-        <NuxtLink :to="`/${currentRole}`" class="nav-link" :class="{'router-link-active': currentRoute === 'Dashboard'}">
-          Dashboard
-        </NuxtLink>
 
-        <!-- Liens conditionnels -->
-        <NuxtLink v-for="link in allowedLinks" :key="link.path" :to="link.path" class="nav-link">
-          {{ link.label }}
-        </NuxtLink>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <span class="nav-section-title">Menu Principal</span>
+          <NuxtLink :to="`/${currentRole}`" class="nav-link">
+            <span class="nav-icon">🏠</span>
+            Dashboard
+          </NuxtLink>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-title">Gestion</span>
+          <NuxtLink v-for="link in allowedLinks" :key="link.path" :to="link.path" class="nav-link">
+            <span class="nav-icon">{{ link.icon }}</span>
+            {{ link.label }}
+          </NuxtLink>
+        </div>
       </nav>
-      <div class="sidebar-footer">
-        <button @click="logout" class="nav-link logout-btn w-full">
-          Déconnexion
+
+      <div class="sidebar-user">
+        <div class="user-info">
+          <div class="user-avatar" :style="{ backgroundColor: avatarColor }">
+            {{ currentRole.charAt(0).toUpperCase() }}
+          </div>
+          <div class="user-details">
+            <span class="user-name">{{ userName || 'Utilisateur' }}</span>
+            <span class="user-role">{{ currentRole.toUpperCase() }}</span>
+          </div>
+        </div>
+        <button @click="logout" class="logout-btn" title="Déconnexion">
+          <span>🚪</span>
         </button>
       </div>
     </aside>
     
-    <main class="main-content">
-      <header class="topbar">
-        <div class="breadcrumb">
-          <span>{{ currentRoute }}</span>
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <header class="navbar">
+        <div class="navbar-left">
+          <h2 class="page-title">{{ currentRoute }}</h2>
         </div>
-        <div class="user-profile">
-          <div class="avatar">{{ currentRole.charAt(0).toUpperCase() }}</div>
-          <span class="role-lbl">{{ currentRole.toUpperCase() }}</span>
+        <div class="navbar-right">
+          <div class="search-bar">
+            <span>🔍</span>
+            <input type="text" placeholder="Rechercher..." />
+          </div>
+          <button class="notif-btn">
+            <span>🔔</span>
+            <span class="notif-badge"></span>
+          </button>
         </div>
       </header>
-      <div class="page-container">
+
+      <main class="page-content">
         <slot />
-      </div>
-    </main>
+      </main>
+    </div>
     
-    <!-- Système de notifications global -->
     <NotificationSystem />
   </div>
 </template>
@@ -48,174 +79,283 @@ import { useRoute } from 'vue-router'
 import NotificationSystem from '~/components/ui/NotificationSystem.vue'
 
 const route = useRoute()
-
-// Lecture globale du rôle (Cookie Nuxt) avec protection par défaut
 const currentRole = useCookie('authRole', { default: () => 'etudiant' })
+const userName = useCookie('authName') // On suppose qu'on a stocké le nom
+
+const avatarColor = computed(() => {
+  const colors = ['#2563eb', '#10b981', '#f59e0b', '#7c3aed', '#db2777']
+  return colors[currentRole.value.length % colors.length]
+})
 
 const currentRoute = computed(() => {
   const path = route.path
-  if (['/admin', '/secretariat', '/enseignant', '/etudiant'].includes(path)) return 'Dashboard'
-  return path.split('/').pop().charAt(0).toUpperCase() + path.split('/').pop().substring(1)
+  if (['/admin', '/secretariat', '/enseignant', '/etudiant'].includes(path)) return 'Tableau de Bord'
+  const lastPart = path.split('/').pop()
+  return lastPart.charAt(0).toUpperCase() + lastPart.slice(1)
 })
 
-// Définition centralisée de tous les liens existants
 const allLinks = [
-  { path: '/etudiants', label: 'Étudiants', roles: ['admin', 'secretariat'] },
-  { path: '/saisie', label: 'Saisie Notes', roles: ['admin', 'secretariat', 'enseignant'] },
-  { path: '/referentiels', label: 'Référentiels', roles: ['admin'] },
-  { path: '/deliberations', label: 'Délibérations', roles: ['admin', 'secretariat'] },
-  { path: '/bulletins', label: 'Bulletins', roles: ['admin', 'secretariat', 'etudiant'] },
-  { path: '/profil', label: 'Profil', roles: ['admin', 'secretariat', 'enseignant', 'etudiant'] }
+  { path: '/etudiants', label: 'Étudiants', icon: '🎓', roles: ['admin', 'secretariat'] },
+  { path: '/saisie', label: 'Saisie Notes', icon: '📝', roles: ['admin', 'secretariat', 'enseignant'] },
+  { path: '/referentiels', label: 'Référentiels', icon: '📚', roles: ['admin'] },
+  { path: '/deliberations', label: 'Délibérations', icon: '⚖️', roles: ['admin', 'secretariat'] },
+  { path: '/bulletins', label: 'Bulletins', icon: '📄', roles: ['admin', 'secretariat', 'etudiant', 'enseignant'] },
+  { path: '/profil', label: 'Profil', icon: '👤', roles: ['admin', 'secretariat', 'enseignant', 'etudiant'] }
 ]
+
+const allowedLinks = computed(() => {
+  return allLinks.filter(link => link.roles.includes(currentRole.value))
+})
 
 const logout = () => {
   const token = useCookie('auth_token')
   const role = useCookie('authRole')
   const id = useCookie('authId')
-  
   token.value = null
   role.value = null
   id.value = null
-  
   navigateTo('/')
 }
-
-// Filtrage basé sur le profil
-const allowedLinks = computed(() => {
-  return allLinks.filter(link => link.roles.includes(currentRole.value))
-})
 </script>
 
 <style scoped>
 .app-layout {
   display: flex;
   min-height: 100vh;
-  background-color: var(--bg-color);
 }
 
+/* Sidebar */
 .sidebar {
-  width: 260px;
-  background-color: var(--theme-dark);
-  border-right: 1px solid var(--border);
+  width: var(--sidebar-width);
+  background-color: var(--bg-sidebar);
+  color: white;
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 10;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  top: 0; left: 0; bottom: 0;
+  z-index: 20;
 }
 
-.sidebar-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.sidebar-brand {
+  padding: 2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.sidebar-header h1 {
-  font-size: 1.5rem;
-  color: white;
+.logo-box {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.brand-text h1 {
+  font-size: 1.15rem;
   font-weight: 700;
+  margin: 0;
   letter-spacing: -0.5px;
 }
 
+.brand-text p {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin: 0;
+}
+
 .sidebar-nav {
-  padding: 1.5rem 1rem;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.nav-section {
+  margin-bottom: 2rem;
+}
+
+.nav-section-title {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  font-weight: 700;
+  padding-left: 1rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: 1px;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  color: rgba(255,255,255,0.7);
-  border-radius: var(--radius);
-  font-weight: 500;
-  transition: all 0.2s ease;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  color: rgba(255,255,255,0.6);
   text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
 }
 
 .nav-link:hover {
-  background-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
   color: white;
 }
 
 .router-link-active {
-  background-color: rgba(255,255,255,0.2);
-  color: white !important;
+  background: rgba(37, 99, 235, 0.15) !important;
+  color: #3b82f6 !important;
+  font-weight: 600;
 }
 
-.sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid rgba(255,255,255,0.1);
+/* Sidebar User */
+.sidebar-user {
+  padding: 1.25rem;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid rgba(255,255,255,0.1);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  opacity: 0.5;
 }
 
 .logout-btn {
-  color: #fca5a5;
-  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 
 .logout-btn:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  color: white;
+  opacity: 1;
 }
 
-.main-content {
+/* Main Wrapper */
+.main-wrapper {
+  margin-left: var(--sidebar-width);
   flex: 1;
-  margin-left: 260px;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  background-color: var(--bg-main);
 }
 
-.topbar {
-  height: 70px;
-  background-color: white;
-  border-bottom: 1px solid var(--border);
+.navbar {
+  height: var(--navbar-height);
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2rem;
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: 10;
 }
 
-.breadcrumb {
-  font-weight: 600;
-  color: var(--text-main);
-  font-size: 1.1rem;
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-.user-profile {
+.navbar-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  font-weight: 500;
+  gap: 1.5rem;
 }
 
-.avatar {
-  width: 36px;
-  height: 36px;
+.search-bar {
+  background: white;
+  border: 1px solid var(--border-light);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 240px;
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.notif-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border: 2px solid white;
   border-radius: 50%;
-  background-color: var(--primary);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
 }
 
-.role-lbl {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.page-container {
+.page-content {
   padding: 2rem;
-  flex: 1;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); }
+  .main-wrapper { margin-left: 0; }
 }
 </style>

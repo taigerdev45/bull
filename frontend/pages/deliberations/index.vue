@@ -1,202 +1,108 @@
 <template>
-  <div class="page-deliberation">
-    <header class="page-header">
-      <div class="header-content">
-        <h2>Délibérations du Jury (S5)</h2>
-        <p>Année universitaire 2025-2026 - Liste récapitulative des résultats</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn btn-secondary">
-          <span class="icon">📊</span> Exporter Excel
-        </button>
-        <button class="btn btn-primary">
-          <span class="icon">✔️</span> Valider les décisions
-        </button>
-      </div>
-    </header>
+  <div class="page-container">
+     <header class="page-header">
+        <div class="header-info">
+           <h1>Procès Verbaux & Délibérations</h1>
+           <p>Validation collective des résultats par promotion et par semestre.</p>
+        </div>
+        <div class="header-actions">
+           <button class="btn btn-primary" @click="startDelib">
+             <span>📢</span> Lancer la Délibération
+           </button>
+        </div>
+     </header>
 
-    <div class="grid-container">
-      <table class="grid-delib">
-        <thead>
-          <tr>
-            <th>Étudiant</th>
-            <th class="center">Moy S5</th>
-            <th class="center">UE5-1</th>
-            <th class="center">UE5-2</th>
-            <th class="center">Crédits</th>
-            <th class="center">Décision S5</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="res in resultats" :key="res.id" :class="{'is-failed': res.decision === 'Ajourné'}">
-            <td class="font-bold">{{ res.nom }} {{ res.prenom }}</td>
-            <td class="center font-bold value">
-              {{ res.moyS5 }}
-            </td>
-            <td class="center">{{ res.ue1 }}</td>
-            <td class="center">{{ res.ue2 }}</td>
-            <td class="center badge-container">
-              <span :class="['badge-sm', res.credits === 30 ? 'badge-success' : 'badge-warning']">
-                {{ res.credits }} / 30
+     <div class="stats-mini-grid">
+        <div class="mini-stat">
+           <span class="label">Admis (Session Normale)</span>
+           <span class="value success">82%</span>
+        </div>
+        <div class="mini-stat">
+           <span class="label">En Rattrapage</span>
+           <span class="value warning">18%</span>
+        </div>
+        <div class="mini-stat">
+           <span class="label">Moyenne Générale Promo</span>
+           <span class="value">11.24</span>
+        </div>
+     </div>
+
+     <div class="pv-card">
+        <UiDataTable 
+          title="Registre de Délibération - S5" 
+          subtitle="Résultats synthétiques pour validation du jury"
+          :columns="columns" 
+          :data="results" 
+          :actions="true"
+        >
+           <template #moyenne="{ row }">
+              <strong :class="row.moyenne >= 10 ? 'text-success' : 'text-danger'">
+                 {{ row.moyenne.toFixed(2) }}
+              </strong>
+           </template>
+           <template #decision="{ row }">
+              <span :class="['badge', row.moyenne >= 10 ? 'badge-success' : 'badge-danger']">
+                 {{ row.moyenne >= 10 ? 'ADMIS' : 'RATTRAPAGE' }}
               </span>
-            </td>
-            <td class="center">
-              <span :class="['decision-badge', res.decision === 'Validé' ? 'valid' : 'invalid']">
-                {{ res.decision }}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+           </template>
+           <template #rowActions="{ row }">
+              <button class="action-btn" @click="viewDetails(row)">Détails</button>
+           </template>
+        </UiDataTable>
+     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useApi } from '~/composables/useApi'
+import { ref } from 'vue'
+import UiDataTable from '~/components/ui/DataTable.vue'
 
-useHead({ title: 'Délibérations | LP ASUR' })
+useHead({ title: 'Délibérations | Bull ASUR' })
 
-const { fetchApi } = useApi()
-const isLoading = ref(true)
-const resultats = ref([])
+const columns = [
+  { key: 'matricule', label: 'Matricule' },
+  { key: 'nom', label: 'Nom & Prénom' },
+  { key: 'moyenne', label: 'Moyenne' },
+  { key: 'credits', label: 'Crédits' },
+  { key: 'decision', label: 'Décision Jury' }
+]
 
-const loadResultats = async () => {
-  isLoading.value = true
-  try {
-    const response = await fetchApi('/resultats/promotion/stats/', {
-      params: { 
-        semestre: 5, // Par défaut S5 pour cette page
-        promo_id: 'LP_ASUR_2026' 
-      }
-    })
-    
-    if (response && response.resultats) {
-      resultats.value = response.resultats
-    }
-  } catch(error) {
-    console.error('Failed to load resultats:', error)
-    alert("Erreur lors du chargement des délibérations.")
-  } finally {
-    isLoading.value = false
-  }
-}
+const results = ref([
+  { id: 1, matricule: '23ASUR001', nom: 'MOUKIKA Brady', moyenne: 14.50, credits: 30 },
+  { id: 2, matricule: '23ASUR002', nom: 'MBA NSOME Yannick', moyenne: 12.75, credits: 30 },
+  { id: 3, matricule: '23ASUR003', nom: 'ZUE David', moyenne: 9.80, credits: 24 },
+  { id: 4, matricule: '23ASUR004', nom: 'NDONG Marie', moyenne: 11.20, credits: 30 }
+])
 
-onMounted(() => {
-  loadResultats()
-})
+const startDelib = () => { alert('Simulation du moteur de délibération...') }
+const viewDetails = (row) => { alert(`Détails pour ${row.nom}`) }
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-}
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+.header-info h1 { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0; }
+.header-info p { color: #64748b; font-size: 1rem; margin-top: 0.25rem; }
 
-.header-content h2 {
-  font-size: 1.75rem;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
-}
+.stats-mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+.mini-stat { background: white; padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 0.25rem; box-shadow: var(--shadow-sm); }
+.mini-stat .label { font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase; }
+.mini-stat .value { font-size: 1.75rem; font-weight: 800; color: #1e293b; }
+.mini-stat .value.success { color: #10b981; }
+.mini-stat .value.warning { color: #f59e0b; }
 
-.header-content p {
-  color: var(--text-muted);
-}
+.pv-card { background: white; border-radius: var(--radius-xl); border: 1px solid var(--border-light); overflow: hidden; }
 
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
+.text-success { color: #059669; }
+.text-danger { color: #dc2626; }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  border: none;
-}
+.badge { padding: 0.35rem 0.85rem; border-radius: 99px; font-size: 0.7rem; font-weight: 800; }
+.badge-success { background: #ecfdf5; color: #065f46; }
+.badge-danger { background: #fef2f2; color: #991b1b; }
 
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-}
+.action-btn { background: #f1f5f9; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #475569; }
+.action-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-.btn-secondary {
-  background-color: white;
-  color: var(--text-main);
-  border: 1px solid var(--border);
-}
-
-.grid-container {
-  background-color: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow-x: auto;
-}
-
-.grid-delib {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.grid-delib th, .grid-delib td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.grid-delib th {
-  background-color: #f8fafc;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.grid-delib tbody tr:hover {
-  background-color: #f1f5f9;
-}
-
-.center { text-align: center; }
-.font-bold { font-weight: 600; color: var(--text-main); }
-
-.grid-delib tbody tr.is-failed {
-  background-color: rgba(239, 68, 68, 0.03);
-}
-
-.grid-delib tbody tr.is-failed .value {
-  color: var(--danger);
-}
-
-.badge-sm {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.badge-success { background-color: rgba(16, 185, 129, 0.1); color: var(--success); }
-.badge-warning { background-color: rgba(239, 68, 68, 0.1); color: var(--danger); }
-
-.decision-badge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-.valid {
-  background-color: var(--success);
-  color: white;
-}
-
-.invalid {
-  background-color: var(--danger);
-  color: white;
-}
+.btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; border: none; font-size: 0.9rem; transition: all 0.2s; }
+.btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px var(--primary-glow); }
 </style>

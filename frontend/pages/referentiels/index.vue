@@ -1,247 +1,174 @@
 <template>
-  <div class="page-referentiels">
+  <div class="page-container">
     <header class="page-header">
-      <div class="header-content">
-        <h2>Gestion des Référentiels Pédagogiques</h2>
-        <p>Gérez la structure académique: Unités d'Enseignement (UE) et Matières.</p>
+      <div class="header-info">
+        <h1>Référentiels Pédagogiques</h1>
+        <p>Structure des Unités d'Enseignement et des matières associées.</p>
       </div>
       <div class="header-actions">
-        <button class="btn btn-primary" @click="addUE">
-          <span class="icon">➕</span> Ajouter une UE
+        <button class="btn btn-primary" @click="openUEModal('add')">
+          <span>➕</span> Créer une UE
         </button>
       </div>
     </header>
 
-    <div class="referentiels-container">
-      <div class="ue-card" v-for="ue in ues" :key="ue.id">
+    <div v-if="pending" class="loader">
+       <div class="spinner"></div>
+       <p>Chargement de la structure...</p>
+    </div>
+
+    <div v-else class="referentiels-grid">
+      <div v-for="ue in ues" :key="ue.id" class="ue-card">
         <div class="ue-header">
           <div class="ue-title">
-            <h3>{{ ue.code }} : {{ ue.libelle }}</h3>
-            <span class="badge">{{ ue.semestre }}</span>
+            <span class="ue-code">{{ ue.code }}</span>
+            <h3>{{ ue.libelle }}</h3>
           </div>
-          <div class="ue-actions">
-            <button class="action-btn edit-btn">✏️</button>
-            <button class="action-btn delete-btn">🗑️</button>
+          <div class="ue-meta">
+            <span class="badge">Semestre {{ ue.semestre_id }}</span>
+            <div class="header-actions-group">
+              <button class="icon-btn edit" @click="openUEModal('edit', ue)">✏️</button>
+              <button class="icon-btn delete" @click="confirmDeleteUE(ue)">🗑️</button>
+            </div>
           </div>
         </div>
 
-        <table class="matieres-table">
-          <thead>
-            <tr>
-              <th>Matière</th>
-              <th width="100" class="center">Coefficient</th>
-              <th width="100" class="center">Crédits</th>
-              <th width="80" class="center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="mat in ue.matieres" :key="mat.id">
-              <td>{{ mat.libelle }}</td>
-              <td class="center font-bold">{{ mat.coefficient }}</td>
-              <td class="center font-bold">{{ mat.credits }}</td>
-              <td class="center actions-cell">
-                <button class="action-btn edit-sm-btn">✏️</button>
-              </td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td class="add-matiere-cell">
-                <button class="btn btn-dashed">
-                  <span class="icon">➕</span> Ajouter une matière à {{ ue.code }}
-                </button>
-              </td>
-              <td class="center total-lbl">Total :</td>
-              <td class="center total-val">{{ totalCredits(ue) }}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
+        <div class="ue-content">
+          <table class="matiere-list">
+            <thead>
+              <tr>
+                <th>Matière</th>
+                <th class="center">Coeff.</th>
+                <th class="center">Crédits</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="mat in ue.matieres" :key="mat.id">
+                <td class="m-name">{{ mat.libelle }}</td>
+                <td class="m-val center">{{ mat.coefficient }}</td>
+                <td class="m-val center">{{ mat.credits }}</td>
+                <td class="m-actions">
+                  <button @click="editMatiere(mat, ue)">✏️</button>
+                </td>
+              </tr>
+              <tr v-if="!ue.matieres?.length">
+                <td colspan="4" class="empty-m">Aucune matière affectée.</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <button class="add-m-btn" @click="addMatiere(ue)">
+            <span>➕</span> Ajouter une matière
+          </button>
+        </div>
+
+        <div class="ue-footer">
+          <div class="total-badge">
+             <span class="t-lbl">Crédits Totaux</span>
+             <span class="t-val">{{ totalCredits(ue) }} / 30</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useApi } from '~/composables/useApi'
 
-useHead({
-  title: 'Référentiels | LP ASUR'
-})
+const { fetchApi } = useApi()
+const ues = ref([])
+const pending = ref(true)
 
-const ues = ref([
-  {
-    id: 1,
-    code: 'UE5-1',
-    libelle: 'Enseignement Général',
-    semestre: 'Semestre 5',
-    matieres: [
-      { id: 101, libelle: 'Anglais technique', coefficient: 1, credits: 2 },
-      { id: 102, libelle: 'Management d\'équipe', coefficient: 1, credits: 1 },
-      { id: 103, libelle: 'Communication', coefficient: 2, credits: 1 },
-      { id: 104, libelle: 'Droit de l\'informatique', coefficient: 2, credits: 2 },
-    ]
-  },
-  {
-    id: 2,
-    code: 'UE5-2',
-    libelle: 'Connaissances de Base et Outils LAN',
-    semestre: 'Semestre 5',
-    matieres: [
-      { id: 201, libelle: 'Remise à niveau IOS', coefficient: 2, credits: 2 },
-      { id: 202, libelle: 'Connaissance des réseaux LAN', coefficient: 2, credits: 2 },
-    ]
+const fetchReferentiel = async () => {
+  pending.value = true
+  try {
+    const data = await fetchApi('/referentiels/ue/')
+    if (data) ues.value = data
+  } catch (e) {
+    console.error('Fetch referentiel error', e)
+  } finally {
+    pending.value = false
   }
-])
-
-const totalCredits = (ue) => {
-  return ue.matieres.reduce((acc, current) => acc + current.credits, 0)
 }
 
-const addUE = () => {
-  alert('Ouverture de la modale de création d\'UE...')
+onMounted(fetchReferentiel)
+
+const totalCredits = (ue) => {
+  if (!ue.matieres) return 0
+  return ue.matieres.reduce((acc, m) => acc + (m.credits || 0), 0)
+}
+
+const openUEModal = (mode, ue = null) => {
+  alert('Fonctionnalité en cours de refonte...')
+}
+
+const confirmDeleteUE = (ue) => {
+  if(confirm(`Supprimer l'UE ${ue.code} ?`)) {
+     alert('Option de suppression désactivée en mode démo.')
+  }
+}
+
+const addMatiere = (ue) => {
+  alert(`Ajout de matière à l'UE ${ue.code}`)
+}
+
+const editMatiere = (mat, ue) => {
+  alert(`Édition de ${mat.libelle}`)
 }
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-}
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+.header-info h1 { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0; }
+.header-info p { color: #64748b; font-size: 1rem; margin: 0.25rem 0 0; }
 
-.header-content h2 {
-  font-size: 1.75rem;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
-}
+.referentiels-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; }
 
-.header-content p {
-  color: var(--text-muted);
-}
+.ue-card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: all 0.2s; }
+.ue-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s ease;
-}
+.ue-header { padding: 1.5rem; background: #f8fafc; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: flex-start; }
+.ue-title { display: flex; flex-direction: column; gap: 0.25rem; }
+.ue-code { font-size: 0.7rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+.ue-title h3 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; }
 
-.btn-primary { background-color: var(--primary); color: white; }
-.btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-.btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border); }
-.btn-dashed { 
-  background-color: transparent; 
-  border: 1px dashed var(--border); 
-  color: var(--text-muted); 
-  width: 100%;
-  justify-content: center;
-  padding: 0.4rem;
-  font-size: 0.85rem;
-}
-.btn-dashed:hover { background-color: #f8fafc; border-color: var(--primary); color: var(--primary); }
+.ue-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; }
+.badge { background: #eef2ff; color: #3730a3; font-size: 0.7rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 999px; }
 
-.referentiels-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
+.header-actions-group { display: flex; gap: 0.5rem; }
+.icon-btn { background: none; border: none; cursor: pointer; padding: 0.25rem; opacity: 0.4; transition: opacity 0.2s; font-size: 1.1rem; }
+.icon-btn:hover { opacity: 1; }
 
-.ue-card {
-  background-color: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
+.ue-content { padding: 1rem 1.5rem; flex: 1; }
+.matiere-list { width: 100%; border-collapse: collapse; }
+.matiere-list th { padding: 0.75rem 0.5rem; text-align: left; font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid #f1f5f9; }
+.matiere-list td { padding: 0.85rem 0.5rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+.matiere-list tr:last-child td { border-bottom: none; }
 
-.ue-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f8fafc;
-}
+.center { text-align: center !important; }
+.m-name { font-weight: 600; color: #334155; }
+.m-val { font-weight: 700; color: #0f172a; }
+.m-actions { text-align: right; }
+.m-actions button { background: none; border: none; cursor: pointer; padding: 0.25rem; opacity: 0.3; transition: opacity 0.2s; }
+.m-actions button:hover { opacity: 1; }
 
-.ue-title {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+.empty-m { text-align: center; color: #94a3b8; padding: 2rem; font-style: italic; }
 
-.ue-title h3 {
-  font-size: 1.2rem;
-  color: var(--text-main);
-  margin: 0;
-}
+.add-m-btn { width: 100%; margin-top: 1.5rem; padding: 0.75rem; border: 1px dashed var(--border-light); background: #fdfdfd; color: #64748b; font-weight: 600; border-radius: var(--radius-md); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.add-m-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
 
-.badge {
-  background-color: rgba(37, 99, 235, 0.1);
-  color: var(--primary);
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
+.ue-footer { padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; }
+.total-badge { background: white; border: 1px solid var(--border-light); padding: 0.5rem 1rem; border-radius: 12px; display: flex; gap: 0.75rem; align-items: center; box-shadow: var(--shadow-sm); }
+.t-lbl { font-size: 0.65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+.t-val { font-size: 1rem; font-weight: 800; color: var(--primary); }
 
-.action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  opacity: 0.7;
-  padding: 0.25rem;
-  transition: opacity 0.2s, transform 0.2s;
-}
+.loader { display: flex; flex-direction: column; align-items: center; padding: 5rem; }
+.spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.action-btn:hover { opacity: 1; transform: scale(1.1); }
-.edit-sm-btn { font-size: 0.95rem; }
-
-.matieres-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.matieres-table th, .matieres-table td {
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.matieres-table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-}
-
-.matieres-table tbody tr:hover {
-  background-color: #fbfcfe;
-}
-
-.add-matiere-cell {
-  padding: 0.75rem 1.5rem;
-}
-
-.total-lbl {
-  font-weight: 600;
-  color: var(--text-muted);
-  text-align: right;
-}
-
-.total-val {
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 1.1rem;
-}
-
-.center { text-align: center; }
-.font-bold { font-weight: 600; color: var(--text-main); }
+.btn { padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: none; display: flex; align-items: center; gap: 0.5rem; }
+.btn-primary { background: var(--primary); color: white; }
 </style>

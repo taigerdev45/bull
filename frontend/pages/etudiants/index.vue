@@ -1,126 +1,171 @@
 <template>
-  <div class="page-etudiants">
-    <header class="page-header">
-      <div class="header-content">
-        <h2>Gestion des Étudiants</h2>
-        <p>Gérez les élèves inscrits en Licence Professionnelle ASUR.</p>
+  <div class="students-module">
+    <!-- Header Page -->
+    <header class="module-header">
+      <div class="title-section">
+        <h1>Gestion Administrative des Étudiants</h1>
+        <p>Registre centralisé de la promotion ASUR</p>
       </div>
-      <div class="header-actions">
-        <button class="btn btn-secondary">
-          <span class="icon">📥</span> Importer (Excel)
-        </button>
-        <button class="btn btn-primary" @click="openModal('add')">
-          <span class="icon">➕</span> Ajouter un Étudiant
+      <div class="actions-section">
+        <button class="btn btn-primary" @click="handleCreate">
+          <span class="icon">➕</span> Nouvel Étudiant
         </button>
       </div>
     </header>
 
-    <div class="table-container">
-      <div v-if="pending" class="loader-container">
-        <div class="spinner"></div>
-        <p>Chargement des étudiants...</p>
+    <!-- Stats Dashboard -->
+    <section class="stats-overview">
+      <div v-for="stat in stats" :key="stat.label" class="stat-item">
+        <span class="stat-label">{{ stat.label }}</span>
+        <span class="stat-value">{{ stat.value }}</span>
       </div>
-      <DataTable 
-        v-else
-        title="Liste de la Promotion" 
-        :columns="columns" 
-        :data="students" 
-        :actions="true"
-      >
-        <template #status="{ row }">
-          <span :class="['badge', row.status === 'Inscrit' ? 'badge-success' : 'badge-warning']">
-            {{ row.status || 'Inscrit' }}
-          </span>
-        </template>
-        <template #rowActions="{ row }">
-          <button class="action-btn view-btn" @click="openModal('view', row)" title="Voir le profil">👁️</button>
-          <button class="action-btn edit-btn" @click="openModal('edit', row)" title="Modifier">✏️</button>
-          <button class="action-btn delete-btn" @click="confirmDelete(row)" title="Supprimer">🗑️</button>
-        </template>
-      </DataTable>
-    </div>
+    </section>
 
-    <!-- Modal Étudiant -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <header class="modal-header">
-          <h3>{{ modalMode === 'add' ? 'Ajouter un Étudiant' : modalMode === 'edit' ? 'Modifier l\'Étudiant' : 'Fiche Étudiant' }}</h3>
-          <button class="close-btn" @click="closeModal">&times;</button>
-        </header>
-        
-        <form @submit.prevent="saveStudent" class="modal-body">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Nom</label>
-              <input v-model="form.nom" required :disabled="modalMode === 'view'" placeholder="Mouk" />
-            </div>
-            <div class="form-group">
-              <label>Prénom</label>
-              <input v-model="form.prenom" required :disabled="modalMode === 'view'" placeholder="Brady" />
-            </div>
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" v-model="form.email" required :disabled="modalMode === 'view'" placeholder="brady.mouk@example.com" />
-            </div>
-            <div class="form-group">
-              <label>Matricule</label>
-              <input v-model="form.matricule" required :disabled="modalMode === 'view'" placeholder="23ASUR001" />
-            </div>
-            <div class="form-group">
-              <label>Date de Naissance</label>
-              <input type="date" v-model="form.date_naissance" required :disabled="modalMode === 'view'" />
-            </div>
-            <div class="form-group">
-              <label>Lieu de Naissance</label>
-              <input v-model="form.lieu_naissance" required :disabled="modalMode === 'view'" placeholder="Libreville" />
-            </div>
-            <div class="form-group">
-              <label>Baccalauréat</label>
-              <input v-model="form.bac" required :disabled="modalMode === 'view'" placeholder="L1, L2, C, D ..." />
-            </div>
-            <div class="form-group">
-              <label>Provenance</label>
-              <input v-model="form.provenance" required :disabled="modalMode === 'view'" placeholder="Lycée Technique" />
-            </div>
-          </div>
-          
-          <footer class="modal-footer" v-if="modalMode !== 'view'">
-            <button type="button" class="btn btn-secondary" @click="closeModal">Annuler</button>
-            <button type="submit" class="btn btn-primary" :disabled="saving">
-              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
-            </button>
-          </footer>
-        </form>
+    <!-- Data Table Section -->
+    <section class="data-section">
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Synchronisation avec le serveur...</p>
       </div>
-    </div>
+
+      <div v-else class="table-container">
+        <UiDataTable
+          title="Registre des Étudiants"
+          :columns="headers"
+          :data="students"
+          :actions="true"
+        >
+          <!-- Custom Slots for Table Cells -->
+          <template #status="{ row }">
+            <span :class="['status-chip', row.status?.toLowerCase()]">
+              {{ row.status || 'Inscrit' }}
+            </span>
+          </template>
+
+          <template #rowActions="{ row }">
+            <div class="row-actions">
+              <button class="icon-btn" title="Voir détails" @click="handleView(row)">👁️</button>
+              <button class="icon-btn edit" title="Modifier" @click="handleEdit(row)">✏️</button>
+              <button class="icon-btn delete" title="Supprimer" @click="handleDelete(row)">🗑️</button>
+            </div>
+          </template>
+        </UiDataTable>
+      </div>
+    </section>
+
+    <!-- Modal Form (Unified for Create/Edit/View) -->
+    <Transition name="modal-fade">
+      <div v-if="modal.show" class="modal-backdrop" @click.self="closeModal">
+        <div class="modal-box">
+          <header class="modal-header">
+            <h3>{{ modal.title }}</h3>
+            <button class="close-x" @click="closeModal">&times;</button>
+          </header>
+
+          <form @submit.prevent="handleSubmit" class="modal-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nom</label>
+                <input v-model="form.nom" required :disabled="modal.mode === 'view'" placeholder="Nom de famille" />
+              </div>
+
+              <div class="form-group">
+                <label>Prénom</label>
+                <input v-model="form.prenom" required :disabled="modal.mode === 'view'" placeholder="Prénom(s)" />
+              </div>
+
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" v-model="form.email" required :disabled="modal.mode === 'view'" placeholder="email@univ.ga" />
+              </div>
+
+              <div class="form-group">
+                <label>Matricule ASUR</label>
+                <input v-model="form.matricule" required :disabled="modal.mode === 'view'" placeholder="Ex: 23ASUR001" />
+              </div>
+
+              <div class="form-group">
+                <label>Date de Naissance</label>
+                <input type="date" v-model="form.date_naissance" required :disabled="modal.mode === 'view'" />
+              </div>
+
+              <div class="form-group">
+                <label>Lieu de Naissance</label>
+                <input v-model="form.lieu_naissance" required :disabled="modal.mode === 'view'" placeholder="Ville" />
+              </div>
+
+              <div class="form-group">
+                <label>Série Baccalauréat</label>
+                <input v-model="form.bac" required :disabled="modal.mode === 'view'" placeholder="Ex: S, C, D..." />
+              </div>
+
+              <div class="form-group">
+                <label>Établissement d'Origine</label>
+                <input v-model="form.provenance" required :disabled="modal.mode === 'view'" placeholder="Lycée de provenance" />
+              </div>
+
+              <div class="form-group full-width">
+                <label>Statut Administratif</label>
+                <select v-model="form.status" :disabled="modal.mode === 'view'">
+                  <option value="Inscrit">Inscrit</option>
+                  <option value="Boursier">Boursier</option>
+                  <option value="Exclu">Exclu</option>
+                  <option value="Suspendu">Suspendu</option>
+                </select>
+              </div>
+            </div>
+
+            <footer class="form-footer" v-if="modal.mode !== 'view'">
+              <button type="button" class="btn btn-alt" @click="closeModal">Annuler</button>
+              <button type="submit" class="btn btn-primary" :disabled="submitting">
+                {{ submitting ? 'Enregistrement...' : 'Enregistrer les informations' }}
+              </button>
+            </footer>
+          </form>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
+import UiDataTable from '~/components/ui/DataTable.vue'
 
-useHead({ title: 'Étudiants | LP ASUR' })
+useHead({ title: 'Étudiants | Bull' })
 
 const { fetchApi } = useApi()
-const students = ref([])
-const pending = ref(true)
-const saving = ref(false)
 
-const columns = [
+// Logic State
+const students = ref([])
+const loading = ref(true)
+const submitting = ref(false)
+
+const headers = [
   { key: 'matricule', label: 'Matricule' },
   { key: 'nom', label: 'Nom' },
   { key: 'prenom', label: 'Prénom' },
   { key: 'email', label: 'Email' },
-  { key: 'bac', label: 'Baccalauréat' },
-  { key: 'provenance', label: 'Étab. Provenance' }
+  { key: 'bac', label: 'Série Bac' },
+  { key: 'status', label: 'Statut' }
 ]
 
-// Modal State
-const showModal = ref(false)
-const modalMode = ref('view') // 'add' | 'edit' | 'view'
-const form = ref({
-  id: '',
+const stats = computed(() => [
+  { label: 'Total Étudiants', value: students.value.length },
+  { label: 'Inscrits Actifs', value: students.value.filter(s => s.status === 'Inscrit').length },
+  { label: 'Détails Promotion', value: 'ASUR 2026' }
+])
+
+// Modal & Form State
+const modal = reactive({
+  show: false,
+  mode: 'add',
+  title: 'Nouvel Étudiant'
+})
+
+const defaultForm = {
+  id: null,
   nom: '',
   prenom: '',
   email: '',
@@ -130,226 +175,316 @@ const form = ref({
   bac: '',
   provenance: '',
   status: 'Inscrit'
-})
+}
 
-const fetchStudents = async () => {
-  pending.value = true
+const form = reactive({ ...defaultForm })
+
+// API Actions
+const loadData = async () => {
+  loading.value = true
   try {
     const data = await fetchApi('/etudiants/')
-    if (data) students.value = data
-  } catch (e) {
-    console.error('Fetch failed', e)
+    students.value = data || []
+  } catch (err) {
+    console.error('Failed to load students', err)
   } finally {
-    pending.value = false
+    loading.value = false
   }
 }
 
-onMounted(fetchStudents)
-
-const openModal = (mode, student = null) => {
-  modalMode.value = mode
-  if (student) {
-    form.value = { ...student }
-  } else {
-    form.value = { id: '', nom: '', prenom: '', email: '', matricule: '', date_naissance: '', lieu_naissance: '', bac: '', provenance: '', status: 'Inscrit' }
-  }
-  showModal.value = true
-}
-
-const closeModal = () => {
-  showModal.value = false
-}
-
-const saveStudent = async () => {
-  saving.value = true
+const handleSubmit = async () => {
+  submitting.value = true
   try {
-    const method = modalMode.value === 'add' ? 'POST' : 'PATCH'
-    const url = modalMode.value === 'add' ? '/etudiants/' : `/etudiants/${form.value.id}/`
+    const isEdit = modal.mode === 'edit'
+    const method = isEdit ? 'PATCH' : 'POST'
+    const endpoint = isEdit ? `/etudiants/${form.id}/` : '/etudiants/'
     
-    await fetchApi(url, {
+    await fetchApi(endpoint, {
       method,
-      body: form.value
+      body: form
     })
     
-    await fetchStudents()
+    await loadData()
     closeModal()
-  } catch (e) {
-    console.error('Erreur lors de l\'enregistrement', e)
-    alert(e.data?.error || 'Erreur lors de l\'enregistrement')
+  } catch (err) {
+    console.error('Save error', err)
+    alert(err.data?.message || 'Erreur lors de la sauvegarde. Vérifiez les champs.')
   } finally {
-    saving.value = false
+    submitting.value = false
   }
 }
 
-const confirmDelete = async (student) => {
-  if (confirm(`Êtes-vous sûr de vouloir supprimer l'étudiant ${student.nom}?`)) {
+const handleDelete = async (row) => {
+  if (confirm(`Êtes-vous sûr de vouloir supprimer ${row.nom} ${row.prenom} de la base de données ?`)) {
     try {
-      await fetchApi(`/etudiants/${student.id}/`, { method: 'DELETE' })
-      await fetchStudents()
-    } catch (e) {
-      console.error('Erreur lors de la suppression', e)
-      alert('Erreur lors de la suppression')
+      await fetchApi(`/etudiants/${row.id}/`, { method: 'DELETE' })
+      await loadData()
+    } catch (err) {
+      alert('Erreur lors de la suppression.')
     }
   }
 }
+
+// UI Handlers
+const closeModal = () => {
+  modal.show = false
+  Object.assign(form, defaultForm)
+}
+
+const handleCreate = () => {
+  modal.mode = 'add'
+  modal.title = 'Inscription Nouvel Étudiant'
+  Object.assign(form, defaultForm)
+  modal.show = true
+}
+
+const handleEdit = (row) => {
+  modal.mode = 'edit'
+  modal.title = `Modifier Profil : ${row.nom}`
+  Object.assign(form, row)
+  modal.show = true
+}
+
+const handleView = (row) => {
+  modal.mode = 'view'
+  modal.title = `Détails Étudiant : ${row.nom}`
+  Object.assign(form, row)
+  modal.show = true
+}
+
+onMounted(loadData)
 </script>
 
 <style scoped>
-.page-header {
+.students-module {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header Section */
+.module-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.header-content h2 {
+.title-section h1 {
   font-size: 1.75rem;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
 }
 
-.header-content p {
-  color: var(--text-muted);
+.title-section p {
+  color: #64748b;
+  margin-top: 0.25rem;
 }
 
-.header-actions {
-  display: flex;
-  gap: 1rem;
+/* Stats Overview */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-}
-
-.btn .icon {
-  margin-right: 0.5rem;
-}
-
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
-
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background-color: white;
-  color: var(--text-main);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  background-color: #f8fafc;
-}
-
-.table-container {
-  margin-top: 1rem;
-}
-
-.badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.badge-success {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-}
-
-.badge-warning {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--warning);
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  padding: 0 0.25rem;
-}
-
-.action-btn:hover { opacity: 1; transform: scale(1.1); }
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-.modal-content {
+.stat-item {
   background: white;
-  width: 100%;
-  max-width: 600px;
-  border-radius: var(--radius);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+/* Table Section */
+.data-section {
+  background: white;
+  border-radius: 16px;
   overflow: hidden;
 }
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.status-chip {
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-chip.inscrit { background: #dcfce7; color: #166534; }
+.status-chip.boursier { background: #dbeafe; color: #1e40af; }
+.status-chip.exclu { background: #fee2e2; color: #991b1b; }
+
+/* Modal & Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modal-box {
+  background: white;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
 .modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f8fafc;
+  background: #f8fafc;
 }
-.modal-header h3 { margin: 0; color: #000080; font-size: 1.25rem; }
-.close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
 
-.modal-body { padding: 1.5rem; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.form-group label { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
-.form-group input { padding: 0.6rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; }
-.form-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); }
-.form-group input:disabled { background-color: #f1f5f9; cursor: not-allowed; }
+.modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
 
-.modal-footer {
-  padding: 1.5rem;
-  border-top: 1px solid var(--border);
+.close-x {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.modal-form {
+  padding: 2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-group input, .form-group select {
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.form-group input:focus, .form-group select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-footer {
+  margin-top: 2rem;
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  background-color: #f8fafc;
 }
 
-.loader-container {
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary { background: #3b82f6; color: white; }
+.btn-primary:hover { background: #2563eb; }
+.btn-alt { background: #f1f5f9; color: #475569; }
+
+.icon-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover { background: white; border-color: #3b82f6; color: #3b82f6; }
+.icon-btn.delete:hover { border-color: #ef4444; color: #ef4444; }
+
+/* Loading State */
+.loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4rem;
-  color: var(--text-muted);
+  padding: 5rem;
+  color: #64748b;
 }
+
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--primary);
+  border: 3px solid #f1f5f9;
+  border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Transitions */
+.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s ease; }
+.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
 </style>

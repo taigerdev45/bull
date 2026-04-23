@@ -1,89 +1,144 @@
 <template>
-  <div class="page-profil">
-    <header class="page-header">
-      <h2>Mon Profil</h2>
-      <p>Gérez vos informations personnelles et préférences de connexion.</p>
-    </header>
-
-    <div class="profil-card">
-      <div class="profil-header">
-        <div class="avatar-large">{{ initial }}</div>
-        <div class="profil-main-info">
+  <div class="page-container">
+    <div class="profil-layout">
+      <!-- Left Side: Profile Summary -->
+      <div class="card side-profile">
+        <div class="avatar-box">
+          <div class="avatar-large" :style="{ backgroundColor: avatarColor }">{{ initial }}</div>
+          <button class="edit-avatar">📷</button>
+        </div>
+        <div class="side-info">
           <h3>{{ fullName }}</h3>
-          <p class="role-badge">{{ currentRole.toUpperCase() }}</p>
+          <span class="role-chip">{{ currentRole.toUpperCase() }}</span>
+        </div>
+        <div class="side-stats">
+          <div class="s-stat">
+            <strong>2026</strong>
+            <span>Année LP</span>
+          </div>
+          <div class="s-stat">
+             <strong>ASUR</strong>
+             <span>Spécialité</span>
+          </div>
         </div>
       </div>
 
-      <form class="profil-form" @submit.prevent>
-        <div class="form-group">
-          <label>Identifiant (Prénom)</label>
-          <input type="text" :value="username" disabled />
-        </div>
-        <div class="form-group">
-          <label>Adresse Email</label>
-          <input type="email" :value="email" disabled />
-        </div>
-        
-        <div class="form-group mt-2">
-          <h4>Changer le mot de passe</h4>
-          <div class="form-row">
-            <input type="password" placeholder="Mot de passe actuel" />
-            <input type="password" placeholder="Nouveau mot de passe" />
+      <!-- Right Side: Details Form -->
+      <div class="card main-profile">
+        <header class="section-header">
+          <h3>Informations Personnelles</h3>
+          <p>Mettez à jour vos informations de contact.</p>
+        </header>
+
+        <form @submit.prevent="updateProfile" class="profile-form">
+          <div class="form-grid">
+            <div class="field">
+              <label>Nom complet</label>
+              <input type="text" v-model="fullName" placeholder="Ex: Jean Dupont" />
+            </div>
+            <div class="field">
+              <label>Email Professionnel</label>
+              <input type="email" v-model="email" disabled />
+              <small>L'email est géré par l'administration.</small>
+            </div>
+            <div class="field">
+               <label>Téléphone</label>
+               <input type="tel" v-model="phone" placeholder="+241 ..." />
+            </div>
           </div>
-        </div>
-        
-        <div class="actions">
-          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-        </div>
-      </form>
+
+          <div class="divider"></div>
+
+          <header class="section-header">
+            <h3>Sécurité</h3>
+            <p>Changez votre mot de passe régulièrement pour sécuriser votre accès.</p>
+          </header>
+
+          <div class="form-grid">
+            <div class="field">
+              <label>Mot de passe actuel</label>
+              <input type="password" v-model="pass.current" placeholder="••••••••" />
+            </div>
+            <div class="field">
+              <label>Nouveau mot de passe</label>
+              <input type="password" v-model="pass.new" placeholder="••••••••" />
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button type="submit" class="btn btn-primary" :disabled="saving">
+              {{ saving ? 'Enregistrement...' : 'Mettre à jour mon profil' }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed } from 'vue'
 
 useHead({ title: 'Profil | Bull ASUR' })
 
-const route = useRoute()
-
-// Lecture globale du rôle et des informations utilisateur
 const currentRole = useCookie('authRole', { default: () => 'etudiant' })
-const username = useCookie('authUsername', { default: () => 'Yannick' })
-const email = useCookie('authEmail', { default: () => 'yannick.mba@inptic.ga' })
-const fullName = useCookie('authFullName', { default: () => 'MBA NSOME Yannick Lionel' })
+const fullName = useCookie('authFullName', { default: () => 'Administrateur Principal' })
+const email = useCookie('authEmail', { default: () => 'taigermboumba@gmail.com' })
+const phone = ref('+241 07 00 00 00')
+const saving = ref(false)
+const pass = ref({ current: '', new: '' })
 
-const initial = computed(() => fullName.value.charAt(0).toUpperCase() || 'U')
+const initial = computed(() => fullName.value ? fullName.value.charAt(0).toUpperCase() : 'A')
+const avatarColor = computed(() => '#2563eb')
+
+const updateProfile = async () => {
+  saving.value = true
+  setTimeout(() => {
+    saving.value = false
+    alert('Profil mis à jour avec succès !')
+  }, 1000)
+}
 </script>
 
 <style scoped>
-.page-header { margin-bottom: 2rem; }
-.page-header h2 { font-size: 1.75rem; color: var(--text-main); font-weight: 700; margin-bottom: 0.25rem; }
-.page-header p { color: var(--text-muted); }
+.profil-layout { display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: flex-start; }
 
-.profil-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; max-width: 700px; box-shadow: var(--shadow); }
+.card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); overflow: hidden; }
 
-.profil-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
-.avatar-large { width: 80px; height: 80px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: bold; }
-.profil-main-info h3 { font-size: 1.5rem; margin-bottom: 0.25rem; color: var(--text-main); }
-.role-badge { display: inline-block; background: var(--theme-dark); color: white; padding: 0.2rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; }
+.side-profile { padding: 3rem 1.5rem; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
-.profil-form .form-group { margin-bottom: 1.5rem; }
-.profil-form label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
-.profil-form input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); outline: none; }
-.profil-form input:focus { border-color: var(--primary); }
-.profil-form input:disabled { background-color: #f1f5f9; color: var(--text-muted); cursor: not-allowed; }
+.avatar-box { position: relative; margin-bottom: 1.5rem; }
+.avatar-large { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; color: white; border: 4px solid white; box-shadow: var(--shadow-md); }
+.edit-avatar { position: absolute; bottom: 0; right: 0; background: white; border: 1px solid var(--border-light); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); }
 
-.form-group h4 { font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; color: var(--text-main); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.side-info h3 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
+.role-chip { background: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 700; padding: 0.35rem 1rem; border-radius: 99px; }
 
-.actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: right; }
-.btn { padding: 0.75rem 1.5rem; border: none; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-family: inherit; transition: background 0.2s; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-hover); }
+.side-stats { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; border-top: 1px solid #f1f5f9; margin-top: 2rem; padding-top: 2rem; }
+.s-stat { display: flex; flex-direction: column; gap: 0.25rem; }
+.s-stat strong { font-size: 1rem; color: #0f172a; }
+.s-stat span { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
 
-@media (max-width: 600px) {
-  .form-row { grid-template-columns: 1fr; }
+.main-profile { padding: 2.5rem; }
+.section-header { margin-bottom: 2rem; }
+.section-header h3 { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0; }
+.section-header p { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+
+.divider { height: 1px; background: #f1f5f9; margin: 2rem 0; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.field { display: flex; flex-direction: column; gap: 0.5rem; }
+.field label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+.field input { padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; width: 100%; transition: all 0.2s; }
+.field input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-glow); }
+.field input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+.field small { font-size: 0.75rem; color: #94a3b8; }
+
+.form-footer { margin-top: 2.5rem; display: flex; justify-content: flex-end; }
+.btn-primary { padding: 0.8rem 2rem; border-radius: 8px; background: var(--primary); color: white; font-weight: 700; cursor: pointer; border: none; box-shadow: 0 4px 12px var(--primary-glow); transition: all 0.2s; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px var(--primary-glow); }
+
+@media (max-width: 900px) {
+  .profil-layout { grid-template-columns: 1fr; }
 }
 </style>

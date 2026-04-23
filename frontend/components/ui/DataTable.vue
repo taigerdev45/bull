@@ -1,129 +1,162 @@
 <template>
-  <div class="datatable-wrapper">
-    <div class="datatable-header" v-if="title || $slots.actions">
-      <h3 v-if="title">{{ title }}</h3>
-      <div class="actions">
-        <slot name="actions" />
+  <div class="data-table-container">
+    <div class="table-header">
+      <div class="header-info">
+        <h3>{{ title }}</h3>
+        <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
+      </div>
+      <div class="header-actions">
+        <div class="search-input">
+          <span>🔍</span>
+          <input v-model="search" type="text" placeholder="Rechercher..." />
+        </div>
+        <slot name="headerActions"></slot>
       </div>
     </div>
-    
-    <div class="table-responsive">
-      <table class="datatable">
+
+    <div class="table-content">
+      <table class="premium-table">
         <thead>
           <tr>
-            <th v-for="(col, index) in columns" :key="index" :style="{ width: col.width }">
+            <th v-for="col in columns" :key="col.key">
               {{ col.label }}
             </th>
-            <th v-if="$slots.rowActions || actions" class="actions-col">Actions</th>
+            <th v-if="actions" class="actions-col">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!data || data.length === 0">
-            <td :colspan="columns.length + (actions ? 1 : 0)" class="empty-state">
-              Aucune donnée disponible.
-            </td>
-          </tr>
-          <tr v-for="(row, rowIndex) in data" :key="rowIndex">
-            <td v-for="(col, colIndex) in columns" :key="colIndex">
+          <tr v-for="(row, index) in filteredData" :key="index">
+            <td v-for="col in columns" :key="col.key">
               <slot :name="col.key" :row="row">
                 {{ row[col.key] }}
               </slot>
             </td>
-            <td v-if="$slots.rowActions || actions" class="actions-col">
-              <slot name="rowActions" :row="row" />
+            <td v-if="actions" class="actions-cell">
+              <slot name="rowActions" :row="row"></slot>
+            </td>
+          </tr>
+          <tr v-if="filteredData.length === 0">
+            <td :colspan="columns.length + (actions ? 1 : 0)" class="empty-state">
+              Aucune donnée trouvée.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <div class="table-footer">
+      <span>Affichage de {{ filteredData.length }} sur {{ data.length }} entrées</span>
+    </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
-  title: {
-    type: String,
-    default: ''
-  },
-  columns: {
-    type: Array,
-    required: true
-  },
-  data: {
-    type: Array,
-    required: true
-  },
-  actions: {
-    type: Boolean,
-    default: false
-  }
+import { ref, computed } from 'vue'
+
+const props = defineProps({
+  title: String,
+  subtitle: String,
+  columns: Array,
+  data: Array,
+  actions: Boolean
+})
+
+const search = ref('')
+
+const filteredData = computed(() => {
+  if (!search.value) return props.data
+  const q = search.value.toLowerCase()
+  return props.data.filter(item => 
+    Object.values(item).some(val => String(val).toLowerCase().includes(q))
+  )
 })
 </script>
 
 <style scoped>
-.datatable-wrapper {
-  background-color: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+.data-table-container {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
 }
 
-.datatable-header {
+.table-header {
   padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-light);
+  gap: 1.5rem;
 }
 
-.datatable-header h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-main);
-  margin: 0;
+.header-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); }
+.subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+.header-actions { display: flex; gap: 1rem; align-items: center; }
+
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: all 0.2s;
 }
 
-.table-responsive {
-  overflow-x: auto;
+.search-input:focus-within {
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
-.datatable {
-  width: 100%;
-  border-collapse: collapse;
+.search-input input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 0.85rem;
 }
 
-.datatable th, .datatable td {
+.table-content { overflow-x: auto; }
+
+.premium-table { width: 100%; border-collapse: collapse; text-align: left; }
+.premium-table th {
   padding: 1rem 1.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-.datatable th {
-  background-color: #f8fafc;
-  font-weight: 600;
+  background: #f8fafc;
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.5px;
 }
 
-.datatable tbody tr {
-  transition: background-color 0.2s ease;
+.premium-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.95rem;
+  color: var(--text-primary);
 }
 
-.datatable tbody tr:hover {
-  background-color: #f1f5f9;
+.premium-table tr:last-child td { border-bottom: none; }
+.premium-table tr:hover td { background: #fbfcfe; }
+
+.actions-col { text-align: center; }
+.actions-cell {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.actions-col {
-  text-align: right;
-  width: 120px;
-}
+.empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
 
-.empty-state {
-  text-align: center;
-  padding: 3rem 1.5rem !important;
+.table-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.8rem;
   color: var(--text-muted);
-  font-style: italic;
+  background: #fbfcfe;
 }
 </style>

@@ -1,332 +1,155 @@
 <template>
-  <div class="page-saisie">
+  <div class="page-container">
     <header class="page-header">
-      <div class="header-content">
-        <h2>Saisie des Notes et Absences</h2>
-        <p>Semestre 5 - Anglais technique (UE5-1)</p>
+      <div class="header-info">
+        <h1>Saisie des Évaluations</h1>
+        <p>Enregistrez les notes par matière et par session.</p>
       </div>
       <div class="header-actions">
-        <!-- Selecteur de matière -->
-        <select class="matiere-select" v-model="selectedMatiere" @change="onMatiereChange">
-          <option v-for="matiere in availableMatieres" :key="matiere.id" :value="matiere.id">
-            {{ matiere.libelle }}
-          </option>
-        </select>
-        <button class="btn btn-primary" @click="saveGrades" :disabled="isSaving">
-          <span v-if="!isSaving">Enregistrer les Notes</span>
-          <span v-else>Enregistrement...</span>
+        <button class="btn btn-primary" @click="showAddModal = true">
+          <span>➕</span> Nouvelle Évaluation
         </button>
       </div>
     </header>
 
-    <div class="table-container">
-      <table class="grid-saisie">
-        <thead>
-          <tr>
-            <th width="80">ID</th>
-            <th>Étudiant</th>
-            <th width="120" class="center">Note CC (40%)</th>
-            <th width="120" class="center">Examen (60%)</th>
-            <th width="120" class="center">Rattrapage</th>
-            <th width="120" class="center">Absences (h)</th>
-            <th width="120" class="center bg-gray">Moyenne (*)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="etudiant in etudiants" :key="etudiant.id" :class="{'is-failed': parseFloat(calculateMoyenne(etudiant)) < 10 && calculateMoyenne(etudiant) !== '-'}">
-            <td>{{ etudiant.id }}</td>
-            <td class="font-bold">{{ etudiant.nom }} {{ etudiant.prenom }}</td>
-            <td class="center">
-              <input type="number" min="0" max="20" step="0.25" v-model.number="etudiant.cc" class="grade-input" />
-            </td>
-            <td class="center">
-              <input type="number" min="0" max="20" step="0.25" v-model.number="etudiant.exam" class="grade-input" />
-            </td>
-            <td class="center">
-              <input 
-                type="number" 
-                min="0" max="20" step="0.25" 
-                v-model.number="etudiant.ratrap" 
-                class="grade-input" 
-                :disabled="!isRattrapageEligible(etudiant)"
-                :title="!isRattrapageEligible(etudiant) ? 'Rattrapage non autorisé (moyenne >= 10)' : ''"
-              />
-            </td>
-            <td class="center">
-              <input 
-                type="number" 
-                min="0" 
-                v-model.number="etudiant.absences" 
-                class="grade-input abscence" 
-                :disabled="isEnseignant"
-                :title="isEnseignant ? 'La gestion des absences relève du secrétariat' : ''"
-              />
-            </td>
-            <td class="center bg-gray font-bold value-cell">
-              {{ calculateMoyenne(etudiant) }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="filter-card">
+       <div class="field">
+          <label>Unité d'Enseignement</label>
+          <select v-model="selectedUE">
+             <option value="">Toutes les UEs</option>
+             <option v-for="ue in ues" :key="ue.id" :value="ue.id">{{ ue.code }} - {{ ue.libelle }}</option>
+          </select>
+       </div>
+       <div class="field">
+          <label>Semestre</label>
+          <select v-model="selectedSemestre">
+             <option value="5">Semestre 5</option>
+             <option value="6">Semestre 6</option>
+          </select>
+       </div>
+    </div>
+
+    <div v-if="pending" class="loader">
+      <div class="spinner"></div>
+      <p>Chargement des sessions d'examen...</p>
+    </div>
+
+    <div v-else class="evaluations-grid">
+       <div v-for="evalItem in evaluations" :key="evalItem.id" class="eval-card">
+          <div class="eval-badge" :class="evalItem.type.toLowerCase()">{{ evalItem.type }}</div>
+          <div class="eval-main">
+             <h3>{{ evalItem.matiere_libelle || 'Matière Inconnue' }}</h3>
+             <p>{{ formatDate(evalItem.date) }}</p>
+          </div>
+          <div class="eval-stats">
+             <div class="es-item">
+                <span class="l">Session</span>
+                <span class="v">{{ evalItem.session === 'normale' ? 'SN' : 'SR' }}</span>
+             </div>
+             <div class="es-item">
+                <span class="l">Moyenne</span>
+                <span class="v" :class="{ empty: !evalItem.moyenne_classe }">
+                  {{ evalItem.moyenne_classe ? evalItem.moyenne_classe.toFixed(2) : '--' }}
+                </span>
+             </div>
+          </div>
+          <div class="eval-actions">
+             <button class="btn-full" @click="enterNotes(evalItem)">Saisir les notes →</button>
+          </div>
+       </div>
+
+       <div v-if="evaluations.length === 0" class="empty-state">
+          <div class="empty-icon">📂</div>
+          <h3>Aucune évaluation trouvée</h3>
+          <p>Commencez par créer une nouvelle session d'évaluation.</p>
+       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 
-useHead({
-  title: 'Saisie | Bull ASUR'
-})
+useHead({ title: 'Saisie Notes | Bull ASUR' })
 
 const { fetchApi } = useApi()
-const authRole = useCookie('authRole', { default: () => 'etudiant' })
-const isEnseignant = computed(() => authRole.value === 'enseignant')
+const evaluations = ref([])
+const ues = ref([])
+const pending = ref(true)
+const selectedUE = ref('')
+const selectedSemestre = ref('5')
 
-const selectedMatiere = ref('')
-const availableMatieres = ref([])
-const etudiants = ref([])
-const isSaving = ref(false)
-
-const loadInitialData = async () => {
+const fetchEvaluations = async () => {
+  pending.value = true
   try {
-    // 1. Charger les matières
-    const matieresData = await fetchApi('/matieres/')
-    availableMatieres.value = matieresData || []
+    const data = await fetchApi('/evaluations/')
+    if (data) evaluations.value = data
     
-    if (availableMatieres.value.length > 0 && !selectedMatiere.value) {
-      selectedMatiere.value = availableMatieres.value[0].id
-    }
-
-    if (!selectedMatiere.value) return
-
-    // 2. Charger les étudiants
-    const studentsData = await fetchApi('/etudiants/')
-    
-    // 3. Charger les notes existantes pour cette matière
-    const evaluationsData = await fetchApi(`/evaluations/matiere/${selectedMatiere.value}/`)
-    
-    etudiants.value = studentsData.map(student => {
-      // Filtrer les notes de cet étudiant
-      const notes = evaluationsData.filter(n => n.etudiant_id === student.id || n.etudiant === student.id)
-      const cc = notes.find(n => n.type === 'CC')?.note ?? null
-      const exam = notes.find(n => n.type === 'Examen')?.note ?? null
-      const ratrap = notes.find(n => n.type === 'Rattrapage')?.note ?? null
-      
-      return {
-        id: student.id,
-        nom: student.nom,
-        prenom: student.prenom,
-        cc,
-        exam,
-        ratrap,
-        absences: 0 // À lier au service d'absences plus tard
-      }
-    })
-  } catch (error) {
-    console.error('Erreur chargement données:', error)
-  }
-}
-
-onMounted(() => {
-  loadInitialData()
-})
-
-const onMatiereChange = () => {
-  loadInitialData()
-}
-
-const calculateMoyenne = (etudiant) => {
-  const cc = parseFloat(etudiant.cc)
-  const exam = parseFloat(etudiant.exam)
-  const ratrap = parseFloat(etudiant.ratrap)
-
-  if (isNaN(cc) && isNaN(exam)) return '-'
-
-  let baseMoyenne = 0
-  if (!isNaN(cc) && !isNaN(exam)) {
-    baseMoyenne = (cc * 0.4) + (exam * 0.6)
-  } else if (!isNaN(cc)) {
-    baseMoyenne = cc * 0.4
-  } else if (!isNaN(exam)) {
-    baseMoyenne = exam * 0.6
-  }
-
-  // Si rattrapage, on prend le max entre la moyenne initiale et le rattrapage
-  if (!isNaN(ratrap)) {
-    return Math.max(baseMoyenne, ratrap).toFixed(2)
-  }
-
-  return baseMoyenne.toFixed(2)
-}
-
-const isRattrapageEligible = (etudiant) => {
-  const moy = calculateMoyenne(etudiant)
-  if (moy === '-') return false
-  return parseFloat(moy) < 10
-}
-
-const saveGrades = async () => {
-  try {
-    isSaving.value = true;
-    const payload = [];
-    
-    etudiants.value.forEach(etudiant => {
-      if (etudiant.cc !== null && etudiant.cc !== '') {
-        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "CC", note: Number(etudiant.cc) });
-      }
-      if (etudiant.exam !== null && etudiant.exam !== '') {
-        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Examen", note: Number(etudiant.exam) });
-      }
-      if (etudiant.ratrap !== null && etudiant.ratrap !== '') {
-        payload.push({ etudiant_id: etudiant.id, matiere_id: selectedMatiere.value, type: "Rattrapage", note: Number(etudiant.ratrap) });
-      }
-    });
-
-    await fetchApi('/evaluations/bulk/', {
-      method: 'POST',
-      body: payload
-    })
-
-    alert('Notes enregistrées avec succès !');
-    await loadInitialData(); // Recharger pour confirmer
-  } catch (error) {
-    console.error(error);
-    alert('Erreur lors de l\'enregistrement des notes : ' + (error.data?.error || 'Erreur inconnue'));
+    const ueData = await fetchApi('/referentiels/ue/')
+    if (ueData) ues.value = ueData
+  } catch (e) {
+    console.error('Fetch error', e)
   } finally {
-    isSaving.value = false;
+    pending.value = false
   }
+}
+
+onMounted(fetchEvaluations)
+
+const formatDate = (d) => {
+  if (!d) return 'Date non définie'
+  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+const enterNotes = (evalItem) => {
+  navigateTo(`/saisie/${evalItem.id}`)
 }
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2rem;
-}
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+.header-info h1 { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0; }
+.header-info p { color: #64748b; font-size: 1rem; margin: 0.25rem 0 0; }
 
-.header-content h2 {
-  font-size: 1.75rem;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
-}
+.filter-card { background: white; padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; gap: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.filter-card .field { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-card label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+.filter-card select { padding: 0.75rem; border: 1px solid var(--border-light); border-radius: 8px; font-weight: 600; color: #334155; outline: none; background-color: #fbfcfe; }
 
-.header-content p {
-  color: var(--text-muted);
-}
+.evaluations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.eval-card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-light); overflow: hidden; display: flex; flex-direction: column; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+.eval-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
-.header-actions {
-  display: flex;
-  gap: 1rem;
-}
+.eval-badge { padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin: 1.25rem 1.25rem 0; }
+.eval-badge.ds { background: #eef2ff; color: #3730a3; }
+.eval-badge.examen { background: #fef3c7; color: #92400e; }
+.eval-badge.tp { background: #ecfdf5; color: #065f46; }
 
-.matiere-select {
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background-color: var(--surface);
-  font-size: 0.95rem;
-  outline: none;
-}
+.eval-main { padding: 1rem 1.25rem; }
+.eval-main h3 { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0; }
+.eval-main p { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1.25rem;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-}
+.eval-stats { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; padding: 1rem 0; }
+.es-item { display: flex; flex-direction: column; align-items: center; border-right: 1px solid #f1f5f9; }
+.es-item:last-child { border-right: none; }
+.es-item .l { font-size: 0.6rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+.es-item .v { font-size: 1.1rem; font-weight: 800; color: #334155; }
+.es-item .v.empty { color: #cbd5e1; }
 
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
-}
+.eval-actions { padding: 1rem; }
+.btn-full { width: 100%; padding: 0.75rem; background: #f8fafc; border: 1px solid var(--border-light); border-radius: 8px; font-weight: 700; color: var(--primary); cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
+.btn-full:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-}
+.empty-state { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; padding: 5rem; text-align: center; background: white; border-radius: var(--radius-xl); border: 2px dashed var(--border-light); }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty-state h3 { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+.empty-state p { color: #64748b; margin-top: 0.5rem; }
 
-.table-container {
-  background-color: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  overflow-x: auto;
-}
+.loader { display: flex; flex-direction: column; align-items: center; padding: 5rem; }
+.spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.grid-saisie {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.grid-saisie th, .grid-saisie td {
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-}
-
-.grid-saisie th:last-child, .grid-saisie td:last-child {
-  border-right: none;
-}
-
-.grid-saisie th {
-  background-color: #f8fafc;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.grid-saisie tbody tr {
-  transition: background-color 0.2s;
-}
-
-.grid-saisie tbody tr:hover {
-  background-color: #f1f5f9;
-}
-
-.grid-saisie tbody tr.is-failed .value-cell {
-  color: var(--danger);
-}
-
-.center {
-  text-align: center;
-}
-
-.bg-gray {
-  background-color: #f8fafc;
-}
-
-.font-bold {
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.grade-input {
-  width: 70px;
-  text-align: center;
-  padding: 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.grade-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-.grade-input.abscence {
-  width: 60px;
-}
+.btn { padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: none; display: flex; align-items: center; gap: 0.5rem; }
+.btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
 </style>
