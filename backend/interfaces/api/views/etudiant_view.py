@@ -11,7 +11,7 @@ from rest_framework.permissions import AllowAny
 @extend_schema(tags=['Étudiants'])
 class EtudiantViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion CRUD des étudiants via le repository."""
-    permission_classes = [AllowAny]
+    permission_classes = [IsSecretariat]
 
     def list(self, request):
         repo = Container.etudiant_repo()

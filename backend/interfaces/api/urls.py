@@ -34,9 +34,7 @@ router.register(r'audit', AuditViewSet, basename='audit')
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/login/', LoginView.as_view(), name='login'),
-    path('debug-auth/', DebugAuthView.as_view(), name='debug_auth'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
-    path('version/', lambda r: JsonResponse({"version": "DEBUG_6"}), name='version'),
     path('resultats/semestre/<str:etudiant_id>/', ResultatSemestreView.as_view()),
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),
     path('resultats/promotion/stats/', PromotionStatsView.as_view()),
