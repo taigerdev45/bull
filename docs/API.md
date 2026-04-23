@@ -12,14 +12,16 @@ Format du header :
 
 | Methode | Endpoint | Description | Roles Autorisés |
 |---------|----------|-------------|-----------------|
-| GET | /etudiants/ | Liste des étudiants. | Admin, Secrétariat |
-| POST | /etudiants/ | Inscription (password optionnel). | Admin, Secrétariat |
-| GET | /personnel/ | Liste des membres du personnel. | Admin |
-| POST | /personnel/ | Création Enseignant/Secrétaire. | Admin |
-| GET | /ues/ | Liste des Unités d'Enseignement (UE). | Tous |
-| GET | /evaluations/ | Historique des notes (filtré par rôle). | Tous |
-| POST | /evaluations/ | Saisie d'une nouvelle note. | Enseignant, Admin |
-| GET | /bulletins/donnees/{id}/ | Données complètes pour génération PDF. | Étudiant, Admin |
+| GET | /etudiants/ | Liste filtrée des étudiants. | Admin, Secrétariat (Tous), Étudiant (Soi-même) |
+| POST | /etudiants/ | Inscription administrative. | Admin, Secrétariat |
+| GET | /enseignants/ | Liste des enseignants. | Admin, Secrétariat (Tous), Enseignant (Soi-même) |
+| GET | /absences/ | Liste des absences. | Admin, Secrétariat (Tous), Étudiant (Soi-même) |
+| POST | /absences/ | Saisie d'une absence. | Admin, Secrétariat |
+| GET | /ues/ | Référentiel des UEs. | Tous (Lecture), Secrétariat (Ecriture) |
+| GET | /evaluations/ | Historique des notes. | Admin/Sec (Tous), Enseignant (Matières), Étudiant (Soi) |
+| POST | /evaluations/ | Saisie d'une note. | Enseignant (Propriétaire), Admin |
+| GET | /bulletins/donnees/{id}/ | Données bulletin. | Staff (Tous), Étudiant (Soi-même) |
+| GET | /resultats/promotion/stats/ | Stats globales. | Admin, Secrétariat |
 
 ---
 

@@ -20,10 +20,10 @@ Le projet "Bulletin de Notes LP ASUR" apporte une réponse automatisée et sécu
 - **Calculs Certifiés** : Intégration rigoureuse des règles de pondération (40% CC, 60% Examen) et de compensation.
 - **Traçabilité Totale** : Mise en place d'un audit log pour chaque action de modification.
 - **Génération Automatisée** : Création instantanée de bulletins PDF conformes aux modèles officiels.
-- **Centralisation** : Base de données Firestore centralisée et sécurisée par Firebase Auth.
+- **Centralisation** : Base de données PostgreSQL (via Supabase) centralisée et sécurisée par Firebase Auth.
 
 ## Stack Technique
 
-- **Frontend** : Next.js
-- **Backend** : Django DDD
-- **Database** : Firebase Firestore
+- **Frontend** : Nuxt 3
+- **Backend** : Django DDD / Python Inject
+- **Database** : PostgreSQL (Supabase)
