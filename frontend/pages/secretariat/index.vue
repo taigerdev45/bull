@@ -11,14 +11,14 @@
         <p>Inscriptions et liste officielle.</p>
       </NuxtLink>
 
-      <NuxtLink to="/saisie" class="shortcut-card">
+      <NuxtLink to="/secretariat/absences" class="shortcut-card">
         <h4>Saisie des Absences</h4>
         <p>Comptabilisation des heures pénalisantes par matière.</p>
       </NuxtLink>
 
       <NuxtLink to="/deliberations" class="shortcut-card">
         <h4>Préparation du Jury</h4>
-        <p>Résultats annuels et décisions finale.</p>
+        <p>Résultats annuels et décisions finales.</p>
       </NuxtLink>
 
       <NuxtLink to="/secretariat/enseignants" class="shortcut-card">
@@ -26,14 +26,14 @@
         <p>Assignation des matières et gestion du personnel.</p>
       </NuxtLink>
 
-      <NuxtLink to="/secretariat/edition-bulletins" class="shortcut-card">
-        <h4>Édition des Bulletins</h4>
-        <p>Gestion de la structure : semestres, UE, matières, absences.</p>
+      <NuxtLink to="/referentiels" class="shortcut-card">
+        <h4>Paramètres Académiques</h4>
+        <p>Gestion de la structure : semestres, UEs et Matières.</p>
       </NuxtLink>
 
-      <NuxtLink to="/secretariat/modification-notes" class="shortcut-card">
-        <h4>Modification des Notes</h4>
-        <p>Consultation et correction des notes par matière.</p>
+      <NuxtLink to="/secretariat/edition-bulletins" class="shortcut-card">
+        <h4>Édition des Bulletins</h4>
+        <p>Génération PDF et gestion des maquettes de bulletins.</p>
       </NuxtLink>
     </div>
   </div>
