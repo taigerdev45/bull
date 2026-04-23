@@ -28,28 +28,34 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'bulk_creer']:
             return [IsEnseignantMatiere()]
-        return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     def get_queryset(self):
-        # Le repository gère déjà le filtrage soft delete
         user = self.request.user
-        role = user.firebase_claims.get('role')
+        if not user.is_authenticated:
+            return []
+            
+        repo = self._get_repo()
+        
+        # On utilise le rôle attaché à l'objet User (qui peut être forcé par SupabaseAuthService)
+        role = getattr(user, 'role', 'etudiant')
+        
+        if role in ['admin', 'super_admin', 'secretariat']:
+            return repo.obtenir_tout() if hasattr(repo, 'obtenir_tout') else []
+            
+        claims = getattr(user, 'firebase_claims', {})
+        uid = user.username # UID stocké dans username
         
         if role == 'etudiant':
-            # Un étudiant ne voit que ses notes
-            return self._get_repo().obtenir_par_etudiant(user.uid)
+            return repo.obtenir_par_etudiant(uid)
         elif role == 'enseignant':
-            # Un enseignant voit les notes des matières qu'il gère
-            matieres = user.firebase_claims.get('matieres', [])
+            matieres = claims.get('matieres', [])
             evals = []
-            repo = self._get_repo()
             for m_id in matieres:
                 evals.extend(repo.obtenir_par_matiere(m_id))
             return evals
         
-        # Admin/Secrétariat voient tout
-        repo = self._get_repo()
-        return repo.obtenir_tout() if hasattr(repo, 'obtenir_tout') else []
+        return []
 
     def perform_create(self, serializer):
         cmd = CreerEvaluationCommand(

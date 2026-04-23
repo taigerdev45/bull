@@ -76,6 +76,7 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         # On attache les métadonnées pour que les permissions puissent les lire
         user.role = role
         user.supabase_claims = payload
+        user.firebase_claims = payload # Compatibilité avec l'ancien code
         
         # Bypass ultime pour le propriétaire
         if user.email == 'taigermboumba@gmail.com':

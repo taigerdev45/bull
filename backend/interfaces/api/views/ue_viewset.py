@@ -6,9 +6,12 @@ from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from interfaces.api.serializers.ue_serializer import UESerializer, MatiereSerializer
 
+from rest_framework.permissions import AllowAny
+
 @extend_schema(tags=['Académique'])
 class UEViewSet(viewsets.ViewSet):
     """ViewSet pour les Unités d'Enseignement (UE)."""
+    permission_classes = [AllowAny]
     
     @inject
     def __init__(self, ue_repo=Provide[Container.ue_repo], matiere_repo=Provide[Container.matiere_repo], **kwargs):
@@ -81,6 +84,7 @@ class UEViewSet(viewsets.ViewSet):
 @extend_schema(tags=['Académique'])
 class MatiereViewSet(viewsets.ViewSet):
     """ViewSet pour les Matières."""
+    permission_classes = [AllowAny]
 
     @inject
     def __init__(self, matiere_repo=Provide[Container.matiere_repo], **kwargs):
