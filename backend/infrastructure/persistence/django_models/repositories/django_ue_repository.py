@@ -36,8 +36,15 @@ class DjangoUERepository(IUERepository):
             return None
 
     def list_all(self) -> List[UE]:
-        models = UEModel.objects.all()
+        models = UEModel.objects.all().select_related('semestre')
         return [self._to_entity(m) for m in models]
+
+    def get_by_semestre(self, semestre_id: int) -> List[UE]:
+        models = UEModel.objects.filter(semestre_id=str(semestre_id)).select_related('semestre')
+        return [self._to_entity(m) for m in models]
+
+    def delete(self, ue_id: str) -> None:
+        UEModel.objects.filter(id=ue_id).delete()
 
     def _to_entity(self, model: UEModel) -> UE:
         return UE(
