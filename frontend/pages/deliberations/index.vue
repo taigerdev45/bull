@@ -119,7 +119,7 @@ const changeSemestre = (s) => {
 const fetchStats = async () => {
   isLoading.value = true
   try {
-    const data = await fetchApi('/resultats/stats/', {
+    const data = await fetchApi('/resultats/promotion/stats/', {
       params: { 
         semestre: selectedSemestre.value,
         promo_id: 'LP_ASUR_2026' // Valeur par défaut pour l'instant
