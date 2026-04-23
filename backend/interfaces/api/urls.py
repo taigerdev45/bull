@@ -14,7 +14,6 @@ from interfaces.api.views.semestre_view import SemestreViewSet
 from interfaces.api.views.enseignant_view import EnseignantViewSet
 from interfaces.api.views.auth_view import ChangePasswordView, LoginView
 from interfaces.api.views.personnel_viewset import PersonnelViewSet
-from interfaces.api.views.debug_auth_view import DebugAuthView
 from application.startup import initialiser_abonnements
 
 # Initialisation de l'audit
