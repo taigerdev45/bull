@@ -31,6 +31,8 @@ class ResultatAnnuelView(views.APIView):
         serializer = ResultatAnnuelSerializer(resultat)
         return Response(serializer.data)
 
+from rest_framework import viewsets, views, status, permissions
+
 @extend_schema(
     tags=['Résultats'],
     parameters=[
@@ -40,6 +42,7 @@ class ResultatAnnuelView(views.APIView):
 )
 class PromotionStatsView(views.APIView):
     """Vue pour les statistiques globales d'une promotion."""
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
         promo_id = request.query_params.get('promo_id')
