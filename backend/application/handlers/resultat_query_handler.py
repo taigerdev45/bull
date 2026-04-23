@@ -61,20 +61,22 @@ class ResultatQueryHandler:
 
     def executer_stats_query(self, query: ObtenirStatsPromotionQuery) -> Dict:
         # Simplification: on récupère tous les résultats du semestre
-        # Une vraie implémentation utiliserait un service ou une vue SQL optimisée
-        from infrastructure.persistence.django_models.models import ResultatSemestreModel
+        from infrastructure.persistence.django_models.models import ResultatSemestreModel, ResultatUEModel
         
-        qs = ResultatSemestreModel.objects.all()
+        qs = ResultatSemestreModel.objects.all().select_related('etudiant')
         if query.semestre:
             qs = qs.filter(numero_semestre=query.semestre)
-        
-        # Pour les délibérations, on veut souvent la liste des étudiants avec leurs moyennes
-        if query.promotion_id: # On simule le filtrage par promo via les étudiants
-            pass # TODO: filtrer par promo_id
             
         resultats = []
         for res in qs:
             etudiant = res.etudiant
+            # Récupérer les moyennes d'UE réelles pour cet étudiant et ce semestre
+            ues_res = ResultatUEModel.objects.filter(etudiant=etudiant, ue__semestre_id=str(res.numero_semestre))
+            
+            detail_ues = {}
+            for ur in ues_res:
+                detail_ues[ur.ue.code] = ur.valeur_moyenne
+
             resultats.append({
                 "id": etudiant.matricule,
                 "nom": etudiant.nom,
@@ -82,8 +84,7 @@ class ResultatQueryHandler:
                 "moyS5": res.valeur_moyenne,
                 "credits": res.details.get('credits_acquis', 0),
                 "decision": "Validé" if res.valeur_moyenne >= 10 else "Ajourné",
-                "ue1": 12.0, # Mocks pour les détails UEs
-                "ue2": 11.0
+                "ues": detail_ues
             })
             
         return {

@@ -116,7 +116,7 @@
                     <td class="center">{{ matiere.credits || '--' }}</td>
                     <td class="center">{{ matiere.coeff || '1.00' }}</td>
                     <td class="center text-blue font-bold">{{ matiere.moyenne?.toFixed(2) }}</td>
-                    <td class="center">{{ matiere.moyenne_classe?.toFixed(2) || '11.50' }}</td>
+                    <td class="center">{{ matiere.moyenne_classe?.toFixed(2) || '--' }}</td>
                   </tr>
                   <tr class="ue-moyenne font-bold">
                     <td class="right">Moyenne {{ ue.id }}</td>
@@ -209,24 +209,24 @@
                   </tr>
                   <tr>
                     <td class="matiere pl-4">Semestre 1</td>
-                    <td class="center">{{ ue.coeff_s1 || '3,00' }}</td>
-                    <td class="center">{{ ue.note_s1 || '11,61' }}</td>
-                    <td class="center">{{ ue.rang_s1 || '23' }}</td>
-                    <td class="center">{{ ue.moy_classe_s1 || '10,34' }}</td>
+                    <td class="center">{{ ue.coeff_s1 || '--' }}</td>
+                    <td class="center">{{ ue.note_s1 || '--' }}</td>
+                    <td class="center">{{ ue.rang_s1 || '--' }}</td>
+                    <td class="center">{{ ue.moy_classe_s1 || '--' }}</td>
                   </tr>
                   <tr>
                     <td class="matiere pl-4">Semestre 2</td>
-                    <td class="center">{{ ue.coeff_s2 || '3,00' }}</td>
-                    <td class="center">{{ ue.note_s2 || '10,78' }}</td>
-                    <td class="center">{{ ue.rang_s2 || '2' }}</td>
-                    <td class="center">{{ ue.moy_classe_s2 || '11,09' }}</td>
+                    <td class="center">{{ ue.coeff_s2 || '--' }}</td>
+                    <td class="center">{{ ue.note_s2 || '--' }}</td>
+                    <td class="center">{{ ue.rang_s2 || '--' }}</td>
+                    <td class="center">{{ ue.moy_classe_s2 || '--' }}</td>
                   </tr>
                   <tr class="annual-row font-bold">
                     <td class="matiere pl-4">Annuel</td>
-                    <td class="center">{{ ue.coeff_annuel || '6,00' }}</td>
-                    <td class="center text-blue">{{ ue.note_annuel || '10,90' }}</td>
-                    <td class="center">{{ ue.rang_annuel || '5' }}</td>
-                    <td class="center">{{ ue.moy_classe_annuel || '10,71' }}</td>
+                    <td class="center">{{ ue.coeff_annuel || '--' }}</td>
+                    <td class="center text-blue">{{ ue.note_annuel || '--' }}</td>
+                    <td class="center">{{ ue.rang_annuel || '--' }}</td>
+                    <td class="center">{{ ue.moy_classe_annuel || '--' }}</td>
                   </tr>
                 </template>
 
@@ -236,10 +236,10 @@
                 </tr>
                 <tr class="font-bold">
                   <td class="pl-4">Annuel</td>
-                  <td class="center">42.00</td>
-                  <td class="center text-blue">12.78</td>
-                  <td class="center">10</td>
-                  <td class="center">11.06</td>
+                  <td class="center">{{ bulletinData?.total_coeff_annuel || '--' }}</td>
+                  <td class="center text-blue">{{ bulletinData?.moyenne_annuelle?.toFixed(2) || '--' }}</td>
+                  <td class="center">{{ bulletinData?.rang_annuel || '--' }}</td>
+                  <td class="center">{{ bulletinData?.moyenne_classe_annuelle?.toFixed(2) || '--' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -322,6 +322,7 @@
 
 <script setup>
 const { fetchApi } = useApi()
+const route = useRoute()
 const authRole = useCookie('authRole', { default: () => 'etudiant' })
 const isEtudiant = computed(() => authRole.value === 'etudiant')
 
@@ -345,8 +346,19 @@ const fetchEtudiants = async () => {
 
 onMounted(async () => {
   const authId = useCookie('authId')
+  
+  // Priorité au paramètre d'URL (depuis délibérations)
+  const queryStudent = route.query.student
+  const querySem = route.query.semestre
+  
+  if (querySem) selectedSemester.value = querySem
+
   if (isEtudiant.value) {
     selectedStudent.value = authId.value
+    await loadBulletin(selectedStudent.value, selectedSemester.value)
+  } else if (queryStudent) {
+    selectedStudent.value = queryStudent
+    await fetchEtudiants()
     await loadBulletin(selectedStudent.value, selectedSemester.value)
   } else {
     await fetchEtudiants()
