@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
-from interfaces.api.views.etudiant_view import EtudiantViewSet, EvaluationView
+from interfaces.api.views.etudiant_view import EtudiantViewSet
 from interfaces.api.views.absence_viewset import AbsenceViewSet
 from interfaces.api.views.evaluation_viewset import EvaluationViewSet
 from interfaces.api.views.resultat_view import ResultatSemestreView, ResultatAnnuelView, PromotionStatsView
