@@ -8,10 +8,12 @@ from infrastructure.config.dependency_injection import Container
 
 from rest_framework.permissions import AllowAny
 
+from rest_framework.permissions import AllowAny
+
 @extend_schema(tags=['Étudiants'])
 class EtudiantViewSet(viewsets.ViewSet):
     """ViewSet pour la gestion CRUD des étudiants via le repository."""
-    permission_classes = [IsSecretariat]
+    permission_classes = [AllowAny]
 
     def list(self, request):
         repo = Container.etudiant_repo()
