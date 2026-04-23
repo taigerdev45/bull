@@ -84,6 +84,12 @@
                 <input v-model="form.matricule" required :disabled="modal.mode === 'view'" placeholder="Ex: 23ASUR001" />
               </div>
 
+              <!-- Mot de passe : affiché uniquement lors de la création -->
+              <div v-if="modal.mode === 'add'" class="form-group full-width">
+                <label>Mot de passe provisoire <span class="hint">(crée le compte de connexion de l'étudiant)</span></label>
+                <input type="password" v-model="form.password" required :disabled="modal.mode === 'view'" placeholder="Min. 8 caractères" autocomplete="new-password" minlength="8" />
+              </div>
+
               <div class="form-group">
                 <label>Date de Naissance</label>
                 <input type="date" v-model="form.date_naissance" required :disabled="modal.mode === 'view'" />
@@ -170,6 +176,7 @@ const defaultForm = {
   prenom: '',
   email: '',
   matricule: '',
+  password: '',
   date_naissance: '',
   lieu_naissance: '',
   bac: '',
@@ -198,17 +205,23 @@ const handleSubmit = async () => {
     const isEdit = modal.mode === 'edit'
     const method = isEdit ? 'PATCH' : 'POST'
     const endpoint = isEdit ? `/etudiants/${form.id}/` : '/etudiants/'
-    
+
+    // En édition on n'envoie pas le password
+    const payload = { ...form }
+    if (isEdit) delete payload.password
+    if (!payload.password) delete payload.password  // Ne pas envoyer vide
+
     await fetchApi(endpoint, {
       method,
-      body: form
+      body: payload
     })
-    
+
     await loadData()
     closeModal()
   } catch (err) {
     console.error('Save error', err)
-    alert(err.data?.message || 'Erreur lors de la sauvegarde. Vérifiez les champs.')
+    const msg = err.data?.error || err.data?.message || 'Erreur lors de la sauvegarde. Vérifiez les champs.'
+    alert(msg)
   } finally {
     submitting.value = false
   }
@@ -487,4 +500,7 @@ onMounted(loadData)
 /* Transitions */
 .modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.3s ease; }
 .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+
+/* Password hint label */
+.hint { font-weight: 400; font-size: 0.78rem; color: #94a3b8; margin-left: 0.25rem; }
 </style>

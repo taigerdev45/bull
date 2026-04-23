@@ -23,6 +23,14 @@ class Etudiant(BaseEntity):
         self._evaluations_ids: List[str] = []
 
     @property
+    def nom(self) -> str:
+        return self._nom
+
+    @property
+    def prenom(self) -> str:
+        return self._prenom
+
+    @property
     def email(self) -> str:
         return self._email
 
@@ -37,6 +45,10 @@ class Etudiant(BaseEntity):
     @property
     def matricule(self) -> str:
         return self._matricule
+
+    @property
+    def date_naissance(self):
+        return self._date_naissance
 
     @property
     def lieu_naissance(self) -> Optional[str]:
