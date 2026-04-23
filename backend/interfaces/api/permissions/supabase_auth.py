@@ -61,8 +61,16 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         # Récupération ou création de l'utilisateur Django local
         user, created = User.objects.get_or_create(username=uid)
         
+        # Email de l'utilisateur
+        email = payload.get('email')
+        if email:
+            user.email = email
+            # Force ADMIN pour le propriétaire si nécessaire
+            if email == 'taigermboumba@gmail.com':
+                role = 'super_admin'
+        
         # Log minimal pour le débogage en production (Render logs)
-        print(f"[AUTH] User {uid} detected as: {role} (raw type: {type(raw_role)})")
+        print(f"[AUTH] User {uid} ({email}) detected as: {role} (raw type: {type(raw_role)})")
         
         # On attache les métadonnées pour que les permissions puissent les lire
         user.supabase_claims = payload
