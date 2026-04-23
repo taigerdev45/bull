@@ -13,6 +13,7 @@ from interfaces.api.views.semestre_view import SemestreViewSet
 from interfaces.api.views.enseignant_view import EnseignantViewSet
 from interfaces.api.views.auth_view import ChangePasswordView, LoginView
 from interfaces.api.views.personnel_viewset import PersonnelViewSet
+from interfaces.api.views.debug_auth_view import DebugAuthView
 from application.startup import initialiser_abonnements
 
 # Initialisation de l'audit
@@ -32,6 +33,7 @@ router.register(r'audit', AuditViewSet, basename='audit')
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/login/', LoginView.as_view(), name='login'),
+    path('debug-auth/', DebugAuthView.as_view(), name='debug_auth'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('resultats/semestre/<str:etudiant_id>/', ResultatSemestreView.as_view()),
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),
