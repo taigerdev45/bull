@@ -1,18 +1,42 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from interfaces.api.serializers.ue_serializer import UESerializer, MatiereSerializer
-
 from rest_framework.permissions import AllowAny
+
+
+def ue_to_dict(ue, matieres=None):
+    """Convertit une entité UE en dict JSON-serializable."""
+    return {
+        "id": ue.id,
+        "code": ue.code,
+        "libelle": ue.libelle,
+        "credits": ue.credits,
+        "semestre_id": ue._semestre_id,
+        "matieres": [matiere_to_dict(m) for m in (matieres or [])],
+    }
+
+
+def matiere_to_dict(m):
+    """Convertit une entité Matiere en dict JSON-serializable."""
+    return {
+        "id": m.id,
+        "libelle": m.libelle,
+        "coefficient": m.coefficient,
+        "credits": m.credits,
+        "ue_id": m._ue_id,
+        "enseignant_id": m.enseignant_id,
+    }
+
 
 @extend_schema(tags=['Académique'])
 class UEViewSet(viewsets.ViewSet):
     """ViewSet pour les Unités d'Enseignement (UE)."""
     permission_classes = [AllowAny]
-    
+
     @inject
     def __init__(self, ue_repo=Provide[Container.ue_repo], matiere_repo=Provide[Container.matiere_repo], **kwargs):
         super().__init__(**kwargs)
@@ -20,20 +44,25 @@ class UEViewSet(viewsets.ViewSet):
         self.matiere_repo = matiere_repo
 
     def list(self, request):
-        ues = self.ue_repo.list_all()
-        # Enrichir avec les matières en utilisant l'ID interne (UUID)
-        for ue in ues:
-            ue.matieres = self.matiere_repo.get_by_ue(ue.id)
-        serializer = UESerializer(ues, many=True)
-        return Response(serializer.data)
+        try:
+            ues = self.ue_repo.list_all()
+            result = []
+            for ue in ues:
+                matieres = self.matiere_repo.get_by_ue(ue.id)
+                result.append(ue_to_dict(ue, matieres))
+            return Response(result)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk=None):
-        ue = self.ue_repo.get_by_id(pk)
-        if not ue:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        ue.matieres = self.matiere_repo.get_by_ue(ue.id)
-        serializer = UESerializer(ue)
-        return Response(serializer.data)
+        try:
+            ue = self.ue_repo.get_by_id(pk)
+            if not ue:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            matieres = self.matiere_repo.get_by_ue(ue.id)
+            return Response(ue_to_dict(ue, matieres))
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
         serializer = UESerializer(data=request.data)
@@ -47,7 +76,7 @@ class UEViewSet(viewsets.ViewSet):
             )
             try:
                 self.ue_repo.save(ue)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(ue_to_dict(ue), status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -56,20 +85,26 @@ class UEViewSet(viewsets.ViewSet):
         ue = self.ue_repo.get_by_id(pk)
         if not ue:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
         serializer = UESerializer(data=request.data)
         if serializer.is_valid():
             ue._code = serializer.validated_data['code']
             ue._libelle = serializer.validated_data['libelle']
             ue._credits = serializer.validated_data['credits']
             ue._semestre_id = serializer.validated_data['semestre_id']
-            self.ue_repo.save(ue)
-            return Response(serializer.data)
+            try:
+                self.ue_repo.save(ue)
+                return Response(ue_to_dict(ue))
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        self.ue_repo.delete(pk)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            self.ue_repo.delete(pk)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], url_path='semestre/(?P<semestre>[^/.]+)')
     def semestre(self, request, semestre=None):
@@ -77,12 +112,13 @@ class UEViewSet(viewsets.ViewSet):
         try:
             s_val = int(semestre)
             ues = self.ue_repo.get_by_semestre(s_val)
-            for ue in ues:
-                ue.matieres = self.matiere_repo.get_by_ue(ue.id)
-            serializer = UESerializer(ues, many=True)
-            return Response(serializer.data)
+            result = [ue_to_dict(ue, self.matiere_repo.get_by_ue(ue.id)) for ue in ues]
+            return Response(result)
         except ValueError:
             return Response({"error": "Semestre invalide"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @extend_schema(tags=['Académique'])
 class MatiereViewSet(viewsets.ViewSet):
@@ -95,16 +131,20 @@ class MatiereViewSet(viewsets.ViewSet):
         self.matiere_repo = matiere_repo
 
     def list(self, request):
-        matieres = self.matiere_repo.list_all()
-        serializer = MatiereSerializer(matieres, many=True)
-        return Response(serializer.data)
+        try:
+            matieres = self.matiere_repo.list_all()
+            return Response([matiere_to_dict(m) for m in matieres])
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk=None):
-        matiere = self.matiere_repo.get_by_id(pk)
-        if not matiere:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = MatiereSerializer(matiere)
-        return Response(serializer.data)
+        try:
+            matiere = self.matiere_repo.get_by_id(pk)
+            if not matiere:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(matiere_to_dict(matiere))
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
         serializer = MatiereSerializer(data=request.data)
@@ -120,7 +160,7 @@ class MatiereViewSet(viewsets.ViewSet):
             )
             try:
                 self.matiere_repo.save(matiere)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(matiere_to_dict(matiere), status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -129,7 +169,7 @@ class MatiereViewSet(viewsets.ViewSet):
         matiere = self.matiere_repo.get_by_id(pk)
         if not matiere:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
         serializer = MatiereSerializer(data=request.data)
         if serializer.is_valid():
             from domain.value_objects.coefficient import Coefficient
@@ -138,27 +178,31 @@ class MatiereViewSet(viewsets.ViewSet):
             matiere._credits = serializer.validated_data['credits']
             matiere._ue_id = serializer.validated_data['ue_id']
             matiere._enseignant_id = serializer.validated_data.get('enseignant_id')
-            self.matiere_repo.save(matiere)
-            return Response(serializer.data)
+            try:
+                self.matiere_repo.save(matiere)
+                return Response(matiere_to_dict(matiere))
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        self.matiere_repo.delete(pk)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            self.matiere_repo.delete(pk)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'], url_path='ue/(?P<ue_id>[^/.]+)')
     def ue(self, request, ue_id=None):
         """Filtre les matières par UE."""
         matieres = self.matiere_repo.get_by_ue(ue_id)
-        serializer = MatiereSerializer(matieres, many=True)
-        return Response(serializer.data)
+        return Response([matiere_to_dict(m) for m in matieres])
 
     @action(detail=False, methods=['get'], url_path='enseignant/(?P<teacher_id>[^/.]+)')
     def enseignant(self, request, teacher_id=None):
         """Filtre les matières par enseignant."""
         matieres = self.matiere_repo.get_by_enseignant(teacher_id)
-        serializer = MatiereSerializer(matieres, many=True)
-        return Response(serializer.data)
+        return Response([matiere_to_dict(m) for m in matieres])
 
     @action(detail=True, methods=['patch'], url_path='attribuer_enseignant')
     def attribuer_enseignant(self, request, pk=None):
@@ -166,7 +210,5 @@ class MatiereViewSet(viewsets.ViewSet):
         enseignant_id = request.data.get('enseignant_id')
         if not enseignant_id:
             return Response({"error": "enseignant_id requis"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # On pourrait vérifier si la matière existe ici
         self.matiere_repo.attribuer_enseignant(pk, enseignant_id)
         return Response({"status": "enseignant attribué"})
