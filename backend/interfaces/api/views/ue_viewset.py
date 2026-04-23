@@ -21,9 +21,9 @@ class UEViewSet(viewsets.ViewSet):
 
     def list(self, request):
         ues = self.ue_repo.list_all()
-        # Enrichir avec les matières
+        # Enrichir avec les matières en utilisant l'ID interne (UUID)
         for ue in ues:
-            ue.matieres = self.matiere_repo.get_by_ue(ue.code)
+            ue.matieres = self.matiere_repo.get_by_ue(ue.id)
         serializer = UESerializer(ues, many=True)
         return Response(serializer.data)
 
@@ -31,7 +31,7 @@ class UEViewSet(viewsets.ViewSet):
         ue = self.ue_repo.get_by_id(pk)
         if not ue:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        ue.matieres = self.matiere_repo.get_by_ue(ue.code)
+        ue.matieres = self.matiere_repo.get_by_ue(ue.id)
         serializer = UESerializer(ue)
         return Response(serializer.data)
 
@@ -78,7 +78,7 @@ class UEViewSet(viewsets.ViewSet):
             s_val = int(semestre)
             ues = self.ue_repo.get_by_semestre(s_val)
             for ue in ues:
-                ue.matieres = self.matiere_repo.get_by_ue(ue.code)
+                ue.matieres = self.matiere_repo.get_by_ue(ue.id)
             serializer = UESerializer(ues, many=True)
             return Response(serializer.data)
         except ValueError:
