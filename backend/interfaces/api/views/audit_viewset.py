@@ -6,9 +6,12 @@ from dependency_injector.wiring import inject, Provide
 from infrastructure.config.dependency_injection import Container
 from datetime import datetime
 
+from interfaces.api.permissions.role_permissions import IsAdmin
+
 @extend_schema(tags=['Administration'])
 class AuditViewSet(viewsets.ViewSet):
     """ViewSet pour la consultation des logs d'audit."""
+    permission_classes = [IsAdmin]
 
     @inject
     def __init__(self, audit_service=Provide[Container.audit_service], **kwargs):

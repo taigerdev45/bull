@@ -139,13 +139,14 @@ class MatiereViewSet(viewsets.ViewSet):
 
     def list(self, request):
         try:
+            is_staff = getattr(request.user, 'is_staff', False)
             role = getattr(request.user, 'role', 'etudiant')
             
             # Si c'est un enseignant, on peut filtrer ses matières
-            if role == 'enseignant':
+            if not is_staff and role == 'enseignant':
                 matieres = self.matiere_repo.get_by_enseignant(request.user.username)
             else:
-                matieres = self.repo.list_all() if hasattr(self, 'repo') else self.matiere_repo.list_all()
+                matieres = self.matiere_repo.list_all()
                 
             return Response([matiere_to_dict(m) for m in matieres])
         except Exception as e:

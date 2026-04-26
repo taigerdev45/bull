@@ -37,8 +37,9 @@ class EtudiantViewSet(viewsets.ViewSet):
     # ─── RETRIEVE ────────────────────────────────────────────────────────────
     def retrieve(self, request, pk=None):
         # Sécurité: un étudiant ne peut voir que son propre profil
+        is_staff = getattr(request.user, 'is_staff', False)
         role = getattr(request.user, 'role', 'etudiant')
-        if role == 'etudiant' and request.user.username != pk:
+        if not is_staff and role == 'etudiant' and request.user.username != pk:
             return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
 
         repo = Container.etudiant_repo()

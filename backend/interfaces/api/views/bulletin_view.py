@@ -16,9 +16,9 @@ class BulletinView(views.APIView):
 
     def get(self, request, etudiant_id):
         # Sécurité : un étudiant ne doit voir que son bulletin
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        user_role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
-        if user_role == 'etudiant' and request.user.username != etudiant_id:
+        is_staff = getattr(request.user, 'is_staff', False)
+        user_role = getattr(request.user, 'role', 'etudiant').lower()
+        if not is_staff and user_role == 'etudiant' and request.user.username != etudiant_id:
             return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
         type_bulletin = request.query_params.get('type', 'SEMESTRIEL')
         semestre = request.query_params.get('semestre')

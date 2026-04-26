@@ -42,10 +42,11 @@ class AbsenceViewSet(viewsets.ViewSet):
     @inject
     def list(self, request, repo=Provide[Container.absence_repo]):
         # On récupère le rôle de l'utilisateur
+        is_staff = getattr(request.user, 'is_staff', False)
         role = getattr(request.user, 'role', 'etudiant')
-        uid = request.user.username  # UID Firebase stocké dans username
+        uid = request.user.username  # UID Supabase stocké dans username
         
-        if role == 'etudiant':
+        if not is_staff and role == 'etudiant':
             absences = repo.obtenir_par_etudiant(uid)
         else:
             # Pour le staff, on peut filtrer par etudiant_id si présent, sinon tout renvoyer
@@ -61,10 +62,11 @@ class AbsenceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     @inject
     def par_etudiant(self, request, etudiant_id=None, repo=Provide[Container.absence_repo]):
+        is_staff = getattr(request.user, 'is_staff', False)
         role = getattr(request.user, 'role', 'etudiant')
         uid = request.user.username
         
-        if role == 'etudiant' and uid != etudiant_id:
+        if not is_staff and role == 'etudiant' and uid != etudiant_id:
             return Response({'error': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
             
         absences = repo.obtenir_par_etudiant(etudiant_id)
