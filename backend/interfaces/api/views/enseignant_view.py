@@ -57,23 +57,35 @@ class EnseignantViewSet(viewsets.ViewSet):
         if serializer.is_valid():
             from domain.entities.enseignant import Enseignant
             
-            email = serializer.validated_data['email']
-            password = serializer.validated_data['password']
-            matricule = serializer.validated_data['matricule']
+            data = serializer.validated_data
+            email = data['email']
+            password = data.get('password')
+            matricule = data['matricule']
             auth_service = Container.auth_service()
             
             try:
-                display_name = f"{serializer.validated_data['prenom']} {serializer.validated_data['nom']}"
-                user_id = auth_service.create_user(
-                    email=email,
-                    password=password,
-                    display_name=display_name
-                )
-                auth_service.set_user_claims(user_id, 'enseignant')
+                display_name = f"{data['prenom']} {data['nom']}"
+                user_id = None
+                
+                # On tente d'abord de voir si l'utilisateur existe déjà pour éviter le crash 400
+                existing_user = auth_service.get_user_by_email(email)
+                if existing_user:
+                    user_id = existing_user['uid']
+                    print(f"[CREATION ENSEIGNANT] Utilisateur déjà existant: {email} -> {user_id}")
+                elif password:
+                    # Création seulement si mot de passe fourni et n'existe pas
+                    user_id = auth_service.create_user(
+                        email=email,
+                        password=password,
+                        display_name=display_name
+                    )
+                
+                if user_id:
+                    auth_service.set_user_claims(user_id, 'enseignant')
                 
                 enseignant = Enseignant(
-                    nom=serializer.validated_data['nom'],
-                    prenom=serializer.validated_data['prenom'],
+                    nom=data['nom'],
+                    prenom=data['prenom'],
                     email=email,
                     matricule=matricule,
                     user_id=user_id
@@ -85,8 +97,12 @@ class EnseignantViewSet(viewsets.ViewSet):
                 return_data = serializer.data
                 return_data.pop('password', None)
                 return Response(return_data, status=status.HTTP_201_CREATED)
+                
             except Exception as e:
+                import traceback
+                print(f"[ERROR CREATE ENSEIGNANT] {str(e)}\n{traceback.format_exc()}")
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
