@@ -27,10 +27,11 @@ backend/staticfiles/
 backend/.env
 backend/serviceAccountKey.json
 backend/supabase_rls.sql
-docs/recap1.md
-docs/audit2.md
-docs/ordre.md
-docs/audite.md
+# Documentation Interne
+# docs/recap1.md (Désinhibé pour synchro GitHub)
+# docs/audit2.md
+# docs/ordre.md
+# docs/audite.md
 
 # Root Environment & IDE
 .env
