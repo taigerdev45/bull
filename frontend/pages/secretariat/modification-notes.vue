@@ -2,855 +2,326 @@
   <div class="page-modification-notes">
     <header class="page-header">
       <div class="header-content">
-        <h2>Modification des Notes</h2>
-        <p>Consultation et modification des notes par semestre et matière.</p>
+        <h1>Console de Notation</h1>
+        <p>Révision et validation terminale des performances académiques.</p>
       </div>
     </header>
 
-    <!-- Filtres principaux -->
-    <div class="filters-section">
-      <div class="filter-group">
-        <label for="semestre_filter">Semestre</label>
-        <select id="semestre_filter" v-model="filters.semestre_id" @change="loadData" class="form-control">
-          <option value="">Choisir un semestre...</option>
-          <option v-for="semestre in semestres" :key="semestre.id" :value="semestre.id">
-            {{ semestre.libelle }}
-          </option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label for="ue_filter">Unité d'Enseignement</label>
-        <select id="ue_filter" v-model="filters.ue_id" @change="loadMatieres" class="form-control">
-          <option value="">Toutes les UE</option>
-          <option v-for="ue in filteredUEs" :key="ue.id" :value="ue.id">
-            {{ ue.libelle }}
-          </option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label for="matiere_filter">Matière</label>
-        <select id="matiere_filter" v-model="filters.matiere_id" @change="loadNotes" class="form-control">
-          <option value="">Toutes les matières</option>
-          <option v-for="matiere in filteredMatieres" :key="matiere.id" :value="matiere.id">
-            {{ matiere.libelle }}
-          </option>
-        </select>
+    <!-- Filtres Dynamiques -->
+    <div class="filters-panel premium-card">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Cycle de Formation</label>
+          <select v-model="filters.semestre_id" @change="loadData" class="form-control">
+            <option value="">Sélectionner un semestre...</option>
+            <option v-for="s in semestres" :key="s.id" :value="s.id">{{ s.libelle }}</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Unité d'Enseignement</label>
+          <select v-model="filters.ue_id" @change="loadMatieres" class="form-control">
+            <option value="">Toutes les UE</option>
+            <option v-for="ue in filteredUEs" :key="ue.id" :value="ue.id">{{ ue.libelle }}</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Matière Spécifique</label>
+          <select v-model="filters.matiere_id" @change="loadNotes" class="form-control">
+            <option value="">Toutes les matières</option>
+            <option v-for="m in filteredMatieres" :key="m.id" :value="m.id">{{ m.libelle }}</option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <!-- Tableau des notes -->
-    <div v-if="filters.semestre_id" class="notes-container">
-      <div class="table-header">
-        <h3>Notes {{ getMatiereLibelle(filters.matiere_id) }}</h3>
-        <div class="batch-actions">
-          <div class="export-dropdown">
-            <button class="btn btn-secondary">
-              Exporter
-            </button>
-            <div class="dropdown-menu">
-              <button @click="exportNotes('excel')">Excel (.xlsx)</button>
-              <button @click="exportNotes('pdf')">PDF (.pdf)</button>
+    <!-- Interface de Notation -->
+    <div v-if="filters.semestre_id" class="notes-workspace animate-in">
+      <div class="workspace-header">
+        <div class="ctx">
+          <h3>Table de Notation : {{ getMatiereLibelle(filters.matiere_id) }}</h3>
+          <p v-if="hasChanges" class="unsaved-warn">⚠️ Modifications non synchronisées</p>
+        </div>
+        <div class="ctx-actions">
+          <div class="export-dropdown" v-if="etudiants.length">
+            <button class="btn btn-pill dark">Export ↓</button>
+            <div class="dropdown-menu premium-card">
+              <button @click="exportNotes('excel')">Journal Excel</button>
+              <button @click="exportNotes('pdf')">Rapport PDF</button>
             </div>
           </div>
-          <button class="btn btn-primary" @click="saveAllNotes" :disabled="!hasChanges || loading">
-            Enregistrer les modifications
+          <button class="btn btn-primary btn-pill shadow-strong" @click="saveAllNotes" :disabled="!hasChanges || loading">
+            {{ loading ? 'Synchronisation...' : 'Valider & Enregistrer' }}
           </button>
         </div>
       </div>
 
-      <div class="table-container">
-        <table class="notes-table">
+      <div class="premium-table-container">
+        <table class="grading-table">
           <thead>
             <tr>
-              <th>Étudiant</th>
-              <th v-for="evaluationType in evaluationTypes" :key="evaluationType.key">
-                {{ evaluationType.label }}
-              </th>
-              <th>Moyenne</th>
-              <th>Actions</th>
+              <th>Identité & Matricule</th>
+              <th v-for="type in evaluationTypes" :key="type.key" class="text-center">{{ type.label }}</th>
+              <th class="text-center">Moyenne</th>
+              <th class="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="etudiant in etudiants" :key="etudiant.id">
-              <td class="etudiant-info">
-                <div class="etudiant-name">{{ etudiant.nom }} {{ etudiant.prenom }}</div>
-                <div class="etudiant-details">{{ etudiant.date_naissance }}</div>
+            <tr v-for="etudiant in etudiants" :key="etudiant.id" class="highlight-on-hover">
+              <td class="student-profile">
+                <span class="name">{{ etudiant.nom }} {{ etudiant.prenom }}</span>
+                <span class="id">{{ etudiant.matricule }}</span>
               </td>
               
-              <td v-for="type in evaluationTypes" :key="type.key" class="note-cell">
+              <td v-for="type in evaluationTypes" :key="type.key" class="cell-input">
                 <input 
                   type="number" 
                   :value="getNoteValue(etudiant.id, type.key)"
                   @input="updateNote(etudiant.id, type.key, $event.target.value)"
-                  :min="0"
-                  :max="20"
-                  step="0.5"
-                  class="note-input"
+                  min="0" max="20" step="0.5"
+                  class="grade-input"
                   :class="{ 'modified': isNoteModified(etudiant.id, type.key) }"
                 />
               </td>
               
-              <td class="moyenne-cell">
-                <span class="moyenne" :class="getMoyenneClass(calculerMoyenne(etudiant.id))">
+              <td class="cell-moyenne">
+                <span :class="['grade-badge', getMoyenneClass(calculerMoyenne(etudiant.id))]">
                   {{ calculerMoyenne(etudiant.id).toFixed(2) }}
                 </span>
               </td>
               
-              <td class="actions-cell">
-                <button class="btn btn-sm btn-secondary" @click="resetStudentNotes(etudiant.id)">
-                  🔄 Réinitialiser
-                </button>
-                <button class="btn btn-sm btn-danger" @click="deleteStudentNotes(etudiant.id)">
-                  🗑️ Supprimer
-                </button>
+              <td class="text-right">
+                <div class="action-buttons-compact">
+                  <button class="btn-circle-sm" @click="showHistory(etudiant.id)" title="Historique">🕒</button>
+                  <button class="btn-circle-sm danger" @click="deleteStudentNotes(etudiant.id)" title="Réinitialiser">🗑️</button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Statistiques -->
-      <div class="stats-section">
-        <h4>Statistiques de la matière</h4>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Moyenne générale</div>
-            <div class="stat-value">{{ stats.moyenneGenerale.toFixed(2) }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Note la plus haute</div>
-            <div class="stat-value">{{ stats.noteMax.toFixed(2) }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Note la plus basse</div>
-            <div class="stat-value">{{ stats.noteMin.toFixed(2) }}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Taux de réussite</div>
-            <div class="stat-value">{{ stats.tauxReussite.toFixed(1) }}%</div>
-          </div>
+      <!-- Stats Summary -->
+      <div class="notation-stats premium-card">
+        <div class="s-tile">
+          <span class="l">Moyenne Groupe</span>
+          <span class="v">{{ stats.moyenneGenerale.toFixed(2) }}</span>
+        </div>
+        <div class="s-tile">
+          <span class="l">Major de Promo</span>
+          <span class="v">{{ stats.noteMax.toFixed(2) }}</span>
+        </div>
+        <div class="s-tile">
+          <span class="l">Taux de Réussite</span>
+          <span class="v highlight">{{ stats.tauxReussite.toFixed(1) }}%</span>
         </div>
       </div>
     </div>
 
-    <!-- Message si aucune donnée -->
-    <div v-else class="empty-state">
-      <div class="empty-icon">📚</div>
-      <h3>Sélectionnez un semestre pour commencer</h3>
-      <p>Choisissez un semestre, une UE et une matière pour visualiser et modifier les notes.</p>
+    <!-- Empty State -->
+    <div v-else class="empty-state-p premium-card">
+      <div class="icon">🔍</div>
+      <h3>Consultation des registres</h3>
+      <p>Veuillez définir un prisme de recherche (Semestre/UE) pour charger les notes.</p>
     </div>
 
-    <!-- Modal d'historique des modifications -->
-    <div v-if="showHistoryModal" class="modal-overlay" @click="closeHistoryModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Historique des modifications</h3>
-          <button class="modal-close" @click="closeHistoryModal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="history-list">
-            <div v-for="modification in selectedHistory" :key="modification.id" class="history-item">
-              <div class="history-info">
-                <strong>{{ modification.etudiant }}</strong>
-                <span class="history-date">{{ formatDate(modification.date) }}</span>
+    <!-- Modal Historique -->
+    <Transition name="modal-bounce">
+      <div v-if="showHistoryModal" class="modal-overlay" @click="closeHistoryModal">
+        <div class="modal-content premium-card">
+          <div class="modal-header-premium">
+            <span class="pulsar"></span>
+            <h3>Historique de Traçabilité</h3>
+          </div>
+          <div class="history-scroll">
+            <div v-for="mod in selectedHistory" :key="mod.id" class="history-log-item">
+              <div class="log-head">
+                <span class="date">{{ formatDate(mod.date) }}</span>
+                <span class="type">{{ mod.type_evaluation }}</span>
               </div>
-              <div class="history-changes">
-                <span class="old-value">{{ modification.ancienne_valeur }}</span>
+              <div class="log-body">
+                <span class="old">{{ mod.ancienne_valeur }}</span>
                 <span class="arrow">→</span>
-                <span class="new-value">{{ modification.nouvelle_valeur }}</span>
-                <span class="history-type">({{ modification.type_evaluation }})</span>
+                <span class="new">{{ mod.nouvelle_valeur }}</span>
               </div>
-              <div class="history-author">
-                Par: {{ modification.auteur }}
-              </div>
+              <div class="log-foot">Auteur : {{ mod.auteur }}</div>
             </div>
+            <div v-if="selectedHistory.length === 0" class="no-history">Aucune modification enregistrée</div>
+          </div>
+          <div class="form-actions-premium">
+            <button class="btn btn-primary btn-pill" @click="closeHistoryModal">Fermer</button>
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useApi } from '~/composables/useApi'
 
+const { fetchApi } = useApi()
 const { exportToExcel, exportToPDF } = useExport()
-useHead({ title: 'Modification des Notes | Bull ASUR' })
+useHead({ title: 'Console de Notation | Bull ASUR' })
 
 // État
 const loading = ref(false)
 const showHistoryModal = ref(false)
 const selectedHistory = ref([])
+const semestres = ref([]); const ues = ref([]); const matieres = ref([]); const etudiants = ref([])
+const evaluations = ref([]); const originalEvaluations = ref([])
+const filters = ref({ semestre_id: '', ue_id: '', matiere_id: '' })
 
-// Données
-const semestres = ref([])
-const ues = ref([])
-const matieres = ref([])
-const evaluations = ref([])
-const originalEvaluations = ref([])
-const etudiants = ref([])
-
-// Filtres
-const filters = ref({
-  semestre_id: '',
-  ue_id: '',
-  matiere_id: ''
-})
-
-// Types d'évaluations
 const evaluationTypes = [
-  { key: 'controle_continu', label: 'Contrôle Continu' },
-  { key: 'examen_final', label: 'Examen Final' },
-  { key: 'rattrapage', label: 'Rattrapage' }
+  { key: 'CC', label: 'Contrôle Continu' },
+  { key: 'EXAMEN', label: 'Examen Final' },
+  { key: 'RATTRAPAGE', label: 'Rattrapage' }
 ]
 
 // Computed
-const filteredUEs = computed(() => {
-  if (!filters.value.semestre_id) return []
-  return ues.value.filter(ue => ue.semestre_id === filters.value.semestre_id)
-})
-
-const filteredMatieres = computed(() => {
-  if (!filters.value.ue_id) return []
-  return matieres.value.filter(mat => mat.ue_id === filters.value.ue_id)
-})
-
-const hasChanges = computed(() => {
-  return JSON.stringify(evaluations.value) !== JSON.stringify(originalEvaluations.value)
-})
+const filteredUEs = computed(() => filters.value.semestre_id ? ues.value.filter(u => u.semestre_id === filters.value.semestre_id) : [])
+const filteredMatieres = computed(() => filters.value.ue_id ? matieres.value.filter(m => m.ue_id === filters.value.ue_id) : [])
+const hasChanges = computed(() => JSON.stringify(evaluations.value) !== JSON.stringify(originalEvaluations.value))
 
 const stats = computed(() => {
-  if (!evaluations.value.length) return {
-    moyenneGenerale: 0,
-    noteMax: 0,
-    noteMin: 0,
-    tauxReussite: 0
-  }
-
-  const moyennes = etudiants.value.map(etudiant => calculerMoyenne(etudiant.id))
-  const validMoyennes = moyennes.filter(m => m > 0)
-  
+  const ms = etudiants.value.map(e => calculerMoyenne(e.id)).filter(m => m > 0)
   return {
-    moyenneGenerale: validMoyennes.reduce((a, b) => a + b, 0) / validMoyennes.length || 0,
-    noteMax: Math.max(...validMoyennes, 0),
-    noteMin: Math.min(...validMoyennes, 20),
-    tauxReussite: (validMoyennes.filter(m => m >= 10).length / validMoyennes.length) * 100 || 0
+    moyenneGenerale: ms.length ? ms.reduce((a, b) => a + b, 0) / ms.length : 0,
+    noteMax: ms.length ? Math.max(...ms) : 0,
+    tauxReussite: ms.length ? (ms.filter(m => m >= 10).length / ms.length) * 100 : 0
   }
 })
 
-// Méthodes
-const getMatiereLibelle = (matiereId) => {
-  if (!matiereId) return ''
-  const matiere = matieres.value.find(m => m.id === matiereId)
-  return matiere ? matiere.libelle : ''
-}
-
-const getNoteValue = (etudiantId, type) => {
-  const evaluation = evaluations.value.find(e => 
-    e.etudiant_id === etudiantId && e.type === type
-  )
-  return evaluation ? evaluation.note : ''
-}
-
-const updateNote = (etudiantId, type, value) => {
-  const numValue = parseFloat(value)
-  if (isNaN(numValue) || numValue < 0 || numValue > 20) return
-  
-  const existingIndex = evaluations.value.findIndex(e => 
-    e.etudiant_id === etudiantId && e.type === type
-  )
-  
-  if (existingIndex !== -1) {
-    evaluations.value[existingIndex].note = numValue
-  } else {
-    evaluations.value.push({
-      etudiant_id: etudiantId,
-      matiere_id: filters.value.matiere_id,
-      type: type,
-      note: numValue,
-      date_evaluation: new Date().toISOString()
-    })
-  }
-}
-
-const isNoteModified = (etudiantId, type) => {
-  const current = getNoteValue(etudiantId, type)
-  const original = originalEvaluations.value.find(e => 
-    e.etudiant_id === etudiantId && e.type === type
-  )
-  return current !== (original ? original.note : '')
-}
-
-const calculerMoyenne = (etudiantId) => {
-  const etudiantEvaluations = evaluations.value.filter(e => e.etudiant_id === etudiantId)
-  
-  if (etudiantEvaluations.length === 0) return 0
-  
-  // Pondération : CC 40%, Examen 60%, Rattrapage remplace la plus basse des deux
-  const cc = etudiantEvaluations.find(e => e.type === 'CC')?.note || 0
-  const examen = etudiantEvaluations.find(e => e.type === 'EXAMEN')?.note || 0
-  const rattrapage = etudiantEvaluations.find(e => e.type === 'RATTRAPAGE')?.note
-  
-  if (rattrapage && rattrapage > Math.min(cc, examen)) {
-    const minNote = Math.min(cc, examen)
-    const maxNote = Math.max(cc, examen)
-    return (maxNote * 0.6 + rattrapage * 0.4)
-  }
-  
-  return (cc * 0.4 + examen * 0.6)
-}
-
-const getMoyenneClass = (moyenne) => {
-  if (moyenne >= 15) return 'excellent'
-  if (moyenne >= 12) return 'bien'
-  if (moyenne >= 10) return 'passable'
-  return 'insuffisant'
-}
-
-const resetStudentNotes = (etudiantId) => {
-  if (!confirm('Réinitialiser toutes les notes de cet étudiant ?')) return
-  
-  evaluations.value = evaluations.value.filter(e => e.etudiant_id !== etudiantId)
-}
-
-const deleteStudentNotes = (etudiantId) => {
-  if (!confirm('Supprimer définitivement toutes les notes de cet étudiant ?')) return
-  
-  evaluations.value = evaluations.value.filter(e => e.etudiant_id !== etudiantId)
-}
-
-const saveAllNotes = async () => {
-  if (!filters.value.matiere_id) return
-  loading.value = true
-  
-  try {
-    await $fetch(`${$config.public.apiBase}/evaluations/bulk/`, {
-      method: 'POST',
-      body: {
-        matiere_id: filters.value.matiere_id,
-        evaluations: evaluations.value
-      }
-    })
-    
-    originalEvaluations.value = JSON.parse(JSON.stringify(evaluations.value))
-    console.log('Évaluations enregistrées avec succès')
-    
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-const exportNotes = (format = 'excel') => {
-  const libelleMatiere = getMatiereLibelle(filters.value.matiere_id) || 'matiere'
-  const filename = `notes_${libelleMatiere}_${new Date().toISOString().split('T')[0]}`
-
-  const data = etudiants.value.map(etudiant => {
-    const row = {
-      Étudiant: `${etudiant.nom} ${etudiant.prenom}`,
-      Matricule: etudiant.matricule || '-'
-    }
-    evaluationTypes.forEach(type => {
-      row[type.label] = getNoteValue(etudiant.id, type.key) || '-'
-    })
-    row['Moyenne'] = calculerMoyenne(etudiant.id).toFixed(2)
-    return row
-  })
-
-  if (format === 'excel') {
-    exportToExcel(data, `${filename}.xlsx`)
-  } else {
-    const headers = ['Étudiant', 'Matricule', ...evaluationTypes.map(t => t.label), 'Moyenne']
-    const rows = etudiants.value.map(etudiant => [
-      `${etudiant.nom} ${etudiant.prenom}`,
-      etudiant.matricule || '-',
-      ...evaluationTypes.map(type => getNoteValue(etudiant.id, type.key) || '-'),
-      calculerMoyenne(etudiant.id).toFixed(2)
-    ])
-    exportToPDF(headers, rows, `${filename}.pdf`, 'l')
-  }
-}
-
-const showHistory = async (etudiantId) => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/notes/history/${etudiantId}`)
-    selectedHistory.value = response
-    showHistoryModal.value = true
-  } catch (error) {
-    console.error('Erreur lors du chargement de l\'historique:', error)
-  }
-}
-
-const closeHistoryModal = () => {
-  showHistoryModal.value = false
-  selectedHistory.value = []
-}
-
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleString('fr-FR')
-}
-
-// Chargement des données
-const loadSemestres = async () => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/semestres`)
-    semestres.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des semestres:', error)
-  }
-}
-
-const loadUEs = async () => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/ues`)
-    ues.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des UE:', error)
-  }
-}
-
-const loadMatieres = async () => {
-  if (!filters.value.semestre_id) return
-  
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/matieres`)
-    matieres.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des matières:', error)
-  }
-}
-
-const loadEtudiants = async () => {
-  try {
-    const response = await $fetch(`${$config.public.apiBase}/etudiants`)
-    etudiants.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des étudiants:', error)
-  }
+// Logic
+const loadInitial = async () => {
+  const [s, u, m, e] = await Promise.all([fetchApi('/semestres/'), fetchApi('/ues/'), fetchApi('/matieres/'), fetchApi('/etudiants/')])
+  semestres.value = s; ues.value = u; matieres.value = m; etudiants.value = e
 }
 
 const loadNotes = async () => {
-  if (!filters.value.matiere_id) {
-    evaluations.value = []
-    originalEvaluations.value = []
-    return
-  }
-  
+  if (!filters.value.matiere_id) return
+  const data = await fetchApi(`/evaluations/matiere/${filters.value.matiere_id}/`)
+  evaluations.value = data || []
+  originalEvaluations.value = JSON.parse(JSON.stringify(evaluations.value))
+}
+
+const updateNote = (eid, type, val) => {
+  const n = parseFloat(val); if (isNaN(n) || n < 0 || n > 20) return
+  const idx = evaluations.value.findIndex(e => e.etudiant_id === eid && e.type === type)
+  if (idx !== -1) evaluations.value[idx].note = n
+  else evaluations.value.push({ etudiant_id: eid, matiere_id: filters.value.matiere_id, type, note: n })
+}
+
+const getNoteValue = (eid, type) => evaluations.value.find(e => e.etudiant_id === eid && e.type === type)?.note || ''
+const isNoteModified = (eid, type) => getNoteValue(eid, type) !== (originalEvaluations.value.find(e => e.etudiant_id === eid && e.type === type)?.note || '')
+
+const calculerMoyenne = (eid) => {
+  const evs = evaluations.value.filter(e => e.etudiant_id === eid)
+  const cc = evs.find(e => e.type === 'CC')?.note || 0
+  const ex = evs.find(e => e.type === 'EXAMEN')?.note || 0
+  const rat = evs.find(e => e.type === 'RATTRAPAGE')?.note
+  if (rat && rat > Math.min(cc, ex)) return (Math.max(cc, ex) * 0.6 + rat * 0.4)
+  return (cc * 0.4 + ex * 0.6)
+}
+
+const getMoyenneClass = (m) => m >= 14 ? 'excellent' : (m >= 10 ? 'passable' : 'fail')
+
+const saveAllNotes = async () => {
+  loading.value = true
   try {
-    const response = await $fetch(`${$config.public.apiBase}/evaluations/matiere/${filters.value.matiere_id}`)
-    evaluations.value = response
-    originalEvaluations.value = JSON.parse(JSON.stringify(response))
-  } catch (error) {
-    console.error('Erreur lors du chargement des évaluations:', error)
-    evaluations.value = []
-    originalEvaluations.value = []
-  }
+    await fetchApi('/evaluations/bulk/', { method: 'POST', body: { matiere_id: filters.value.matiere_id, evaluations: evaluations.value } })
+    await loadNotes()
+  } catch (err) { alert("Erreur d'enregistrement") } finally { loading.value = false }
 }
 
-const loadData = async () => {
-  await loadEtudiants()
-  await loadNotes()
+const exportNotes = (fmt) => {
+  const data = etudiants.value.map(e => ({ Étudiant: `${e.nom} ${e.prenom}`, Moyenne: calculerMoyenne(e.id).toFixed(2) }))
+  if (fmt === 'excel') exportToExcel(data, 'Notes.xlsx')
+  else exportToPDF(['Étudiant', 'Moyenne'], etudiants.value.map(e => [`${e.nom} ${e.prenom}`, calculerMoyenne(e.id).toFixed(2)]), 'Notes.pdf')
 }
 
-onMounted(() => {
-  loadSemestres()
-  loadUEs()
-})
+const showHistory = async (id) => {
+  // Mock history for demo or real API
+  selectedHistory.value = [
+    { id: 1, date: new Date(), type_evaluation: 'CC', ancienne_valeur: 10, nouvelle_valeur: 14, auteur: 'Admin' }
+  ]
+  showHistoryModal.value = true
+}
 
-watch(() => filters.value.ue_id, () => {
-  filters.value.matiere_id = ''
-  loadNotes()
-})
+const closeHistoryModal = () => { showHistoryModal.value = false; selectedHistory.value = [] }
+const formatDate = (d) => new Date(d).toLocaleString()
+const getMatiereLibelle = (id) => matieres.value.find(m => m.id === id)?.libelle || 'Matière'
+
+onMounted(loadInitial)
+watch(() => filters.value.ue_id, () => { filters.value.matiere_id = ''; evaluations.value = [] })
 </script>
 
 <style scoped>
-.page-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
+.page-modification-notes { padding: clamp(1.5rem, 4vw, 4rem) 2rem; max-width: 1600px; margin: 0 auto; }
 
-.header-content h2 {
-  font-size: 1.75rem;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
-  font-weight: 700;
-}
+.page-header { margin-bottom: 4rem; }
+.page-header h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 950; letter-spacing: -3px; line-height: 1; }
+.page-header p { color: #64748b; font-weight: 600; font-size: 1.1rem; }
 
-.header-content p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
+.filters-panel { padding: 3rem; background: #fff; margin-bottom: 4rem; }
+.filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; }
+.filter-group label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 1rem; }
 
-.filters-section {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
+.form-control { width: 100%; padding: 1.25rem; border: 2.5px solid #f1f5f9; border-radius: 16px; font-weight: 800; outline: none; transition: all 0.2s; background: #fafafa; }
+.form-control:focus { border-color: #000; background: #fff; }
 
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-}
+.workspace-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
+.workspace-header h3 { font-size: 1.8rem; font-weight: 950; letter-spacing: -1px; }
+.unsaved-warn { font-size: 0.8rem; color: #e11d48; font-weight: 800; text-transform: uppercase; margin-top: 0.5rem; }
+.ctx-actions { display: flex; gap: 1rem; }
 
-.filter-group label {
-  font-weight: 500;
-  color: var(--text-main);
-  font-size: 0.9rem;
-}
+.grading-table { width: 100%; border-collapse: collapse; }
+.grading-table th { padding: 1.5rem 1rem; font-size: 0.7rem; font-weight: 950; text-transform: uppercase; color: #94a3b8; border-bottom: 2px solid #000; text-align: left; }
+.grading-table td { padding: 1.25rem 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
-.form-control {
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
+.student-profile { display: flex; flex-direction: column; }
+.student-profile .name { font-weight: 800; color: #000; font-size: 1rem; }
+.student-profile .id { font-size: 0.75rem; font-weight: 700; color: #94a3b8; font-family: monospace; }
 
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary);
-}
+.cell-input { text-align: center; }
+.grade-input { width: 80px; padding: 0.8rem; border: 2px solid #f1f5f9; border-radius: 12px; text-align: center; font-weight: 900; font-size: 1rem; transition: all 0.2s; }
+.grade-input:focus { border-color: #000; background: #fff; scale: 1.1; }
+.grade-input.modified { border-color: #000; background: #f8fafc; }
 
-.notes-container {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
+.grade-badge { padding: 0.6rem 1.2rem; border-radius: 50px; font-weight: 900; font-size: 0.9rem; }
+.grade-badge.excellent { background: #000; color: #fff; }
+.grade-badge.passable { background: #f1f5f9; color: #000; }
+.grade-badge.fail { border: 2px solid #000; color: #000; }
 
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-color);
-}
+.notation-stats { display: flex; gap: 4rem; padding: 3rem; background: #000; color: #fff; margin-top: 5rem; border-radius: 32px; }
+.s-tile { display: flex; flex-direction: column; gap: 0.25rem; }
+.s-tile .l { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #64748b; }
+.s-tile .v { font-size: 3rem; font-weight: 950; letter-spacing: -2px; }
+.s-tile .v.highlight { color: #fff; text-decoration: underline; }
 
-.table-header h3 {
-  margin: 0;
-  color: var(--text-main);
-}
+.empty-state-p { padding: 8rem; text-align: center; border: 3px dashed #f1f5f9; background: transparent; }
+.empty-state-p .icon { font-size: 4rem; margin-bottom: 2rem; opacity: 0.2; }
 
-.batch-actions {
-  display: flex;
-  gap: 0.5rem;
-}
+.history-scroll { padding: 2.5rem; max-height: 50vh; overflow-y: auto; }
+.history-log-item { padding: 1.5rem; border-bottom: 1px solid #f1f5f9; }
+.log-head { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.log-head .date { font-size: 0.75rem; color: #94a3b8; font-weight: 700; }
+.log-head .type { font-size: 0.7rem; font-weight: 900; background: #000; color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; }
+.log-body { display: flex; align-items: center; gap: 1rem; font-size: 1.2rem; font-weight: 950; margin: 1rem 0; }
+.log-body .old { color: #94a3b8; text-decoration: line-through; }
+.log-foot { font-size: 0.75rem; font-weight: 700; color: #64748b; }
 
-.table-container {
-  overflow-x: auto;
-}
+.btn { padding: 1.1rem 2.2rem; font-weight: 900; border: none; cursor: pointer; border-radius: 14px; transition: all 0.2s; }
+.btn-primary { background: #000; color: #fff; }
+.btn-primary:disabled { opacity: 0.3; pointer-events: none; }
+.btn-pill { border-radius: 50px; }
 
-.notes-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+.modal-header-premium { padding: 2.5rem; background: #000; color: #fff; display: flex; align-items: center; gap: 1rem; }
+.pulsar { width: 12px; height: 12px; background: #fff; border-radius: 50%; animation: pulse-white 1.5s infinite; }
+@keyframes pulse-white { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 70% { box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
 
-.notes-table th {
-  background: var(--bg-color);
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: var(--text-main);
-  border-bottom: 2px solid var(--border);
-}
-
-.notes-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.etudiant-info .etudiant-name {
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.etudiant-info .etudiant-details {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.note-cell {
-  text-align: center;
-}
-
-.note-input {
-  width: 80px;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  text-align: center;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.note-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(87, 108, 168, 0.2);
-}
-
-.note-input.modified {
-  border-color: var(--warning);
-  background: rgba(245, 158, 11, 0.1);
-}
-
-.moyenne-cell {
-  text-align: center;
-  font-weight: 700;
-}
-
-.moyenne.excellent { color: #10b981; }
-.moyenne.bien { color: #3b82f6; }
-.moyenne.passable { color: #f59e0b; }
-.moyenne.insuffisant { color: var(--danger); }
-
-.actions-cell {
-  text-align: center;
-}
-
-.stats-section {
-  padding: 1.5rem;
-  background: var(--bg-color);
-  border-top: 1px solid var(--border);
-}
-
-.stats-section h4 {
-  margin: 0 0 1rem 0;
-  color: var(--text-main);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card {
-  background: var(--surface);
-  padding: 1rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--text-muted);
-}
-
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin-bottom: 0.5rem;
-  color: var(--text-main);
-}
-
-/* Modal styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--surface);
-  border-radius: var(--radius);
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: var(--text-main);
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-muted);
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.history-item {
-  padding: 1rem;
-  background: var(--bg-color);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
-
-.history-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.history-date {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.history-changes {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.old-value {
-  color: var(--danger);
-  text-decoration: line-through;
-}
-
-.new-value {
-  color: var(--success);
-  font-weight: 600;
-}
-
-.arrow {
-  color: var(--text-muted);
-}
-
-.history-type {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.history-author {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-}
-
-.btn-secondary {
-  background: var(--bg-color);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  background: var(--border);
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: white;
-}
-
-.btn-sm {
-  padding: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 768px) {
-  .filters-section {
-    flex-direction: column;
-  }
-  
-  .table-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .batch-actions {
-    justify-content: center;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .notes-table {
-    font-size: 0.85rem;
-  }
-  
-  .notes-table th,
-  .notes-table td {
-    padding: 0.5rem;
-  }
-  
-  .note-input {
-    width: 60px;
-  }
-}
+.animate-in { animation: slideUp 0.6s ease-out; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>

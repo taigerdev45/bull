@@ -1,131 +1,121 @@
 <template>
-  <div class="page-container">
+  <div class="page-absences">
     <header class="page-header">
-      <div class="header-info">
+      <div class="header-content">
         <h1>Saisie des Absences</h1>
-        <p>Comptabilisation des heures pénalisantes par étudiant et matière.</p>
+        <p>Comptabilisation rigoureuse des heures d'absence par étudiant et unité d'enseignement.</p>
       </div>
       <div class="header-actions">
         <div class="export-dropdown" v-if="absences.length">
-          <button class="btn btn-ghost shadow-sm">
-            Exporter
+          <button class="btn btn-pill dark">
+            Exporter ↓
           </button>
-          <div class="dropdown-menu">
-            <button @click="exportData('excel')">Excel (.xlsx)</button>
-            <button @click="exportData('pdf-p')">PDF Portrait</button>
-            <button @click="exportData('pdf-l')">PDF Paysage</button>
+          <div class="dropdown-menu premium-card">
+            <button @click="exportData('excel')">Journal Excel (.xlsx)</button>
+            <button @click="exportData('pdf-p')">Rapport PDF (Portrait)</button>
+            <button @click="exportData('pdf-l')">Rapport PDF (Paysage)</button>
           </div>
         </div>
-        <button class="btn btn-primary" @click="showAddModal = true">
-          Nouvelle Absence
+        <button class="btn btn-primary btn-pill" @click="showAddModal = true">
+          + Nouvelle Absence
         </button>
       </div>
     </header>
 
-    <!-- Zone filtres -->
-    <div class="filter-card">
-      <div class="field">
-        <label>Étudiant</label>
-        <select v-model="selectedEtudiant" @change="fetchAbsences">
-          <option value="">Tous les étudiants</option>
-          <option v-for="et in etudiants" :key="et.id" :value="et.id">
-            {{ et.prenom }} {{ et.nom }} ({{ et.matricule }})
-          </option>
-        </select>
+    <!-- Filtre Étudiant -->
+    <div class="filters-section premium-card">
+      <div class="filter-row">
+        <div class="filter-group max-w-400">
+          <label>Cibler un étudiant</label>
+          <select v-model="selectedEtudiant" @change="fetchAbsences" class="form-control">
+            <option value="">Tous les dossiers archivés</option>
+            <option v-for="et in etudiants" :key="et.id" :value="et.id">
+              {{ et.prenom }} {{ et.nom }} ({{ et.matricule }})
+            </option>
+          </select>
+        </div>
       </div>
     </div>
 
-    <div v-if="pending" class="loader">
-      <div class="spinner"></div>
-      <p>Chargement des absences...</p>
+    <!-- Loader -->
+    <div v-if="pending" class="loading-state-wrap">
+      <div class="pulsar-dark"></div>
+      <p>Synchronisation du registre...</p>
     </div>
 
-    <div v-else class="evaluations-grid">
-      <div v-for="absence in absences" :key="absence.id" class="eval-card">
-        <div class="eval-badge">Absence</div>
-        <div class="eval-main">
+    <!-- Grid des Absences -->
+    <div v-else class="absences-grid">
+      <div v-for="absence in absences" :key="absence.id" class="absence-card premium-card">
+        <div class="card-header">
+          <span class="type-badge">ABSENCE</span>
+          <span class="hours-badge">{{ absence.nombre_heures }}H</span>
+        </div>
+        <div class="card-body">
           <h3>{{ getMatiereLibelle(absence.matiere_id) }}</h3>
-          <p>{{ formatDate(absence.date_absence) }}</p>
-        </div>
-        <div class="eval-stats">
-          <div class="es-item">
-            <span class="l">Étudiant</span>
-            <span class="v student-name">{{ getEtudiantNom(absence.etudiant_id) }}</span>
-          </div>
-          <div class="es-item">
-            <span class="l">Heures</span>
-            <span class="v text-danger">{{ absence.nombre_heures }}h</span>
+          <p class="date">{{ formatDate(absence.date_absence) }}</p>
+          <div class="student-info">
+            <span class="label">Étudiant</span>
+            <p class="name">{{ getEtudiantNom(absence.etudiant_id) }}</p>
           </div>
         </div>
-        <div class="eval-actions">
-          <button class="btn-full" @click="deleteAbsence(absence)">🗑️ Supprimer</button>
+        <div class="card-footer">
+          <button class="btn-delete" @click="deleteAbsence(absence)">Révoquer l'entrée 🗑️</button>
         </div>
       </div>
 
-      <div v-if="absences.length === 0" class="empty-state">
-        <div class="empty-icon">📂</div>
-        <h3>Aucune absence trouvée</h3>
-        <p>Commencez par enregistrer une absence pour un étudiant.</p>
+      <!-- Empty State -->
+      <div v-if="absences.length === 0" class="empty-state premium-card">
+        <div class="empty-icon">🗃️</div>
+        <h3>Registre Vierge</h3>
+        <p>Aucune absence n'a été répertoriée pour cette sélection.</p>
       </div>
     </div>
 
-    <!-- ─── Modal Nouvelle Absence ─────────────────────────── -->
-    <Transition name="modal-fade">
+    <!-- Modal Nouvelle Absence -->
+    <Transition name="modal-bounce">
       <div v-if="showAddModal" class="modal-overlay" @click.self="showAddModal = false">
-        <div class="modal-box">
-          <div class="modal-header">
-            <h2>Nouvelle Absence</h2>
-            <button class="modal-close" @click="showAddModal = false">✕</button>
+        <div class="modal-content premium-card">
+          <div class="modal-header-premium">
+            <span class="pulsar"></span>
+            <h3>Enregistrer une Absence</h3>
           </div>
 
           <form class="modal-form" @submit.prevent="submitAbsence">
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Étudiant</label>
-                <select v-model="form.etudiant_id" required>
-                  <option value="">-- Sélectionner --</option>
-                  <option v-for="et in etudiants" :key="et.id" :value="et.id">
-                    {{ et.prenom }} {{ et.nom }} ({{ et.matricule }})
-                  </option>
-                </select>
-              </div>
+            <div class="form-group stack">
+              <label>Étudiant concerné</label>
+              <select v-model="form.etudiant_id" required class="form-control">
+                <option value="">-- Sélectionner l'étudiant --</option>
+                <option v-for="et in etudiants" :key="et.id" :value="et.id">
+                  {{ et.prenom }} {{ et.nom }} ({{ et.matricule }})
+                </option>
+              </select>
+            </div>
 
-              <div class="form-group">
-                <label>Matière</label>
-                <select v-model="form.matiere_id" required>
-                  <option value="">-- Sélectionner --</option>
-                  <option v-for="mat in matieres" :key="mat.id" :value="mat.id">
-                    {{ mat.libelle }}
-                  </option>
-                </select>
-              </div>
+            <div class="form-group stack mt-1">
+              <label>Matière (UE)</label>
+              <select v-model="form.matiere_id" required class="form-control">
+                <option value="">-- Sélectionner l'UE --</option>
+                <option v-for="mat in matieres" :key="mat.id" :value="mat.id">
+                  {{ mat.libelle }}
+                </option>
+              </select>
+            </div>
 
+            <div class="form-row mt-1">
               <div class="form-group">
-                <label>Nombre d'heures</label>
-                <input
-                  type="number"
-                  v-model.number="form.nombre_heures"
-                  min="1"
-                  max="50"
-                  required
-                  placeholder="Ex: 2"
-                />
+                <label>Volume horaire</label>
+                <input type="number" v-model.number="form.nombre_heures" min="1" max="50" required class="form-control">
               </div>
-
               <div class="form-group">
-                <label>Date de l'absence</label>
-                <input
-                  type="date"
-                  v-model="form.date_absence"
-                  required
-                />
+                <label>Date effective</label>
+                <input type="date" v-model="form.date_absence" required class="form-control">
               </div>
             </div>
 
-            <div class="modal-footer">
-              <button type="button" class="btn btn-ghost" @click="showAddModal = false">Annuler</button>
+            <div class="form-actions-premium mt-2">
+              <button type="button" class="btn btn-outline" @click="showAddModal = false">Annuler</button>
               <button type="submit" class="btn btn-primary" :disabled="submitting">
-                {{ submitting ? 'Enregistrement...' : '✅ Enregistrer l\'absence' }}
+                {{ submitting ? 'Enregistrement...' : 'Confirmer l\'absence' }}
               </button>
             </div>
           </form>
@@ -142,29 +132,9 @@ import { useApi } from '~/composables/useApi'
 const { fetchApi } = useApi()
 const { exportToExcel, exportToPDF } = useExport()
 
-useHead({ title: 'Saisie Absences | Secrétariat Bull ASUR' })
+useHead({ title: 'Saisie Absences | Bull ASUR' })
 
-const exportData = (type) => {
-  const data = absences.value.map(a => ({
-    Étudiant: getEtudiantNom(a.etudiant_id),
-    Matière: getMatiereLibelle(a.matiere_id),
-    Heures: a.nombre_heures,
-    Date: formatDate(a.date_absence)
-  }))
-
-  if (type === 'excel') {
-    exportToExcel(data, 'liste_absences.xlsx')
-  } else {
-    const headers = ['Étudiant', 'Matière', 'Heures', 'Date']
-    const rows = absences.value.map(a => [
-      getEtudiantNom(a.etudiant_id),
-      getMatiereLibelle(a.matiere_id),
-      `${a.nombre_heures}h`,
-      formatDate(a.date_absence)
-    ])
-    exportToPDF(headers, rows, 'liste_absences.pdf', type === 'pdf-l' ? 'l' : 'p')
-  }
-}
+// État
 const absences = ref([])
 const etudiants = ref([])
 const matieres = ref([])
@@ -180,6 +150,7 @@ const form = ref({
   date_absence: new Date().toISOString().split('T')[0]
 })
 
+// Logic
 const fetchInitialData = async () => {
   pending.value = true
   try {
@@ -187,10 +158,8 @@ const fetchInitialData = async () => {
       fetchApi('/etudiants/'),
       fetchApi('/matieres/')
     ])
-    
-    etudiants.value = etData.status === 'fulfilled' && Array.isArray(etData.value) ? etData.value : []
-    matieres.value = matData.status === 'fulfilled' && Array.isArray(matData.value) ? matData.value : []
-
+    etudiants.value = etData.status === 'fulfilled' ? etData.value : []
+    matieres.value = matData.status === 'fulfilled' ? matData.value : []
     await fetchAbsences()
   } finally {
     pending.value = false
@@ -201,11 +170,8 @@ const fetchAbsences = async () => {
   pending.value = true
   try {
     let url = '/absences/'
-    if (selectedEtudiant.value) {
-      url += `?etudiant_id=${selectedEtudiant.value}`
-    }
-    const data = await fetchApi(url)
-    absences.value = Array.isArray(data) ? data : []
+    if (selectedEtudiant.value) url += `?etudiant_id=${selectedEtudiant.value}`
+    absences.value = await fetchApi(url)
   } catch (e) {
     absences.value = []
   } finally {
@@ -213,111 +179,125 @@ const fetchAbsences = async () => {
   }
 }
 
-onMounted(fetchInitialData)
-
-const getMatiereLibelle = (id) => {
-  const mat = matieres.value.find(m => m.id === id)
-  return mat ? mat.libelle : 'Matière Inconnue'
-}
-
-const getEtudiantNom = (id) => {
-  const et = etudiants.value.find(e => e.id === id)
-  return et ? `${et.prenom} ${et.nom}` : 'Étudiant Inconnu'
-}
-
-const formatDate = (d) => {
-  if (!d) return 'Date non définie'
-  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
 const submitAbsence = async () => {
   submitting.value = true
   try {
-    await fetchApi('/absences/', {
-      method: 'POST',
-      body: form.value
-    })
+    await fetchApi('/absences/', { method: 'POST', body: form.value })
     showAddModal.value = false
-    form.value.nombre_heures = 2
     await fetchAbsences()
   } catch (err) {
-    const msg = err.data?.error || err.data?.message || 'Erreur lors de la création.'
-    alert(msg)
+    alert(err.data?.error || 'Erreur lors de la création.')
   } finally {
     submitting.value = false
   }
 }
 
-const deleteAbsence = async (absenceItem) => {
-  if (!confirm(`Supprimer cette absence de ${absenceItem.nombre_heures}h ?`)) return
+const deleteAbsence = async (item) => {
+  if (!confirm(`Supprimer cette absence (${item.nombre_heures}h) ?`)) return
   try {
-    await fetchApi(`/absences/${absenceItem.id}/`, { method: 'DELETE' })
+    await fetchApi(`/absences/${item.id}/`, { method: 'DELETE' })
     await fetchAbsences()
   } catch (err) {
-    alert('Impossible de supprimer l\'absence. Vérifiez vos droits.')
+    alert('Action impossible.')
   }
 }
+
+const exportData = (type) => {
+  const data = absences.value.map(a => ({ Étudiant: getEtudiantNom(a.etudiant_id), Matière: getMatiereLibelle(a.matiere_id), Heures: a.nombre_heures, Date: formatDate(a.date_absence) }))
+  if (type === 'excel') { exportToExcel(data, 'Journal_Absences.xlsx') }
+  else {
+    const headers = ['Étudiant', 'Matière', 'Heures', 'Date']
+    const rows = absences.value.map(a => [getEtudiantNom(a.etudiant_id), getMatiereLibelle(a.matiere_id), `${a.nombre_heures}h`, formatDate(a.date_absence)])
+    exportToPDF(headers, rows, 'Registre_Absences.pdf', type === 'pdf-l' ? 'l' : 'p')
+  }
+}
+
+const getMatiereLibelle = (id) => matieres.value.find(m => m.id === id)?.libelle || 'UE Inconnue'
+const getEtudiantNom = (id) => {
+  const et = etudiants.value.find(e => e.id === id)
+  return et ? `${et.prenom} ${et.nom}` : 'Profil Inconnu'
+}
+const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+
+onMounted(fetchInitialData)
 </script>
 
 <style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-.header-info h1 { font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0; }
-.header-info p { color: #64748b; font-size: 1rem; margin: 0.25rem 0 0; }
+.page-absences { padding: clamp(1.5rem, 4vw, 4rem) 2rem; max-width: 1500px; margin: 0 auto; animation: fadeIn 0.6s ease-out; }
 
-.filter-card { background: white; padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-light); display: flex; gap: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
-.filter-card .field { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px; }
-.filter-card label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-.filter-card select { padding: 0.75rem; border: 1px solid var(--border-light); border-radius: 8px; font-weight: 600; color: #334155; outline: none; background-color: #fbfcfe; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-.evaluations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-.eval-card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-light); overflow: hidden; display: flex; flex-direction: column; transition: all 0.2s; box-shadow: var(--shadow-sm); }
-.eval-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4rem; flex-wrap: wrap; gap: 2rem; }
+.header-content h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -2px; margin-bottom: 0.5rem; }
+.header-content p { color: #64748b; font-weight: 500; font-size: 1.1rem; }
+.header-actions { display: flex; gap: 1rem; position: relative; }
 
-.eval-badge { background: #fee2e2; color: #991b1b; padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; align-self: flex-start; margin: 1.25rem 1.25rem 0; }
+.export-dropdown { position: relative; }
+.export-dropdown:hover .dropdown-menu { display: block; opacity: 1; pointer-events: auto; transform: translateY(0); }
+.dropdown-menu { 
+  display: none; position: absolute; top: 100%; right: 0; min-width: 240px; 
+  background: #fff; z-index: 100; padding: 0.75rem; margin-top: 0.5rem;
+  transition: all 0.2s; opacity: 0; pointer-events: none; transform: translateY(10px);
+}
+.dropdown-menu button { 
+  width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent;
+  font-weight: 700; font-size: 0.85rem; border-radius: 8px; cursor: pointer;
+}
+.dropdown-menu button:hover { background: #f1f5f9; }
 
-.eval-main { padding: 1rem 1.25rem; }
-.eval-main h3 { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0; }
-.eval-main p { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
+.filters-section { padding: 2rem 3rem; margin-bottom: 3rem; background: #fff; }
+.filter-group label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 0.75rem; }
+.max-w-400 { max-width: 400px; }
 
-.eval-stats { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; padding: 1rem 0; }
-.es-item { display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid #f1f5f9; text-align: center; padding: 0 0.5rem; }
-.es-item:last-child { border-right: none; }
-.es-item .l { font-size: 0.6rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-.es-item .v { font-size: 1.1rem; font-weight: 800; color: #334155; margin-top: 2px; }
-.es-item .v.text-danger { color: #dc2626; }
-.es-item .student-name { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.absences-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2rem; }
+.absence-card { background: #fff; padding: 2rem; border: 1px solid #f1f5f9; transition: all 0.3s; }
+.absence-card:hover { transform: translateY(-5px); }
 
-.eval-actions { padding: 1rem; }
-.btn-full { width: 100%; padding: 0.75rem; background: #fff1f2; border: 1px solid #fecaca; border-radius: 8px; font-weight: 700; color: #dc2626; cursor: pointer; transition: all 0.2s; font-size: 0.85rem; }
-.btn-full:hover { background: #dc2626; color: white; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.type-badge { font-size: 0.65rem; font-weight: 900; padding: 0.3rem 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 50px; }
+.hours-badge { font-size: 1.25rem; font-weight: 900; color: #000; letter-spacing: -1px; }
 
-.empty-state { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; padding: 5rem; text-align: center; background: white; border-radius: var(--radius-xl); border: 2px dashed var(--border-light); }
-.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-.empty-state h3 { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
-.empty-state p { color: #64748b; margin-top: 0.5rem; }
+.card-body h3 { font-size: 1.2rem; font-weight: 900; margin-bottom: 0.25rem; letter-spacing: -0.5px; }
+.card-body .date { font-size: 0.85rem; color: #94a3b8; font-weight: 600; margin-bottom: 1.5rem; }
 
-.loader { display: flex; flex-direction: column; align-items: center; padding: 5rem; }
-.spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.student-info { padding: 1.25rem; background: #f8fafc; border-radius: 12px; }
+.student-info .label { font-size: 0.65rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.25rem; display: block; }
+.student-info .name { font-weight: 800; font-size: 0.95rem; color: #000; margin: 0; }
 
-.btn { padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: none; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
-.btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-glow); }
-.btn-ghost { background: #f1f5f9; color: #64748b; }
+.card-footer { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; }
+.btn-delete { width: 100%; padding: 0.75rem; background: transparent; border: 2px solid #fee2e2; border-radius: 10px; color: #ef4444; font-weight: 900; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
+.btn-delete:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
-/* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1rem; backdrop-filter: blur(4px); }
-.modal-box { background: white; border-radius: var(--radius-xl, 16px); width: 100%; max-width: 600px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid #f1f5f9; }
-.modal-header h2 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; }
-.modal-close { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #94a3b8; padding: 0.25rem; }
-.modal-form { padding: 1.5rem 2rem; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
-.form-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-.form-group input, .form-group select { padding: 0.75rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; font-weight: 500; color: #0f172a; background: #f8fafc; outline: none; transition: border-color 0.2s; }
-.form-group input:focus, .form-group select:focus { border-color: var(--primary); background: white; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #f1f5f9; }
+.loading-state-wrap { padding: 6rem; text-align: center; }
+.pulsar-dark { width: 40px; height: 40px; background: #000; border-radius: 50%; margin: 0 auto 1.5rem; animation: pulse-black 1.5s infinite; }
+@keyframes pulse-black { 0% { box-shadow: 0 0 0 0 rgba(0,0,0,0.4); } 70% { box-shadow: 0 0 0 20px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
 
-.modal-fade-enter-active, .modal-fade-leave-active { transition: opacity 0.25s ease; }
-.modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
+.empty-state { grid-column: 1 / -1; padding: 6rem; text-align: center; border: 3px dashed #f1f5f9; }
+.empty-icon { font-size: 3.5rem; margin-bottom: 1.5rem; opacity: 0.3; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.modal-content { max-width: 550px; width: 100%; border-radius: 24px; overflow: hidden; }
+.modal-header-premium { padding: 2.5rem; background: #000; color: #fff; display: flex; align-items: center; gap: 1rem; }
+.modal-header-premium h3 { font-weight: 900; font-size: 1.5rem; }
+.pulsar { width: 12px; height: 12px; background: #fff; border-radius: 50%; animation: pulse-white 1.5s infinite; }
+@keyframes pulse-white { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 70% { box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+
+.modal-form { padding: 2.5rem; }
+.form-group.stack { display: flex; flex-direction: column; gap: 0.6rem; }
+.form-group label { font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; }
+.form-control { width: 100%; padding: 1.1rem; border: 2px solid #f1f5f9; border-radius: 12px; font-weight: 700; background: #fafafa; outline: none; }
+.form-control:focus { border-color: #000; background: #fff; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-actions-premium { display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 2rem; }
+
+.btn { padding: 1rem 2rem; font-weight: 900; font-size: 0.9rem; border: none; cursor: pointer; border-radius: 12px; transition: all 0.2s; }
+.btn-primary { background: #000; color: #fff; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+.btn-pill { border-radius: 50px; }
+.btn-pill.dark { background: transparent; border: 2px solid #000; color: #000; }
+.btn-outline { background: transparent; border: 2px solid #f1f5f9; color: #64748b; }
+
+.mt-1 { margin-top: 1.5rem; }
+.mt-2 { margin-top: 3rem; }
 </style>

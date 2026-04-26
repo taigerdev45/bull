@@ -46,6 +46,19 @@ export default defineNuxtConfig({
       type: 'classic',
     }
   },
+  app: {
+    head: {
+      title: 'Bull ASUR - Excellence Académique',
+      meta: [
+        { name: 'description', content: 'Modern SaaS platform for academic grading and bulletin generation.' },
+        { name: 'theme-color', content: '#000000' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/icon.png' }
+      ]
+    }
+  },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
     public: {

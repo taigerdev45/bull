@@ -2,198 +2,199 @@
   <div class="page-etudiants">
     <header class="page-header">
       <div class="header-content">
-        <h2>Gestion des Étudiants</h2>
-        <p>Inscriptions, informations administratives et suivi académique.</p>
+        <h1>Gestion des Étudiants</h1>
+        <p>Inscriptions, informations administratives et suivi académique de la promotion.</p>
       </div>
       <div class="header-actions">
         <div class="export-dropdown" v-if="students.length">
-          <button class="btn btn-secondary shadow-sm">
-            Exporter
+          <button class="btn btn-pill dark">
+            Exporter ↓
           </button>
-          <div class="dropdown-menu">
-            <button @click="exportData('excel')">Excel (.xlsx)</button>
-            <button @click="exportData('pdf-p')">PDF Portrait</button>
-            <button @click="exportData('pdf-l')">PDF Paysage</button>
+          <div class="dropdown-menu premium-card">
+            <button @click="exportData('excel')">Format Excel (.xlsx)</button>
+            <button @click="exportData('pdf-p')">Document PDF (Portrait)</button>
+            <button @click="exportData('pdf-l')">Document PDF (Paysage)</button>
           </div>
         </div>
-        <button class="btn btn-primary" @click="openModal('add')">
-          Ajouter un Étudiant
+        <button class="btn btn-primary btn-pill" @click="openModal('add')">
+          + Nouvel Étudiant
         </button>
       </div>
     </header>
 
     <!-- Filtres et recherche -->
-    <div class="filters-section">
-      <div class="search-box">
-        <input 
-          type="text" 
-          v-model="searchTerm" 
-          placeholder="Rechercher par nom, prénom..."
-          class="form-control"
-        >
+    <div class="filters-section premium-card">
+      <div class="filter-row">
+        <div class="filter-group flex-2">
+          <label>Rechercher un dossier</label>
+          <input 
+            type="text" 
+            v-model="searchTerm" 
+            placeholder="Nom, prénom ou matricule..."
+            class="form-control"
+          >
+        </div>
+        <div class="filter-group">
+          <label>Diplôme (Bac)</label>
+          <select v-model="filterBac" class="form-control">
+            <option value="">Tous les types</option>
+            <option value="S">Scientifique (S)</option>
+            <option value="ES">Économique et Social (ES)</option>
+            <option value="L">Littéraire (L)</option>
+            <option value="STMG">STMG</option>
+            <option value="STI2D">STI2D</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
       </div>
-      <div class="filter-options">
-        <select v-model="filterBac" class="form-control">
-          <option value="">Tous les bacs</option>
-          <option value="S">Scientifique</option>
-          <option value="ES">Économique et Social</option>
-          <option value="L">Littéraire</option>
-          <option value="STMG">STMG</option>
-          <option value="STI2D">STI2D</option>
-          <option value="Autre">Autre</option>
-        </select>
+    </div>
+
+    <!-- Statistiques Rapides -->
+    <div class="quick-stats-row">
+      <div class="stat-mini premium-card">
+        <span class="label">Total inscrits</span>
+        <span class="value">{{ students.length }}</span>
+      </div>
+      <div class="stat-mini premium-card">
+        <span class="label">Bacs Scientifiques</span>
+        <span class="value">{{ students.filter(s => s.bac === 'S').length }}</span>
       </div>
     </div>
 
     <!-- Tableau des étudiants -->
-    <div class="table-container">
-      <DataTable
-        :columns="studentColumns"
-        :data="filteredStudents"
-        title="Liste des étudiants"
-        :actions="true"
-      >
-        <template #actions="{ row }">
-          <button class="btn btn-sm btn-secondary" @click="openModal('edit', row)">
-            ✏️
-          </button>
-          <button class="btn btn-sm btn-danger" @click="deleteStudent(row.id)">
-            🗑️
-          </button>
-        </template>
-      </DataTable>
+    <div class="table-section premium-table-container">
+      <div class="table-header-box">
+        <div class="title-wrap">
+          <h3>Registre Matricule</h3>
+          <span class="badge-count">{{ filteredStudents.length }}</span>
+        </div>
+        <p class="subtitle">Base de données officielle des étudiants inscrits pour l'année en cours</p>
+      </div>
+      <div class="table-container">
+        <table class="students-table">
+          <thead>
+            <tr>
+              <th>Matricule</th>
+              <th>Identité complète</th>
+              <th>Email académique</th>
+              <th>Né(e) le</th>
+              <th>Bac</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="student in filteredStudents" :key="student.id" class="highlight-on-hover">
+              <td class="font-mono">{{ student.matricule }}</td>
+              <td class="font-bold">{{ student.nom }} {{ student.prenom }}</td>
+              <td class="text-sm">{{ student.email }}</td>
+              <td class="text-sm">{{ student.date_naissance }}</td>
+              <td>
+                <span class="bac-badge">{{ student.bac }}</span>
+              </td>
+              <td class="text-xs text-right">
+                <div class="action-buttons-compact">
+                  <button class="btn-circle-sm" @click="openModal('edit', student)" title="Modifier">✏️</button>
+                  <button class="btn-circle-sm danger" @click="deleteStudent(student.id)" title="Supprimer">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="loading && students.length === 0">
+              <td colspan="6" class="loading-state">Synchronisation sécurisée des dossiers...</td>
+            </tr>
+            <tr v-if="!loading && filteredStudents.length === 0">
+              <td colspan="6" class="loading-state">Aucun dossier correspondant à votre recherche</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal d'ajout/modification -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ modalMode === 'add' ? 'Ajouter' : 'Modifier' }} un étudiant</h3>
-          <button class="modal-close" @click="closeModal">&times;</button>
+    <Transition name="modal-bounce">
+      <div v-if="showModal" class="modal-overlay" @click="closeModal">
+        <div class="modal-content premium-card" @click.stop>
+          <div class="modal-header-premium">
+            <span class="pulsar"></span>
+            <h3>{{ modalMode === 'add' ? 'Nouveau Dossier' : 'Mise à jour Dossier' }}</h3>
+          </div>
+          
+          <form @submit.prevent="saveStudent" class="modal-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nom de famille</label>
+                <input type="text" v-model="formData.nom" required class="form-control" placeholder="DIALLO">
+              </div>
+              <div class="form-group">
+                <label>Prénoms</label>
+                <input type="text" v-model="formData.prenom" required class="form-control" placeholder="Mamadou">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email académique</label>
+                <input type="email" v-model="formData.email" required class="form-control" placeholder="m.diallo@uadb.edu">
+              </div>
+              <div class="form-group">
+                <label>Numéro Matricule</label>
+                <input type="text" v-model="formData.matricule" required class="form-control" placeholder="LPASUR001">
+              </div>
+            </div>
+
+            <div class="id-security-card">
+              <p>🧬 <strong>Identifiants générés par défaut</strong></p>
+              <span>User: {{ formData.prenom || '...' }} | Pass: {{ formData.matricule || '...' }}</span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Date de naissance</label>
+                <input type="date" v-model="formData.date_naissance" required class="form-control">
+              </div>
+              <div class="form-group">
+                <label>Lieu de naissance</label>
+                <input type="text" v-model="formData.lieu_naissance" required class="form-control" placeholder="Dakar">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Type de Baccalauréat</label>
+                <select v-model="formData.bac" required class="form-control">
+                  <option value="">Sélectionner...</option>
+                  <option value="S">Scientifique</option>
+                  <option value="ES">Économique et Social</option>
+                  <option value="L">Littéraire</option>
+                  <option value="STMG">STMG</option>
+                  <option value="STI2D">STI2D</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Lycée de provenance</label>
+                <input type="text" v-model="formData.provenance" placeholder="Ex: Lycée Lamine Guèye" required class="form-control">
+              </div>
+            </div>
+
+            <div class="form-actions-premium">
+              <button type="button" class="btn btn-outline" @click="closeModal">Annuler</button>
+              <button type="submit" class="btn btn-primary" :disabled="loading">
+                {{ loading ? 'Synchronisation...' : (modalMode === 'add' ? 'Créer le dossier' : 'Enregistrer') }}
+              </button>
+            </div>
+          </form>
         </div>
-        
-        <form @submit.prevent="saveStudent" class="modal-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="nom">Nom *</label>
-              <input 
-                type="text" 
-                id="nom" 
-                v-model="formData.nom" 
-                required 
-                class="form-control"
-              >
-            </div>
-            <div class="form-group">
-              <label for="prenom">Prénom *</label>
-              <input 
-                type="text" 
-                id="prenom" 
-                v-model="formData.prenom" 
-                required 
-                class="form-control"
-              >
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="email">Email *</label>
-              <input 
-                type="email" 
-                id="email" 
-                v-model="formData.email" 
-                required 
-                class="form-control"
-                placeholder="email@example.com"
-              >
-            </div>
-            <div class="form-group">
-              <label for="matricule">Matricule *</label>
-              <input 
-                type="text" 
-                id="matricule" 
-                v-model="formData.matricule" 
-                required 
-                class="form-control"
-                placeholder="Ex: LPASUR001"
-              >
-            </div>
-          </div>
-
-          <div class="alert-info-credentials">
-            <p><strong>Note :</strong> Les identifiants de connexion par défaut seront :</p>
-            <ul>
-              <li><strong>Identifiant :</strong> {{ formData.prenom || 'Prénom' }}</li>
-              <li><strong>Mot de passe :</strong> {{ formData.matricule || 'Matricule' }}</li>
-            </ul>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="date_naissance">Date de naissance *</label>
-              <input 
-                type="date" 
-                id="date_naissance" 
-                v-model="formData.date_naissance" 
-                required 
-                class="form-control"
-              >
-            </div>
-            <div class="form-group">
-              <label for="lieu_naissance">Lieu de naissance *</label>
-              <input 
-                type="text" 
-                id="lieu_naissance" 
-                v-model="formData.lieu_naissance" 
-                required 
-                class="form-control"
-              >
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="bac">Type de Bac *</label>
-              <select id="bac" v-model="formData.bac" required class="form-control">
-                <option value="">Sélectionner...</option>
-                <option value="S">Scientifique</option>
-                <option value="ES">Économique et Social</option>
-                <option value="L">Littéraire</option>
-                <option value="STMG">STMG</option>
-                <option value="STI2D">STI2D</option>
-                <option value="Autre">Autre</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="provenance">Provenance *</label>
-              <input 
-                type="text" 
-                id="provenance" 
-                v-model="formData.provenance" 
-                placeholder="Lycée d'origine"
-                required 
-                class="form-control"
-              >
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" @click="closeModal">
-              Annuler
-            </button>
-            <button type="submit" class="btn btn-primary" :disabled="loading">
-              {{ loading ? 'Enregistrement...' : (modalMode === 'add' ? 'Ajouter' : 'Modifier') }}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useApi } from '~/composables/useApi'
+
+const { fetchApi } = useApi()
+const { exportToExcel, exportToPDF } = useExport()
 
 useHead({ title: 'Gestion des Étudiants | Bull ASUR' })
 
@@ -202,7 +203,7 @@ const students = ref([])
 const searchTerm = ref('')
 const filterBac = ref('')
 const showModal = ref(false)
-const modalMode = ref('add') // 'add' ou 'edit'
+const modalMode = ref('add')
 const loading = ref(false)
 const currentStudent = ref(null)
 
@@ -218,16 +219,6 @@ const formData = ref({
   provenance: ''
 })
 
-// Colonnes du tableau
-const studentColumns = [
-  { key: 'nom', label: 'Nom' },
-  { key: 'prenom', label: 'Prénom' },
-  { key: 'matricule', label: 'Matricule' },
-  { key: 'email', label: 'Email' },
-  { key: 'date_naissance', label: 'Né(e) le' },
-  { key: 'bac', label: 'Bac' }
-]
-
 // Filtrage
 const filteredStudents = computed(() => {
   return students.value.filter(student => {
@@ -235,13 +226,22 @@ const filteredStudents = computed(() => {
     const matchesSearch = `${student.nom} ${student.prenom} ${student.matricule}`.toLowerCase().includes(searchLower)
     const matchesBac = !filterBac.value || student.bac === filterBac.value
     return matchesSearch && matchesBac
-  })
+  }).sort((a, b) => a.nom.localeCompare(b.nom))
 })
 
-const { fetchApi } = useApi()
-const { exportToExcel, exportToPDF } = useExport()
-
 // Méthodes
+const loadStudents = async () => {
+  loading.value = true
+  try {
+    const response = await fetchApi('/etudiants/')
+    students.value = response
+  } catch (error) {
+    console.error('Erreur loading students', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 const exportData = (type) => {
   const data = students.value.map(s => ({
     Nom: s.nom,
@@ -255,330 +255,150 @@ const exportData = (type) => {
   }))
 
   if (type === 'excel') {
-    exportToExcel(data, 'liste_etudiants.xlsx')
+    exportToExcel(data, 'Liste_Etudiants_ASUR.xlsx')
   } else {
-    const headers = ['Matricule', 'Nom', 'Prénom', 'Bac', 'Date Naiss.']
-    const rows = students.value.map(s => [
-      s.matricule, 
-      s.nom, 
-      s.prenom, 
-      s.bac, 
-      s.date_naissance
-    ])
-    exportToPDF(headers, rows, 'liste_etudiants.pdf', type === 'pdf-l' ? 'l' : 'p')
+    const headers = ['Matricule', 'Nom', 'Prénom', 'Bac', 'Provenance']
+    const rows = students.value.map(s => [s.matricule, s.nom, s.prenom, s.bac, s.provenance])
+    exportToPDF(headers, rows, 'Registre_Etudiants.pdf', type === 'pdf-l' ? 'l' : 'p')
   }
 }
 
 const openModal = (mode, student = null) => {
   modalMode.value = mode
-  currentStudent.value = student
-  
   if (mode === 'edit' && student) {
     formData.value = { ...student }
+    currentStudent.value = student
   } else {
     resetForm()
   }
-  
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
   resetForm()
-  currentStudent.value = null
 }
 
 const resetForm = () => {
-  formData.value = {
-    nom: '',
-    prenom: '',
-    email: '',
-    matricule: '',
-    date_naissance: '',
-    lieu_naissance: '',
-    bac: '',
-    provenance: ''
-  }
-}
-
-const loadStudents = async () => {
-  try {
-    const response = await fetchApi('/etudiants/')
-    students.value = response
-  } catch (error) {
-    console.error('Erreur lors du chargement des étudiants', error)
-  }
+  formData.value = { nom: '', prenom: '', email: '', matricule: '', date_naissance: '', lieu_naissance: '', bac: '', provenance: '' }
+  currentStudent.value = null
 }
 
 const saveStudent = async () => {
   loading.value = true
-  
   try {
-    const url = modalMode.value === 'add' 
-      ? '/etudiants/'
-      : `/etudiants/${currentStudent.value.id}/`
-    
+    const url = modalMode.value === 'add' ? '/etudiants/' : `/etudiants/${currentStudent.value.id}/`
     const method = modalMode.value === 'add' ? 'POST' : 'PATCH'
-    
-    const response = await fetchApi(url, {
-      method,
-      body: formData.value
-    })
-    
+    await fetchApi(url, { method, body: formData.value })
     await loadStudents()
     closeModal()
-    console.log('Étudiant enregistré avec succès via API')
-    
   } catch (error) {
-    console.error('Erreur lors de l\'enregistrement', error)
     alert(error.data?.error || "Erreur lors de l'enregistrement")
   } finally {
     loading.value = false
   }
 }
 
-const deleteStudent = async (studentId) => {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
-    return
-  }
-  
+const deleteStudent = async (id) => {
+  if (!confirm('Action irréversible. Supprimer ce dossier ?')) return
   try {
-    await fetchApi(`/etudiants/${studentId}/`, {
-      method: 'DELETE'
-    })
-    
+    await fetchApi(`/etudiants/${id}/`, { method: 'DELETE' })
     await loadStudents()
-    console.log('Étudiant supprimé avec succès')
-    
   } catch (error) {
-    console.error('Erreur lors de la suppression', error)
-    alert("Erreur lors de la suppression")
+    alert("Échec de la suppression")
   }
 }
 
-onMounted(() => {
-  loadStudents()
-})
+onMounted(loadStudents)
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
+.page-etudiants { padding: clamp(1.5rem, 4vw, 4rem) 2rem; max-width: 1500px; margin: 0 auto; animation: fadeIn 0.6s ease-out; }
 
-.header-content h2 {
-  font-size: 1.75rem;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
-  font-weight: 700;
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.header-content p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4rem; flex-wrap: wrap; gap: 2rem; }
+.header-content h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -2px; margin-bottom: 0.5rem; }
+.header-content p { color: #64748b; font-weight: 500; font-size: 1.1rem; }
+.header-actions { display: flex; gap: 1rem; position: relative; }
 
-.filters-section {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+.export-dropdown { position: relative; }
+.export-dropdown:hover .dropdown-menu { display: block; opacity: 1; pointer-events: auto; transform: translateY(0); }
+.dropdown-menu { 
+  display: none; position: absolute; top: 100%; left: 0; min-width: 220px; 
+  background: #fff; z-index: 100; padding: 0.75rem; margin-top: 0.5rem;
+  transition: all 0.2s; opacity: 0; pointer-events: none; transform: translateY(10px);
 }
+.dropdown-menu button { 
+  width: 100%; text-align: left; padding: 0.75rem 1rem; border: none; background: transparent;
+  font-weight: 700; font-size: 0.85rem; border-radius: 8px; cursor: pointer;
+}
+.dropdown-menu button:hover { background: #f1f5f9; }
 
-.search-box {
-  flex: 1;
-}
+.filters-section { padding: 2.5rem; margin-bottom: 3rem; background: #fff; }
+.filter-row { display: flex; gap: 2rem; align-items: flex-end; flex-wrap: wrap; }
+.filter-group { flex: 1; min-width: 200px; }
+.filter-group.flex-2 { flex: 2; }
+.filter-group label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 0.75rem; }
 
-.search-box input {
-  width: 100%;
-}
+.quick-stats-row { display: flex; gap: 1rem; margin-bottom: 3rem; }
+.stat-mini { padding: 1.25rem 2rem; display: flex; align-items: center; gap: 2rem; background: #fff; }
+.stat-mini .label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; }
+.stat-mini .value { font-size: 1.5rem; font-weight: 900; color: #000; }
 
-.filter-options select {
-  min-width: 150px;
-}
+.table-header-box { padding: 2.5rem; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
+.title-wrap { display: flex; align-items: center; gap: 1rem; }
+.title-wrap h3 { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; }
+.badge-count { padding: 0.2rem 0.8rem; background: #000; color: #fff; font-size: 0.75rem; font-weight: 900; border-radius: 6px; }
+.subtitle { font-size: 0.85rem; color: #64748b; margin-top: 0.4rem; }
 
-.table-container {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
+.students-table { width: 100%; border-collapse: collapse; }
+.students-table th { padding: 1.5rem 1rem; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; border-bottom: 2px solid #000; }
+.students-table td { padding: 1.5rem 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
+.font-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+.font-bold { font-weight: 800; color: #000; }
+.text-sm { font-size: 0.9rem; color: #475569; font-weight: 500; }
+.text-right { text-align: right; }
 
-.modal-content {
-  background: var(--surface);
-  border-radius: var(--radius);
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
+.bac-badge { padding: 0.4rem 0.8rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 900; font-size: 0.7rem; }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
+.action-buttons-compact { display: flex; gap: 0.4rem; justify-content: flex-end; }
+.btn-circle-sm { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #f1f5f9; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+.btn-circle-sm:hover { scale: 1.1; border-color: #000; }
+.btn-circle-sm.danger:hover { background: #fee2e2; border-color: #ef4444; }
 
-.modal-header h3 {
-  margin: 0;
-  color: var(--text-main);
-}
+.btn { padding: 1rem 2rem; font-weight: 900; font-size: 0.9rem; border: none; cursor: pointer; transition: all 0.2s; border-radius: 12px; }
+.btn-pill { border-radius: 50px; }
+.btn-primary { background: #000; color: #fff; }
+.btn-primary:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.15); transform: translateY(-2px); }
+.btn-pill.dark { background: transparent; border: 2px solid #000; color: #000; }
+.btn-pill.dark:hover { background: #000; color: #fff; }
 
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-muted);
-}
+.modal-content { max-width: 650px; width: 100%; padding: 0; overflow: hidden; border-radius: 24px; }
+.modal-header-premium { padding: 2.5rem; background: #000; color: #fff; display: flex; align-items: center; gap: 1rem; }
+.modal-header-premium h3 { font-weight: 900; font-size: 1.5rem; }
+.pulsar { width: 12px; height: 12px; background: #fff; border-radius: 50%; animation: pulse-white 1.5s infinite; }
+@keyframes pulse-white { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 70% { box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
 
-.modal-form {
-  padding: 1.5rem;
-}
+.modal-form { padding: 2.5rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.form-group label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.6rem; }
+.form-control { width: 100%; padding: 1.1rem; border: 2px solid #f1f5f9; border-radius: 12px; font-weight: 700; outline: none; background: #fafafa; }
+.form-control:focus { border-color: #000; background: #fff; }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
+.id-security-card { padding: 1.5rem; background: #f8fafc; border-radius: 12px; border-left: 5px solid #000; margin-bottom: 2rem; }
+.id-security-card p { font-weight: 900; font-size: 0.85rem; margin-bottom: 0.4rem; }
+.id-security-card span { font-family: monospace; font-weight: 700; color: #64748b; }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
+.form-actions-premium { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #f1f5f9; }
+.btn-outline { background: transparent; border: 2px solid #f1f5f9; color: #64748b; }
+.btn-outline:hover { border-color: #000; color: #000; }
 
-.form-group label {
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--text-main);
-}
-
-.form-control {
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-
-.btn-secondary {
-  background: var(--bg-color);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  background: var(--border);
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: white;
-}
-
-.btn-sm {
-  padding: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.alert-info-credentials {
-  background-color: #f0f9ff;
-  border-left: 4px solid #0ea5e9;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 4px;
-}
-
-.alert-info-credentials p {
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #0369a1;
-}
-
-.alert-info-credentials ul {
-  list-style: none;
-  padding-left: 0.5rem;
-}
-
-.alert-info-credentials li {
-  font-size: 0.9rem;
-  color: #0c4a6e;
-}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; }
 
 @media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .filters-section {
-    flex-direction: column;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal-content {
-    width: 95%;
-    margin: 1rem;
-  }
+  .form-row { grid-template-columns: 1fr; }
+  .header-actions { width: 100%; flex-direction: column; }
 }
 </style>
