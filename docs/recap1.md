@@ -54,20 +54,22 @@ Nous avons implémenté un système de **filtrage par identité** (Strict Role-B
 - **Support Enseignants** : Saisie des notes restreinte aux matières assignées.
 - **Logs d'Audit** : Traçabilité des modifications de notes via `AuditService`.
 
-### 🛠️ 5. Correctifs de Stabilité et Synchronisation (Session du 26/04/2026)
+### 🛠️ 5. Correctifs de Stabilité et Sécurité (Session du 26/04/2026)
 
-*   **Unification de l'Extraction du Rôle (Sécurité)** :
-    *   Correction du bug de priorité sur le rôle générique `'authenticated'` de Supabase.
-    *   **Solution** : Utilisation systématique de `request.user.role` (injecté par `SupabaseAuthentication`) dans toutes les classes de permission (`IsSecretariat`, etc.) et ViewSets.
-*   **Actualisation des Données Staff** :
-    *   Restauration des variables d'état dans `etudiants.vue` et correction des endpoints API pour la saisie groupée des notes.
-    *   Implémentation des méthodes `UPDATE` (PUT) et `PARTIAL_UPDATE` (PATCH) manquantes dans les ViewSets (`Personnel`, `Semestre`, `UE`, `Matière`, `Absence`).
-*   **Résolution des Erreurs 403/405** : Les listes et modifications de données sont désormais 100% opérationnelles pour le personnel authentifié.
+*   **Robustesse de l'Authentification (Supabase)** :
+    *   **Problème** : Les erreurs 403 étaient causées par une validation de token locale (JWT decode) qui échouait si le `SUPABASE_JWT_SECRET` était mal configuré sur Render.
+    *   **Solution** : Refactorisation de `SupabaseAuthentication` pour utiliser l'API officielle Supabase (`get_user`). Le backend valide désormais le token directement auprès de Supabase, éliminant toute dépendance aux clés secrètes locales pour la validation.
+    *   **Compatibilité** : Ajout de l'attribut `uid` à l'objet `user` Django pour assurer la compatibilité avec toutes les commandes et handlers du backend.
+*   **Correction des crashs 500 (Sérialisation)** :
+    *   **Problème** : Crash lors de la récupération des listes d'enseignants ou de personnel car les entités DDD utilisaient des attributs privés (`_nom`, `_prenom`) sans propriétés publiques correspondantes, empêchant le sérialiseur DRF d'y accéder.
+    *   **Solution** : Ajout des propriétés `@property` `nom` et `prenom` aux entités `Enseignant` et `Personnel`.
+*   **Unification du RBAC** :
+    *   Utilisation systématique de `request.user.role` injecté par le middleware d'auth.
 
 ### ⏳ 6. En cours / Priorités
-- **Génération PDF** : Finalisation du moteur Weasyprint pour l'édition de masse des bulletins PDF.
-- **Workflow Délibération** : Validation finale du processus de "clôture de jury" (verrouillage des notes).
-- **Vérification en Production** : Monitorer les logs Render pour confirmer la résolution définitive des 403.
+- **Validation Finale (Prod)** : Vérifier que l'interface secrétariat charge désormais toutes les listes (Étudiants, Enseignants, Matières) sans erreur.
+- **Génération PDF** : Finalisation du moteur Weasyprint pour les bulletins.
+- **Verrouillage de session** : Implémenter le switch de verrouillage pour les délibérations.
 
 ## 📂 7. Cartographie des Fichiers Critiques
 ... (reste identique)
