@@ -46,3 +46,10 @@ class DjangoEnseignantRepository(IEnseignantRepository):
             matricule=model.matricule,
             user_id=model.user_id
         )
+
+    def get_by_user_id(self, user_id: str) -> Optional[Enseignant]:
+        try:
+            model = EnseignantModel.objects.get(user_id=user_id)
+            return self._to_entity(model)
+        except EnseignantModel.DoesNotExist:
+            return None

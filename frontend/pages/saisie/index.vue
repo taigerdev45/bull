@@ -37,7 +37,7 @@
 
     <div v-else class="evaluations-grid">
       <div v-for="evalItem in evaluations" :key="evalItem.id" class="eval-card">
-        <div class="eval-badge" :class="evalItem.type?.toLowerCase()">{{ evalItem.type }}</div>
+        <div class="eval-badge" :class="String(evalItem.type || '').toLowerCase()">{{ evalItem.type }}</div>
         <div class="eval-main">
           <h3>{{ evalItem.matiere_libelle || 'Matière Inconnue' }}</h3>
           <p>{{ formatDate(evalItem.date_evaluation) }}</p>

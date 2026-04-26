@@ -40,12 +40,12 @@ class PersonnelViewSet(viewsets.ViewSet):
         return Response([
             {
                 "id": p.id,
-                "nom": p._nom,
-                "prenom": p._prenom,
-                "email": p._email,
-                "role": p._role,
-                "numero_telephone": p._numero_telephone,
-                "user_id": p._user_id
+                "nom": p.nom,
+                "prenom": p.prenom,
+                "email": p.email,
+                "role": p.role,
+                "numero_telephone": p.numero_telephone,
+                "user_id": p.user_id
             } for p in personnels
         ])
 

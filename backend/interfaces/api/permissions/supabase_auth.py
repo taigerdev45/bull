@@ -1,4 +1,5 @@
 import os
+from django.db.models import Q
 from django.contrib.auth.models import User
 from rest_framework import authentication, exceptions
 
@@ -117,21 +118,59 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         if email == 'taigermboumba@gmail.com':
             role = 'super_admin'
 
+        # --- RECONCILIATION ET FALLBACK DE RÔLE ---
+        # Si le rôle extrait du token est 'etudiant' (défaut) ou si on veut valider l'UID
+        if email != 'taigermboumba@gmail.com':
+            from infrastructure.persistence.django_models.models import PersonnelModel, EnseignantModel, EtudiantModel
+            
+            # 1. Vérifier le personnel (Admin/Secretariat)
+            personnel = PersonnelModel.objects.filter(Q(user_id=uid) | Q(email=email)).first()
+            if personnel:
+                role = personnel.role
+                if personnel.user_id != uid:
+                    personnel.user_id = uid
+                    personnel.save()
+            else:
+                # 2. Vérifier les enseignants
+                enseignant = EnseignantModel.objects.filter(Q(user_id=uid) | Q(email=email)).first()
+                if enseignant:
+                    role = 'enseignant'
+                    if enseignant.user_id != uid:
+                        enseignant.user_id = uid
+                        enseignant.save()
+                else:
+                    # 3. Vérifier les étudiants (pour réconcilier l'UID)
+                    etudiant = EtudiantModel.objects.filter(Q(user_id=uid) | Q(email=email)).first()
+                    if etudiant:
+                        role = 'etudiant'
+                        if etudiant.user_id != uid:
+                            etudiant.user_id = uid
+                            etudiant.save()
+        else:
+            role = 'super_admin'
+                
         # Récupération ou création de l'utilisateur Django local
-        user, _ = User.objects.get_or_create(username=uid)
+        user, created = User.objects.get_or_create(username=uid)
         if email:
             user.email = email
-        if email == 'taigermboumba@gmail.com':
+            
+        user.is_active = True
+        
+        # Gestion des permissions Django (is_staff/is_superuser)
+        is_staff_role = role in ['super_admin', 'admin', 'secretariat', 'staff']
+        user.is_staff = is_staff_role
+        
+        if role == 'super_admin' or email == 'taigermboumba@gmail.com':
             user.is_superuser = True
             user.is_staff = True
 
+        # Injection en mémoire
         user.role = role
         user.uid = uid
         user.supabase_claims = user_data
         user.firebase_claims = user_data
         user.save()
 
-        print(f"[AUTH SUCCESS] UID: {uid} | Email: {email} | Role: {role}")
-        print(f"[AUTH CLAIMS] App: {user_data.get('app_metadata')} | User: {user_data.get('user_metadata')}")
+        print(f"[AUTH SUCCESS] UID: {uid} | Email: {email} | Role: {role} | IsStaff: {user.is_staff}")
 
         return (user, user_data)

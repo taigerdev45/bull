@@ -26,6 +26,10 @@ class Enseignant(BaseEntity):
         return self._prenom
 
     @property
+    def matricule(self) -> str:
+        return self._matricule
+
+    @property
     def user_id(self) -> Optional[str]:
         return self._user_id
 

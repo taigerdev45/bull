@@ -13,7 +13,7 @@ class EnseignantSerializer(serializers.Serializer):
     prenom = serializers.CharField(max_length=100)
     email = serializers.EmailField()
     matricule = serializers.CharField(max_length=50)
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
 
 @extend_schema(tags=['Administration'])
 class EnseignantViewSet(viewsets.ViewSet):
@@ -30,19 +30,28 @@ class EnseignantViewSet(viewsets.ViewSet):
         self.repo = repo
 
     def list(self, request):
-        role = getattr(request.user, 'role', 'etudiant')
-        
-        if role == 'etudiant':
-            return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            role = getattr(request.user, 'role', 'etudiant')
             
-        if role == 'enseignant':
-            enseignants = [self.repo.get_by_id(request.user.username)]
-            enseignants = [e for e in enseignants if e]
-        else:
-            enseignants = self.repo.list_all()
-            
-        serializer = EnseignantSerializer(enseignants, many=True)
-        return Response(serializer.data)
+            if role == 'etudiant':
+                return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
+                
+            if role == 'enseignant':
+                # On utilise user.uid qui est plus robuste
+                uid = getattr(request.user, 'uid', request.user.username)
+                enseignants = [self.repo.get_by_user_id(uid)]
+                enseignants = [e for e in enseignants if e]
+            else:
+                enseignants = self.repo.list_all()
+                
+            serializer = EnseignantSerializer(enseignants, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            import traceback
+            return Response({
+                "error": str(e),
+                "traceback": traceback.format_exc()
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
         serializer = EnseignantSerializer(data=request.data)

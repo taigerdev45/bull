@@ -12,6 +12,11 @@ class DRFErrorLoggingMiddleware:
             user = request.user
             auth = getattr(request, 'auth', 'None')
             role = getattr(user, 'role', 'N/A')
-            logger.warning(f"[403 FORBIDDEN] Path: {request.path} | User: {user} | Role: {role} | Auth: {auth}")
-            print(f"[403 FORBIDDEN] Path: {request.path} | User: {user} | Role: {role}")
+            is_staff = getattr(user, 'is_staff', False)
+            is_active = getattr(user, 'is_active', False)
+            email = getattr(user, 'email', 'N/A')
+            
+            log_msg = f"[403 FORBIDDEN] Path: {request.path} | Email: {email} | Role: {role} | IsStaff: {is_staff} | IsActive: {is_active}"
+            logger.warning(log_msg)
+            print(log_msg)
         return response

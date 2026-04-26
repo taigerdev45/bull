@@ -13,3 +13,5 @@ class IEnseignantRepository(ABC):
     def delete(self, enseignant_id: str) -> None: pass
     @abstractmethod
     def get_by_matricule(self, matricule: str) -> Optional[Enseignant]: pass
+    @abstractmethod
+    def get_by_user_id(self, user_id: str) -> Optional[Enseignant]: pass
