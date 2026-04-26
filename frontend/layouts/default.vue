@@ -73,10 +73,7 @@
             <span class="s-icon">🔍</span>
             <input type="text" placeholder="Recherche globale...">
           </div>
-          <div class="notif-p">
-            <span class="n-icon">🔔</span>
-            <span class="dot"></span>
-          </div>
+          <NotificationCenter />
         </div>
       </header>
 
@@ -93,6 +90,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import NotificationSystem from '~/components/ui/NotificationSystem.vue'
+import NotificationCenter from '~/components/ui/NotificationCenter.vue'
 
 const route = useRoute()
 const isSidebarOpen = ref(false)
