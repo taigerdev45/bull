@@ -27,6 +27,11 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
+  --shadow-premium: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+  --shadow-dropdown: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  --shadow-highlight: 0 0 0 3px rgba(0, 0, 0, 0.05);
+  --gradient-border: linear-gradient(135deg, #e5e7eb, #ffffff);
+
   --sidebar-width: 260px;
   --navbar-height: 70px;
 }
@@ -159,6 +164,36 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; transition: background 0.2s; }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Premium Utility Classes */
+.premium-card {
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-premium);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+}
+
+.premium-table-container {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-premium);
+  border: 1px solid var(--border-light);
+}
+
+.highlight-on-hover {
+  transition: all 0.2s ease;
+}
+
+.highlight-on-hover:hover {
+  background: #f9fafb;
+  box-shadow: inset 4px 0 0 var(--primary);
+}
 
 /* Global Smoothness */
 html {
