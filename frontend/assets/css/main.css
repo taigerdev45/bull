@@ -31,6 +31,41 @@
   --navbar-height: 70px;
 }
 
+/* PWA Notification */
+.pwa-toast {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  margin: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background-color: var(--bg-sidebar);
+  color: white;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.btn-refresh {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-refresh:hover { background: var(--border-focus); }
+
 /* Reset & Base */
 * {
   margin: 0;
@@ -52,26 +87,40 @@ body {
   min-height: 100vh;
 }
 
-/* Page Transitions */
+/* Smooth Transitions and Optimizations */
 .page-enter-active, .page-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
 }
-.page-enter-from, .page-leave-to {
+.page-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Loading state for PWA fluidity */
+.nuxt-loading-indicator {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 10px var(--primary));
+}
+
+/* Hardware Acceleration for Sidebar and Modals */
+.sidebar, .modal-content, .teacher-card {
+  will-change: transform;
 }
 
 /* Scrollbar Customization */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; transition: background 0.2s; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* Global Smoothness */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

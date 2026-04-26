@@ -1,5 +1,19 @@
 <template>
   <div class="app-layout">
+    <VitePwaManifest />
+    
+    <!-- Notification PWA Update -->
+    <client-only>
+      <div v-if="$pwa?.needRefresh" class="pwa-toast shadow-lg" role="alert">
+        <div class="message">
+          <span>✨ Nouvelle version disponible !</span>
+        </div>
+        <div class="actions">
+          <button @click="$pwa.updateServiceWorker()" class="btn-refresh">Actualiser</button>
+        </div>
+      </div>
+    </client-only>
+
     <!-- Overlay pour Mobile -->
     <div v-if="isSidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
 
