@@ -34,7 +34,7 @@ class UEViewSet(viewsets.ViewSet):
     """ViewSet pour les Unités d'Enseignement (UE)."""
     
     def get_permissions(self):
-        if self.action in ['create', 'update', 'destroy']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsSecretariat()]
         return [permissions.IsAuthenticated()]
 
@@ -128,7 +128,7 @@ class MatiereViewSet(viewsets.ViewSet):
     """ViewSet pour les Matières."""
     
     def get_permissions(self):
-        if self.action in ['create', 'update', 'destroy', 'attribuer_enseignant']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'attribuer_enseignant']:
             return [IsSecretariat()]
         return [permissions.IsAuthenticated()]
 
@@ -139,8 +139,7 @@ class MatiereViewSet(viewsets.ViewSet):
 
     def list(self, request):
         try:
-            auth = request.auth if isinstance(request.auth, dict) else {}
-            role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+            role = getattr(request.user, 'role', 'etudiant')
             
             # Si c'est un enseignant, on peut filtrer ses matières
             if role == 'enseignant':

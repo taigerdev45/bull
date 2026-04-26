@@ -18,7 +18,7 @@ class AbsenceViewSet(viewsets.ViewSet):
     """
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'destroy']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsSecretariat()]
         return [permissions.IsAuthenticated()]
 
@@ -42,8 +42,7 @@ class AbsenceViewSet(viewsets.ViewSet):
     @inject
     def list(self, request, repo=Provide[Container.absence_repo]):
         # On récupère le rôle de l'utilisateur
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        role = getattr(request.user, 'role', 'etudiant')
         uid = request.user.username  # UID Firebase stocké dans username
         
         if role == 'etudiant':
@@ -62,8 +61,7 @@ class AbsenceViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     @inject
     def par_etudiant(self, request, etudiant_id=None, repo=Provide[Container.absence_repo]):
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        role = getattr(request.user, 'role', 'etudiant')
         uid = request.user.username
         
         if role == 'etudiant' and uid != etudiant_id:

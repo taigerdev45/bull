@@ -116,9 +116,8 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     def list_par_etudiant(self, request, etudiant_id=None):
         """Notes d'un étudiant spécifique."""
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        user_role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
-        if user_role == 'etudiant' and request.user.username != etudiant_id:
+        role = getattr(request.user, 'role', 'etudiant')
+        if role == 'etudiant' and request.user.username != etudiant_id:
             return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
             
         evals = self._get_repo().obtenir_par_etudiant(etudiant_id)
@@ -132,11 +131,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='matiere/(?P<matiere_id>[^/.]+)')
     def list_par_matiere(self, request, matiere_id=None):
         """Notes d'une matière spécifique."""
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        user_role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        role = getattr(request.user, 'role', 'etudiant')
         
         # Seul le staff ou les enseignants peuvent lister par matière
-        if user_role == 'etudiant':
+        if role == 'etudiant':
             return Response({"error": "Action réservée au staff"}, status=status.HTTP_403_FORBIDDEN)
             
         evals = self._get_repo().obtenir_par_matiere(matiere_id)

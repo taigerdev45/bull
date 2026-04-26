@@ -23,8 +23,7 @@ class EtudiantViewSet(viewsets.ViewSet):
         repo = Container.etudiant_repo()
         
         # Sécurité : un étudiant ne doit pas pouvoir lister tous les autres
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        role = getattr(request.user, 'role', 'etudiant')
         
         if role == 'etudiant':
             etudiants = [repo.get_by_id(request.user.username)]
@@ -38,8 +37,7 @@ class EtudiantViewSet(viewsets.ViewSet):
     # ─── RETRIEVE ────────────────────────────────────────────────────────────
     def retrieve(self, request, pk=None):
         # Sécurité: un étudiant ne peut voir que son propre profil
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        role = getattr(request.user, 'role', 'etudiant')
         if role == 'etudiant' and request.user.username != pk:
             return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
 

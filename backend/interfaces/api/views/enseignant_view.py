@@ -30,8 +30,7 @@ class EnseignantViewSet(viewsets.ViewSet):
         self.repo = repo
 
     def list(self, request):
-        auth = request.auth if isinstance(request.auth, dict) else {}
-        role = (auth.get('role') or getattr(request.user, 'role', 'etudiant')).lower()
+        role = getattr(request.user, 'role', 'etudiant')
         
         if role == 'etudiant':
             return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
