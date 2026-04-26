@@ -1,6 +1,6 @@
 <template>
   <div class="notification-center">
-    <div class="notif-bell-wrapper" @click="toggleDropdown">
+    <div class="notif-bell-wrapper" @click.stop="toggleDropdown">
       <span class="n-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>

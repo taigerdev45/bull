@@ -296,13 +296,22 @@ const getDecisionClass = (d) => {
   return ''
 }
 
-const quickGenerateS5 = (e) => alert(`Bulletin S5 - ${e.nom} généré`)
-const quickGenerateS6 = (e) => alert(`Bulletin S6 - ${e.nom} généré`)
-const quickGenerateAnnuel = (e) => alert(`Bulletin Annuel - ${e.nom} généré`)
+const quickGenerateS5 = (e) => generateBulletin({ ...e, moyenne: e.moyenne_S5, decision: 'Semestre 5 En cours' }, 'semestriel S5')
+const quickGenerateS6 = (e) => generateBulletin({ ...e, moyenne: e.moyenne_S6, decision: e.decision_jury }, 'semestriel S6')
+const quickGenerateAnnuel = (e) => generateBulletin({ ...e, moyenne: e.moyenne_annuelle, decision: e.decision_jury }, 'annuel')
 
-const generateBulletinS5 = () => quickGenerateS5(filteredEtudiants.value.find(e => e.id === parseInt(selectedEtudiant.value)))
-const generateBulletinS6 = () => quickGenerateS6(filteredEtudiants.value.find(e => e.id === parseInt(selectedEtudiant.value)))
-const generateBulletinAnnuel = () => quickGenerateAnnuel(filteredEtudiants.value.find(e => e.id === parseInt(selectedEtudiant.value)))
+const generateBulletinS5 = () => {
+  const e = filteredEtudiants.value.find(et => et.id === parseInt(selectedEtudiant.value))
+  if (e) quickGenerateS5(e)
+}
+const generateBulletinS6 = () => {
+  const e = filteredEtudiants.value.find(et => et.id === parseInt(selectedEtudiant.value))
+  if (e) quickGenerateS6(e)
+}
+const generateBulletinAnnuel = () => {
+  const e = filteredEtudiants.value.find(et => et.id === parseInt(selectedEtudiant.value))
+  if (e) quickGenerateAnnuel(e)
+}
 
 onMounted(loadEtudiants)
 </script>
