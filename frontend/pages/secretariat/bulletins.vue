@@ -137,13 +137,22 @@
           <div class="action-controls">
             <div class="button-group">
               <button @click="exportReleveS5" class="btn btn-secondary">
-                <span>Excel</span> Relevé S5
+                <span>📊</span> Excel S5
+              </button>
+              <button @click="exportRelevePDF(5)" class="btn btn-secondary">
+                <span>📄</span> PDF S5
               </button>
               <button @click="exportReleveS6" class="btn btn-secondary">
-                <span>Excel</span> Relevé S6
+                <span>📊</span> Excel S6
+              </button>
+              <button @click="exportRelevePDF(6)" class="btn btn-secondary">
+                <span>📄</span> PDF S6
               </button>
               <button @click="exportDecisionsJury" class="btn btn-info">
-                <span>Excel</span> Décisions Jury
+                <span>📊</span> Excel Jury
+              </button>
+              <button @click="exportDecisionsPDF('l')" class="btn btn-info">
+                <span>📄</span> PDF Jury (L)
               </button>
             </div>
           </div>
@@ -229,9 +238,10 @@
 import { ref, computed, onMounted } from 'vue'
 import BulletinService from '~/services/bulletinService'
 
-useHead({ title: 'Génération des Bulletins | Bull ASUR' })
-
+const { exportToExcel, exportToPDF } = useExport()
 const bulletinService = BulletinService
+
+useHead({ title: 'Génération des Bulletins | Bull ASUR' })
 
 // État
 const etudiants = ref([])
@@ -446,6 +456,30 @@ const exportDecisionsJury = () => {
   } catch (error) {
     console.error('Erreur export décisions jury:', error)
   }
+}
+
+const exportRelevePDF = (semestre) => {
+  const headers = ['Matricule', 'Nom', 'Prénom', `Moyenne S${semestre}`, `Crédits S${semestre}`]
+  const rows = filteredEtudiants.value.map(e => [
+    e.matricule,
+    e.nom,
+    e.prenom,
+    e[`moyenne_S${semestre}`] || '-',
+    e[`credits_S${semestre}`] || '-'
+  ])
+  exportToPDF(headers, rows, `releve_notes_S${semestre}.pdf`, 'p')
+}
+
+const exportDecisionsPDF = (orientation = 'p') => {
+  const headers = ['Matricule', 'Nom', 'Prénom', 'Moy. Annuelle', 'Décision']
+  const rows = filteredEtudiants.value.map(e => [
+    e.matricule,
+    e.nom,
+    e.prenom,
+    e.moyenne_annuelle || '-',
+    e.decision_jury || 'En attente'
+  ])
+  exportToPDF(headers, rows, 'decisions_jury.pdf', orientation)
 }
 
 // Génération rapide depuis le tableau

@@ -10,3 +10,7 @@ class IAuditRepository(ABC):
     def search_by_etudiant(self, etudiant_id: str, action: Optional[str] = None, 
                            date_debut: Optional[str] = None, date_fin: Optional[str] = None) -> List[Dict]:
         pass
+
+    @abstractmethod
+    def get_all(self, filtres: Optional[Dict] = None) -> List[Dict]:
+        pass

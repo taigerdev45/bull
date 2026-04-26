@@ -18,6 +18,17 @@ class AuditViewSet(viewsets.ViewSet):
         super().__init__(**kwargs)
         self.audit_service = audit_service
 
+    def list(self, request):
+        """Liste tous les logs d'audit avec filtres."""
+        params = {
+            'action': request.query_params.get('action'),
+            'entity_type': request.query_params.get('entity_type'),
+            'date_debut': request.query_params.get('date_debut'),
+            'date_fin': request.query_params.get('date_fin'),
+        }
+        logs = self.audit_service.obtenir_tous_les_logs(params)
+        return Response(logs)
+
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     def etudiant(self, request, etudiant_id=None):
         """Récupère l'audit pour un étudiant spécifique."""

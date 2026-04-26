@@ -25,6 +25,21 @@ class DjangoAuditRepository(IAuditRepository):
         models = query.order_by('-created_at')
         return [self._to_dict(m) for m in models]
 
+    def get_all(self, filtres: Optional[Dict] = None) -> List[Dict]:
+        query = AuditLogModel.objects.all()
+        if filtres:
+            if filtres.get('action'):
+                query = query.filter(action=filtres.get('action'))
+            if filtres.get('entity_type'):
+                query = query.filter(entity_type=filtres.get('entity_type'))
+            if filtres.get('date_debut'):
+                query = query.filter(created_at__gte=filtres.get('date_debut'))
+            if filtres.get('date_fin'):
+                query = query.filter(created_at__lte=filtres.get('date_fin'))
+        
+        models = query.order_by('-created_at')[:500]  # Limite raisonnable
+        return [self._to_dict(m) for m in models]
+
     def _to_dict(self, model: AuditLogModel) -> Dict:
         return {
             'action': model.action,

@@ -107,9 +107,51 @@ body {
   filter: drop-shadow(0 0 10px var(--primary));
 }
 
-/* Hardware Acceleration for Sidebar and Modals */
+/* hardware Acceleration for Sidebar and Modals */
 .sidebar, .modal-content, .teacher-card {
   will-change: transform;
+}
+
+/* Export Dropdown */
+.export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  min-width: 160px;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+  display: none;
+  z-index: 100;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+}
+
+.export-dropdown:hover .dropdown-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-menu button {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: var(--text-secondary);
+}
+
+.dropdown-menu button:hover {
+  background: var(--bg-main);
+  color: var(--primary);
 }
 
 /* Scrollbar Customization */

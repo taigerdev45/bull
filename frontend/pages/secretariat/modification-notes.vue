@@ -45,9 +45,15 @@
       <div class="table-header">
         <h3>Notes {{ getMatiereLibelle(filters.matiere_id) || 'du semestre' }}</h3>
         <div class="batch-actions">
-          <button class="btn btn-secondary" @click="exportNotes">
-            📊 Exporter
-          </button>
+          <div class="export-dropdown">
+            <button class="btn btn-secondary">
+              <span>📊</span> Exporter
+            </button>
+            <div class="dropdown-menu">
+              <button @click="exportNotes('excel')">Excel (.xlsx)</button>
+              <button @click="exportNotes('pdf')">PDF (.pdf)</button>
+            </div>
+          </div>
           <button class="btn btn-primary" @click="saveAllNotes" :disabled="!hasChanges || loading">
             💾 Enregistrer tout
           </button>
@@ -170,6 +176,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 
+const { exportToExcel, exportToPDF } = useExport()
 useHead({ title: 'Modification des Notes | Bull ASUR' })
 
 // État
@@ -337,31 +344,34 @@ const saveAllNotes = async () => {
   }
 }
 
-const exportNotes = () => {
-  // Export CSV
-  const csvContent = generateCSV()
-  const blob = new Blob([csvContent], { type: 'text/csv' })
-  const url = window.URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `notes_${getMatiereLibelle(filters.value.matiere_id)}_${new Date().toISOString().split('T')[0]}.csv`
-  a.click()
-  window.URL.revokeObjectURL(url)
-}
+const exportNotes = (format = 'excel') => {
+  const libelleMatiere = getMatiereLibelle(filters.value.matiere_id) || 'matiere'
+  const filename = `notes_${libelleMatiere}_${new Date().toISOString().split('T')[0]}`
 
-const generateCSV = () => {
-  const headers = ['Étudiant', 'Contrôle Continu', 'Examen Final', 'Rattrapage', 'Moyenne']
-  const rows = etudiants.value.map(etudiant => {
-    return [
-      `${etudiant.nom} ${etudiant.prenom}`,
-      getNoteValue(etudiant.id, 'controle_continu'),
-      getNoteValue(etudiant.id, 'examen_final'),
-      getNoteValue(etudiant.id, 'rattrapage'),
-      calculerMoyenne(etudiant.id).toFixed(2)
-    ].join(',')
+  const data = etudiants.value.map(etudiant => {
+    const row = {
+      Étudiant: `${etudiant.nom} ${etudiant.prenom}`,
+      Matricule: etudiant.matricule || '-'
+    }
+    evaluationTypes.forEach(type => {
+      row[type.label] = getNoteValue(etudiant.id, type.key) || '-'
+    })
+    row['Moyenne'] = calculerMoyenne(etudiant.id).toFixed(2)
+    return row
   })
-  
-  return [headers.join(','), ...rows].join('\n')
+
+  if (format === 'excel') {
+    exportToExcel(data, `${filename}.xlsx`)
+  } else {
+    const headers = ['Étudiant', 'Matricule', ...evaluationTypes.map(t => t.label), 'Moyenne']
+    const rows = etudiants.value.map(etudiant => [
+      `${etudiant.nom} ${etudiant.prenom}`,
+      etudiant.matricule || '-',
+      ...evaluationTypes.map(type => getNoteValue(etudiant.id, type.key) || '-'),
+      calculerMoyenne(etudiant.id).toFixed(2)
+    ])
+    exportToPDF(headers, rows, `${filename}.pdf`, 'l')
+  }
 }
 
 const showHistory = async (etudiantId) => {

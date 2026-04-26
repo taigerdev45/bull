@@ -6,6 +6,16 @@
         <p>Administrez les intervenants et assignez leurs unités d'enseignement.</p>
       </div>
       <div class="header-actions">
+        <div class="export-dropdown" v-if="teachers.length">
+          <button class="btn btn-secondary shadow-sm">
+            <span>📥</span> Exporter
+          </button>
+          <div class="dropdown-menu">
+            <button @click="exportData('excel')">Excel (.xlsx)</button>
+            <button @click="exportData('pdf-p')">PDF Portrait</button>
+            <button @click="exportData('pdf-l')">PDF Paysage</button>
+          </div>
+        </div>
         <button class="btn btn-primary shadow-sm" @click="openModal('add')">
           <span class="icon">➕</span> Ajouter un Enseignant
         </button>
@@ -179,6 +189,7 @@
 import { ref, computed, onMounted } from 'vue'
 
 const { fetchApi } = useApi()
+const { exportToExcel, exportToPDF } = useExport()
 useHead({ title: 'Enseignants | Secretariat Bull ASUR' })
 
 // État
@@ -231,6 +242,31 @@ const loadUEs = async () => {
     availableUEs.value = res
   } catch (err) {
     console.error('Erreur chargement UEs', err)
+  }
+}
+
+const exportData = (type) => {
+  const data = teachers.value.map(t => ({
+    Nom: t.nom,
+    Prénom: t.prenom,
+    Spécialité: t.specialite || 'N/A',
+    Téléphone: t.numero_telephone || 'N/A',
+    Email: t.email,
+    Matières: t.matieres ? t.matieres.join(', ') : ''
+  }))
+
+  if (type === 'excel') {
+    exportToExcel(data, 'liste_enseignants.xlsx')
+  } else {
+    const headers = ['Nom', 'Prénom', 'Spécialité', 'Téléphone', 'Matières']
+    const rows = teachers.value.map(t => [
+      t.nom, 
+      t.prenom, 
+      t.specialite || '', 
+      t.numero_telephone || '',
+      t.matieres ? t.matieres.slice(0, 2).join(', ') + (t.matieres.length > 2 ? '...' : '') : ''
+    ])
+    exportToPDF(headers, rows, 'liste_enseignants.pdf', type === 'pdf-l' ? 'l' : 'p')
   }
 }
 

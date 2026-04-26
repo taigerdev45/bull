@@ -6,6 +6,16 @@
         <p>Comptabilisation des heures pénalisantes par étudiant et matière.</p>
       </div>
       <div class="header-actions">
+        <div class="export-dropdown" v-if="absences.length">
+          <button class="btn btn-ghost shadow-sm">
+            <span>📥</span> Exporter
+          </button>
+          <div class="dropdown-menu">
+            <button @click="exportData('excel')">Excel (.xlsx)</button>
+            <button @click="exportData('pdf-p')">PDF Portrait</button>
+            <button @click="exportData('pdf-l')">PDF Paysage</button>
+          </div>
+        </div>
         <button class="btn btn-primary" @click="showAddModal = true">
           <span>➕</span> Nouvelle Absence
         </button>
@@ -129,9 +139,32 @@
 import { ref, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 
+const { fetchApi } = useApi()
+const { exportToExcel, exportToPDF } = useExport()
+
 useHead({ title: 'Saisie Absences | Secrétariat Bull ASUR' })
 
-const { fetchApi } = useApi()
+const exportData = (type) => {
+  const data = absences.value.map(a => ({
+    Étudiant: getEtudiantNom(a.etudiant_id),
+    Matière: getMatiereLibelle(a.matiere_id),
+    Heures: a.nombre_heures,
+    Date: formatDate(a.date_absence)
+  }))
+
+  if (type === 'excel') {
+    exportToExcel(data, 'liste_absences.xlsx')
+  } else {
+    const headers = ['Étudiant', 'Matière', 'Heures', 'Date']
+    const rows = absences.value.map(a => [
+      getEtudiantNom(a.etudiant_id),
+      getMatiereLibelle(a.matiere_id),
+      `${a.nombre_heures}h`,
+      formatDate(a.date_absence)
+    ])
+    exportToPDF(headers, rows, 'liste_absences.pdf', type === 'pdf-l' ? 'l' : 'p')
+  }
+}
 const absences = ref([])
 const etudiants = ref([])
 const matieres = ref([])

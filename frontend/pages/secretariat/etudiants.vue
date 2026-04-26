@@ -6,6 +6,16 @@
         <p>Inscriptions, informations administratives et suivi académique.</p>
       </div>
       <div class="header-actions">
+        <div class="export-dropdown" v-if="students.length">
+          <button class="btn btn-secondary shadow-sm">
+            <span>📥</span> Exporter
+          </button>
+          <div class="dropdown-menu">
+            <button @click="exportData('excel')">Excel (.xlsx)</button>
+            <button @click="exportData('pdf-p')">PDF Portrait</button>
+            <button @click="exportData('pdf-l')">PDF Paysage</button>
+          </div>
+        </div>
         <button class="btn btn-primary" @click="openModal('add')">
           <span class="icon">➕</span> Ajouter un Étudiant
         </button>
@@ -229,8 +239,36 @@ const filteredStudents = computed(() => {
 })
 
 const { fetchApi } = useApi()
+const { exportToExcel, exportToPDF } = useExport()
 
 // Méthodes
+const exportData = (type) => {
+  const data = students.value.map(s => ({
+    Nom: s.nom,
+    Prénom: s.prenom,
+    Matricule: s.matricule,
+    Email: s.email,
+    'Date Naissance': s.date_naissance,
+    'Lieu Naissance': s.lieu_naissance,
+    Bac: s.bac,
+    Provenance: s.provenance
+  }))
+
+  if (type === 'excel') {
+    exportToExcel(data, 'liste_etudiants.xlsx')
+  } else {
+    const headers = ['Matricule', 'Nom', 'Prénom', 'Bac', 'Date Naiss.']
+    const rows = students.value.map(s => [
+      s.matricule, 
+      s.nom, 
+      s.prenom, 
+      s.bac, 
+      s.date_naissance
+    ])
+    exportToPDF(headers, rows, 'liste_etudiants.pdf', type === 'pdf-l' ? 'l' : 'p')
+  }
+}
+
 const openModal = (mode, student = null) => {
   modalMode.value = mode
   currentStudent.value = student

@@ -18,6 +18,9 @@
 
     <div class="content-wrapper">
       <header class="landing-header">
+        <div class="main-logo-container">
+          <img src="/logo.png" alt="Bull ASUR Logo" class="landing-logo">
+        </div>
         <h1>Bienvenue sur Bull ASUR</h1>
         <p class="subtitle">Le portail de gestion des bulletins de notes - LP ASUR (INPTIC)</p>
       </header>
@@ -262,6 +265,22 @@ const handleLogin = async () => {
 .landing-header {
   text-align: center;
   margin-bottom: 4rem;
+}
+
+.main-logo-container {
+  margin-bottom: 1.5rem;
+  animation: float 6s ease-in-out infinite;
+}
+
+.landing-logo {
+  height: 120px;
+  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
 .landing-header h1 {

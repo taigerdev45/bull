@@ -21,3 +21,7 @@ class AuditService:
             date_debut=filtres.get('date_debut'),
             date_fin=filtres.get('date_fin')
         )
+
+    def obtenir_tous_les_logs(self, filtres: Dict = None) -> List[Dict]:
+        """Récupère tous les logs avec filtres optionnels."""
+        return self.audit_repo.get_all(filtres)

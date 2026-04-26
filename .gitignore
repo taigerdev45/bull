@@ -17,9 +17,9 @@ frontend/.env
 frontend/.env.local
 
 # Backend (Python / Django)
-backend/__pycache__/
-backend/*.py[cod]
-backend/*$py.class
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
 backend/env/
 backend/venv/
 backend/*.sqlite3
@@ -28,10 +28,9 @@ backend/.env
 backend/serviceAccountKey.json
 backend/supabase_rls.sql
 # Documentation Interne
-# docs/recap1.md (Désinhibé pour synchro GitHub)
-# docs/audit2.md
-# docs/ordre.md
-# docs/audite.md
+docs/recap1.md
+docs/audit2.md
+docs/audite.md
 
 # Root Environment & IDE
 .env

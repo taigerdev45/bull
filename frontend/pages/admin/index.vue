@@ -59,6 +59,10 @@
               <span class="a-icon">🔍</span>
               Manager UEs
             </NuxtLink>
+            <NuxtLink to="/admin/logs" class="action-btn-p">
+              <span class="a-icon">📑</span>
+              Consultation Logs
+            </NuxtLink>
             <NuxtLink to="/profil" class="action-btn-p">
               <span class="a-icon">⚙️</span>
               Configuration profil

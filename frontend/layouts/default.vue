@@ -21,7 +21,7 @@
     <aside class="sidebar" :class="{ 'is-open': isSidebarOpen }">
       <div class="sidebar-brand">
         <div class="logo-box">
-          <span class="logo-text">B</span>
+          <img src="/logo.png" alt="Bull ASUR Logo" class="sidebar-logo-img">
         </div>
         <div class="brand-text">
           <h1>Bull ASUR</h1>
@@ -140,6 +140,7 @@ const allLinks = [
   { path: '/bulletins', label: 'Bulletins', icon: '📄', roles: ['admin', 'secretariat', 'super_admin', 'staff', 'etudiant', 'enseignant'] },
   { path: '/saisie', label: 'Saisie Notes', icon: '📝', roles: ['admin', 'secretariat', 'super_admin', 'staff', 'enseignant'] },
   { path: '/personnel', label: 'Personnel', icon: '👥', roles: ['admin', 'super_admin'] },
+  { path: '/admin/logs', label: 'Audit', icon: '📑', roles: ['admin', 'super_admin'] },
   { path: '/profil', label: 'Profil', icon: '👤', roles: ['admin', 'secretariat', 'super_admin', 'staff', 'enseignant', 'etudiant'] }
 ]
 
@@ -211,16 +212,18 @@ const logout = () => {
 }
 
 .logo-box {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #3b82f6, #1e40af);
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3));
 }
 
 .brand-text h1 {
