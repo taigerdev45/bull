@@ -95,7 +95,8 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
             
         user.save() # Persister l'email et potentiellement d'autres infos
         
-        # Log minimal
-        print(f"[AUTH] User {uid} ({email}) authenticated with role: {role}")
+        # Log détaillé (visible sur Render)
+        print(f"[AUTH SUCCESS] UID: {uid} | Email: {user.email} | Detected Role: {role}")
+        print(f"[AUTH CLAIMS] App Meta: {app_metadata} | User Meta: {user_metadata} | Global Role: {payload.get('role')}")
         
         return (user, payload)
