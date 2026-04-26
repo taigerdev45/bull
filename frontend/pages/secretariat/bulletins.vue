@@ -55,15 +55,15 @@
           <h4>{{ stats.total_etudiants }}</h4>
           <p>Total Étudiants</p>
         </div>
-        <div class="stat-card success">
+        <div class="stat-card">
           <h4>{{ stats.diplomes }}</h4>
           <p>Diplômés</p>
         </div>
-        <div class="stat-card warning">
+        <div class="stat-card">
           <h4>{{ stats.admissibles }}</h4>
           <p>Admissibles</p>
         </div>
-        <div class="stat-card danger">
+        <div class="stat-card">
           <h4>{{ stats.redoublants }}</h4>
           <p>Redoublants</p>
         </div>

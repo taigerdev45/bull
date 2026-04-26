@@ -2,13 +2,13 @@
   <div class="page-container">
     <header class="page-header">
       <div class="header-info">
-        <h1>📑 Journaux d'Audit</h1>
+        <h1>Journaux d'Audit</h1>
         <p>Suivi de toutes les actions critiques effectuées sur la plateforme.</p>
       </div>
       <div class="header-actions">
         <div class="export-dropdown" v-if="logs.length">
           <button class="btn btn-secondary shadow-sm">
-            <span>📥</span> Exporter
+            Exporter
           </button>
           <div class="dropdown-menu">
             <button @click="handleExport('excel')">Excel (.xlsx)</button>
@@ -17,7 +17,7 @@
           </div>
         </div>
         <button class="btn btn-ghost" @click="fetchLogs">
-          <span>🔄</span> Actualiser
+          Actualiser
         </button>
       </div>
     </header>

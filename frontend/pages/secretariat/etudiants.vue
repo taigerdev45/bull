@@ -8,7 +8,7 @@
       <div class="header-actions">
         <div class="export-dropdown" v-if="students.length">
           <button class="btn btn-secondary shadow-sm">
-            <span>📥</span> Exporter
+            Exporter
           </button>
           <div class="dropdown-menu">
             <button @click="exportData('excel')">Excel (.xlsx)</button>
@@ -17,7 +17,7 @@
           </div>
         </div>
         <button class="btn btn-primary" @click="openModal('add')">
-          <span class="icon">➕</span> Ajouter un Étudiant
+          Ajouter un Étudiant
         </button>
       </div>
     </header>

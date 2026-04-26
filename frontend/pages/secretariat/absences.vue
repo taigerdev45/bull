@@ -8,7 +8,7 @@
       <div class="header-actions">
         <div class="export-dropdown" v-if="absences.length">
           <button class="btn btn-ghost shadow-sm">
-            <span>📥</span> Exporter
+            Exporter
           </button>
           <div class="dropdown-menu">
             <button @click="exportData('excel')">Excel (.xlsx)</button>
@@ -17,7 +17,7 @@
           </div>
         </div>
         <button class="btn btn-primary" @click="showAddModal = true">
-          <span>➕</span> Nouvelle Absence
+          Nouvelle Absence
         </button>
       </div>
     </header>

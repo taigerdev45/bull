@@ -1,99 +1,65 @@
-// Imports client-side uniquement
-import * as XLSX from 'xlsx'
-import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
-
 export const useExport = () => {
-  /**
-   * Exporte des données vers un fichier Excel
-   * @param {Array} data - Liste de dictionnaires d'objets
-   * @param {String} filename - Nom du fichier de sortie
-   */
-  const exportToExcel = (data, filename = 'export.xlsx') => {
+  const exportToExcel = async (data, filename = 'export.xlsx') => {
     if (!process.client) return
     if (!data || !data.length) return alert("Aucune donnée à exporter")
     
     try {
+      const XLSX = await import('xlsx')
       const worksheet = XLSX.utils.json_to_sheet(data)
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Données')
       XLSX.writeFile(workbook, filename)
     } catch (error) {
-      console.error("Erreur lors de l'export Excel:", error)
-      alert("Erreur lors de la génération du fichier Excel.")
+      console.error("Erreur Excel:", error)
+      alert("Erreur lors de la génération Excel.")
     }
   }
 
-  /**
-   * Exporte des données vers un fichier PDF
-   * @param {Array} headers - Libellés des colonnes ['Nom', 'Prénom', ...]
-   * @param {Array} rows - Valeurs correspondantes [['Doe', 'John'], ...]
-   * @param {String} filename - Nom du fichier
-   * @param {String} orientation - 'p' (portrait) ou 'l' (landscape)
-   */
-  const exportToPDF = (headers, rows, filename = 'export.pdf', orientation = 'p') => {
+  const exportToPDF = async (headers, rows, filename = 'export.pdf', orientation = 'p') => {
     if (!process.client) return
     if (!rows || !rows.length) return alert("Aucune donnée à exporter")
 
-    const doc = new jsPDF({
-      orientation: orientation,
-      unit: 'mm',
-      format: 'a4'
-    })
+    try {
+      const { jsPDF } = await import('jspdf')
+      const autoTable = (await import('jspdf-autotable')).default
 
-    // Header stylisé
-    doc.setFillColor(30, 41, 59) // bg-sidebar color
-    doc.rect(0, 0, doc.internal.pageSize.width, 40, 'F')
-    
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(22)
-    doc.text('BULL ASUR - GESTION ACADÉMIQUE', 14, 20)
-    
-    doc.setFontSize(10)
-    doc.text(`Document : ${filename.replace('.pdf', '').toUpperCase()}`, 14, 30)
-    doc.text(`Généré le : ${new Date().toLocaleString()}`, doc.internal.pageSize.width - 70, 30)
+      const doc = new jsPDF({
+        orientation: orientation,
+        unit: 'mm',
+        format: 'a4'
+      })
 
-    // Tableau
-    doc.autoTable({
-      head: [headers],
-      body: rows,
-      startY: 45,
-      theme: 'grid',
-      styles: {
-        fontSize: 9,
-        cellPadding: 3,
-        overflow: 'linebreak',
-        halign: 'left'
-      },
-      headStyles: {
-        fillColor: [37, 99, 235],
-        textColor: 255,
-        fontStyle: 'bold'
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252]
-      }
-    })
+      // Header Monochrome
+      doc.setFillColor(0, 0, 0)
+      doc.rect(0, 0, doc.internal.pageSize.width, 35, 'F')
+      
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(20)
+      doc.setFont('helvetica', 'bold')
+      doc.text('BULL ASUR - GESTION ACADÉMIQUE', 15, 18)
+      
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`Document : ${filename.toUpperCase()}`, 15, 28)
+      doc.text(`Date : ${new Date().toLocaleDateString()}`, doc.internal.pageSize.width - 60, 28)
 
-    // Footer avec numérotation
-    const pageCount = doc.internal.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
-      doc.setTextColor(150, 150, 150)
-      doc.text(
-        `Page ${i} sur ${pageCount}`,
-        doc.internal.pageSize.width / 2,
-        doc.internal.pageSize.height - 10,
-        { align: 'center' }
-      )
+      // Tableau Monochrome
+      doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 40,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [0, 0, 0], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] }
+      })
+
+      doc.save(filename)
+    } catch (error) {
+      console.error("Erreur PDF:", error)
+      alert("Erreur lors de la génération PDF.")
     }
-
-    doc.save(filename)
   }
 
-  return { 
-    exportToExcel, 
-    exportToPDF 
-  }
+  return { exportToExcel, exportToPDF }
 }

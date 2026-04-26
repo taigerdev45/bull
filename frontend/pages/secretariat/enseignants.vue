@@ -2,13 +2,13 @@
   <div class="page-enseignants">
     <header class="page-header">
       <div class="header-content">
-        <h2>👨‍🏫 Gestion des Enseignants</h2>
+        <h2>Gestion des Enseignants</h2>
         <p>Administrez les intervenants et assignez leurs unités d'enseignement.</p>
       </div>
       <div class="header-actions">
         <div class="export-dropdown" v-if="teachers.length">
           <button class="btn btn-secondary shadow-sm">
-            <span>📥</span> Exporter
+            Exporter
           </button>
           <div class="dropdown-menu">
             <button @click="exportData('excel')">Excel (.xlsx)</button>
@@ -17,7 +17,7 @@
           </div>
         </div>
         <button class="btn btn-primary shadow-sm" @click="openModal('add')">
-          <span class="icon">➕</span> Ajouter un Enseignant
+          Ajouter un Enseignant
         </button>
       </div>
     </header>

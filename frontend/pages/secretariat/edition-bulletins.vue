@@ -28,7 +28,7 @@
         <div class="panel-header">
           <h3>Gestion des Semestres</h3>
           <button class="btn btn-primary" @click="openModal('semestre', 'add')">
-            ➕ Ajouter un semestre
+            Ajouter un semestre
           </button>
         </div>
         
@@ -40,10 +40,10 @@
           >
             <template #actions="{ row }">
               <button class="btn btn-sm btn-secondary" @click="openModal('semestre', 'edit', row)">
-                ✏️
+                Modifier
               </button>
               <button class="btn btn-sm btn-danger" @click="deleteItem('semestre', row.id)">
-                🗑️
+                Supprimer
               </button>
             </template>
           </DataTable>
@@ -55,7 +55,7 @@
         <div class="panel-header">
           <h3>Gestion des Unités d'Enseignement</h3>
           <button class="btn btn-primary" @click="openModal('ue', 'add')">
-            ➕ Ajouter une UE
+            Ajouter une UE
           </button>
         </div>
         
@@ -70,10 +70,10 @@
             </template>
             <template #actions="{ row }">
               <button class="btn btn-sm btn-secondary" @click="openModal('ue', 'edit', row)">
-                ✏️
+                Modifier
               </button>
               <button class="btn btn-sm btn-danger" @click="deleteItem('ue', row.id)">
-                🗑️
+                Supprimer
               </button>
             </template>
           </DataTable>
@@ -85,7 +85,7 @@
         <div class="panel-header">
           <h3>Gestion des Matières</h3>
           <button class="btn btn-primary" @click="openModal('matiere', 'add')">
-            ➕ Ajouter une matière
+            Ajouter une matière
           </button>
         </div>
         
@@ -100,10 +100,10 @@
             </template>
             <template #actions="{ row }">
               <button class="btn btn-sm btn-secondary" @click="openModal('matiere', 'edit', row)">
-                ✏️
+                Modifier
               </button>
               <button class="btn btn-sm btn-danger" @click="deleteItem('matiere', row.id)">
-                🗑️
+                Supprimer
               </button>
             </template>
           </DataTable>
@@ -115,14 +115,14 @@
         <div class="panel-header">
           <h3>Gestion des Absences</h3>
           <button class="btn btn-primary" @click="openModal('absence', 'add')">
-            ➕ Ajouter une absence
+            Ajouter une absence
           </button>
         </div>
         
         <!-- Filtres pour les absences -->
         <div class="filters-section">
           <div class="filter-group">
-            <label>Étudiant:</label>
+            <label>Étudiant</label>
             <select v-model="absenceFilters.etudiant_id" class="form-control">
               <option value="">Tous les étudiants</option>
               <option v-for="etudiant in etudiants" :key="etudiant.id" :value="etudiant.id">
@@ -131,7 +131,7 @@
             </select>
           </div>
           <div class="filter-group">
-            <label>Matière:</label>
+            <label>Matière</label>
             <select v-model="absenceFilters.matiere_id" class="form-control">
               <option value="">Toutes les matières</option>
               <option v-for="matiere in matieres" :key="matiere.id" :value="matiere.id">
@@ -155,10 +155,10 @@
             </template>
             <template #actions="{ row }">
               <button class="btn btn-sm btn-secondary" @click="openModal('absence', 'edit', row)">
-                ✏️
+                Modifier
               </button>
               <button class="btn btn-sm btn-danger" @click="deleteItem('absence', row.id)">
-                🗑️
+                Supprimer
               </button>
             </template>
           </DataTable>

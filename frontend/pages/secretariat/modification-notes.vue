@@ -3,34 +3,34 @@
     <header class="page-header">
       <div class="header-content">
         <h2>Modification des Notes</h2>
-        <p>Consultation et modification des notes des étudiants par semestre et matière.</p>
+        <p>Consultation et modification des notes par semestre et matière.</p>
       </div>
     </header>
 
     <!-- Filtres principaux -->
     <div class="filters-section">
       <div class="filter-group">
-        <label for="semestre_filter">Semestre:</label>
+        <label for="semestre_filter">Semestre</label>
         <select id="semestre_filter" v-model="filters.semestre_id" @change="loadData" class="form-control">
-          <option value="">Sélectionner un semestre...</option>
+          <option value="">Choisir un semestre...</option>
           <option v-for="semestre in semestres" :key="semestre.id" :value="semestre.id">
-            {{ semestre.libelle }} ({{ semestre.annee_universitaire }})
+            {{ semestre.libelle }}
           </option>
         </select>
       </div>
       
       <div class="filter-group">
-        <label for="ue_filter">Unité d'Enseignement:</label>
+        <label for="ue_filter">Unité d'Enseignement</label>
         <select id="ue_filter" v-model="filters.ue_id" @change="loadMatieres" class="form-control">
           <option value="">Toutes les UE</option>
           <option v-for="ue in filteredUEs" :key="ue.id" :value="ue.id">
-            {{ ue.code }} - {{ ue.libelle }}
+            {{ ue.libelle }}
           </option>
         </select>
       </div>
       
       <div class="filter-group">
-        <label for="matiere_filter">Matière:</label>
+        <label for="matiere_filter">Matière</label>
         <select id="matiere_filter" v-model="filters.matiere_id" @change="loadNotes" class="form-control">
           <option value="">Toutes les matières</option>
           <option v-for="matiere in filteredMatieres" :key="matiere.id" :value="matiere.id">
@@ -43,11 +43,11 @@
     <!-- Tableau des notes -->
     <div v-if="filters.semestre_id" class="notes-container">
       <div class="table-header">
-        <h3>Notes {{ getMatiereLibelle(filters.matiere_id) || 'du semestre' }}</h3>
+        <h3>Notes {{ getMatiereLibelle(filters.matiere_id) }}</h3>
         <div class="batch-actions">
           <div class="export-dropdown">
             <button class="btn btn-secondary">
-              <span>📊</span> Exporter
+              Exporter
             </button>
             <div class="dropdown-menu">
               <button @click="exportNotes('excel')">Excel (.xlsx)</button>
@@ -55,7 +55,7 @@
             </div>
           </div>
           <button class="btn btn-primary" @click="saveAllNotes" :disabled="!hasChanges || loading">
-            💾 Enregistrer tout
+            Enregistrer les modifications
           </button>
         </div>
       </div>
