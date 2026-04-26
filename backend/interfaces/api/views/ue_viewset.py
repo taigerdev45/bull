@@ -100,6 +100,9 @@ class UEViewSet(viewsets.ViewSet):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def partial_update(self, request, pk=None):
+        return self.update(request, pk)
+
     def destroy(self, request, pk=None):
         try:
             self.ue_repo.delete(pk)
@@ -196,6 +199,9 @@ class MatiereViewSet(viewsets.ViewSet):
             except Exception as e:
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, pk=None):
+        return self.update(request, pk)
 
     def destroy(self, request, pk=None):
         try:

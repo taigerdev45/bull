@@ -54,13 +54,23 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         app_metadata = payload.get('app_metadata', {})
         user_metadata = payload.get('user_metadata', {})
         
-        # Priorité : payload.role > app_metadata.role > user_metadata.role > default
-        raw_role = payload.get('role') or app_metadata.get('role') or user_metadata.get('role', 'etudiant')
+        # Priorité : app_metadata.role > user_metadata.role > payload.role > default
+        # Note: Dans Supabase, 'role' est souvent simplement 'authenticated' par défaut, 
+        # on ne doit l'utiliser que si rien d'autre n'est défini ou si c'est une valeur spécifique.
         
-        if isinstance(raw_role, list):
-            role = str(raw_role[0]).lower().strip() if raw_role else 'etudiant'
+        role = 'etudiant' # Défaut
+        
+        if app_metadata.get('role'):
+            role = app_metadata.get('role')
+        elif user_metadata.get('role'):
+            role = user_metadata.get('role')
+        elif payload.get('role') and payload.get('role') != 'authenticated':
+            role = payload.get('role')
+        
+        if isinstance(role, list):
+            role = str(role[0]).lower().strip() if role else 'etudiant'
         else:
-            role = str(raw_role).lower().strip()
+            role = str(role).lower().strip()
 
         # Récupération ou création de l'utilisateur Django local
         user, created = User.objects.get_or_create(username=uid)

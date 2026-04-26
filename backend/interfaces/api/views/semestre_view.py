@@ -33,7 +33,20 @@ class SemestreViewSet(viewsets.ViewSet):
                 annee_universitaire=serializer.validated_data['annee_universitaire']
             )
             self.repo.save(semestre)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(SemestreSerializer(semestre).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        semestre = self.repo.get_by_id(pk)
+        if not semestre:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = SemestreSerializer(data=request.data)
+        if serializer.is_valid():
+            semestre._libelle = serializer.validated_data['libelle']
+            semestre._annee_universitaire = serializer.validated_data['annee_universitaire']
+            self.repo.save(semestre)
+            return Response(SemestreSerializer(semestre).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):

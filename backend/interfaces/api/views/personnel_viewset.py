@@ -50,6 +50,33 @@ class PersonnelViewSet(viewsets.ViewSet):
         ])
 
     @inject
+    def update(self, request, pk=None, repo=Provide[Container.personnel_repo]):
+        """Met à jour un membre du personnel."""
+        personnel = repo.get_by_id(pk)
+        if not personnel:
+            return Response({'error': 'Personnel introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data
+        if 'nom' in data: personnel._nom = data['nom']
+        if 'prenom' in data: personnel._prenom = data['prenom']
+        if 'email' in data: personnel._email = data['email']
+        if 'role' in data: personnel._role = data['role']
+        if 'numero_telephone' in data: personnel._numero_telephone = data['numero_telephone']
+        
+        repo.save(personnel)
+        return Response({
+            "id": personnel.id,
+            "nom": personnel._nom,
+            "prenom": personnel._prenom,
+            "email": personnel._email,
+            "role": personnel._role,
+            "numero_telephone": personnel._numero_telephone
+        })
+
+    def partial_update(self, request, pk=None):
+        return self.update(request, pk)
+
+    @inject
     def destroy(self, request, pk=None, repo=Provide[Container.personnel_repo]):
         """Supprime un membre du personnel."""
         try:

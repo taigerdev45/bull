@@ -314,11 +314,12 @@ const deleteStudentNotes = (etudiantId) => {
   evaluations.value = evaluations.value.filter(e => e.etudiant_id !== etudiantId)
 }
 
-const saveNotes = async () => {
+const saveAllNotes = async () => {
+  if (!filters.value.matiere_id) return
   loading.value = true
   
   try {
-    await $fetch(`${$config.public.apiBase}/evaluations/batch`, {
+    await $fetch(`${$config.public.apiBase}/evaluations/bulk/`, {
       method: 'POST',
       body: {
         matiere_id: filters.value.matiere_id,

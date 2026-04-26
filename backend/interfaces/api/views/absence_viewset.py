@@ -89,6 +89,9 @@ class AbsenceViewSet(viewsets.ViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def partial_update(self, request, pk=None):
+        return self.update(request, pk)
+
     @inject
     def destroy(self, request, pk=None, repo=Provide[Container.absence_repo]):
         repo.supprimer(pk)

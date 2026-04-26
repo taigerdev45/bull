@@ -183,6 +183,51 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+
+useHead({ title: 'Gestion des Étudiants | Bull ASUR' })
+
+// État
+const students = ref([])
+const searchTerm = ref('')
+const filterBac = ref('')
+const showModal = ref(false)
+const modalMode = ref('add') // 'add' ou 'edit'
+const loading = ref(false)
+const currentStudent = ref(null)
+
+// Formulaire
+const formData = ref({
+  nom: '',
+  prenom: '',
+  email: '',
+  matricule: '',
+  date_naissance: '',
+  lieu_naissance: '',
+  bac: '',
+  provenance: ''
+})
+
+// Colonnes du tableau
+const studentColumns = [
+  { key: 'nom', label: 'Nom' },
+  { key: 'prenom', label: 'Prénom' },
+  { key: 'matricule', label: 'Matricule' },
+  { key: 'email', label: 'Email' },
+  { key: 'date_naissance', label: 'Né(e) le' },
+  { key: 'bac', label: 'Bac' }
+]
+
+// Filtrage
+const filteredStudents = computed(() => {
+  return students.value.filter(student => {
+    const searchLower = searchTerm.value.toLowerCase()
+    const matchesSearch = `${student.nom} ${student.prenom} ${student.matricule}`.toLowerCase().includes(searchLower)
+    const matchesBac = !filterBac.value || student.bac === filterBac.value
+    return matchesSearch && matchesBac
+  })
+})
+
 const { fetchApi } = useApi()
 
 // Méthodes
