@@ -13,7 +13,10 @@ class EnseignantSerializer(serializers.Serializer):
     prenom = serializers.CharField(max_length=100)
     email = serializers.EmailField()
     matricule = serializers.CharField(max_length=50)
+    telephone = serializers.CharField(max_length=20, required=False, allow_null=True, allow_blank=True)
+    specialite = serializers.CharField(max_length=200, required=False, allow_null=True, allow_blank=True)
     password = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
+    matieres = serializers.ListField(child=serializers.CharField(), read_only=True)
 
 @extend_schema(tags=['Administration'])
 class EnseignantViewSet(viewsets.ViewSet):
@@ -42,9 +45,29 @@ class EnseignantViewSet(viewsets.ViewSet):
                 enseignants = [e for e in enseignants if e]
             else:
                 return Response({"error": "Acces restreint"}, status=status.HTTP_403_FORBIDDEN)
+            
+            # Enrichissement avec les matières (via Django ORM pour la performance)
+            from infrastructure.persistence.django_models.models import MatiereModel
+            matieres_dict = {} # e_id -> List[libelle]
+            matieres_ids_dict = {} # e_id -> List[id]
+            
+            all_m = MatiereModel.objects.exclude(enseignant=None).select_related('enseignant')
+            for m in all_m:
+                e_id = m.enseignant.id
+                if e_id not in matieres_dict:
+                    matieres_dict[e_id] = []
+                    matieres_ids_dict[e_id] = []
+                matieres_dict[e_id].append(m.libelle)
+                matieres_ids_dict[e_id].append(m.id)
+
+            data = []
+            for e in enseignants:
+                s = EnseignantSerializer(e).data
+                s['matieres'] = matieres_dict.get(e.id, [])
+                s['matiere_ids'] = matieres_ids_dict.get(e.id, [])
+                data.append(s)
                 
-            serializer = EnseignantSerializer(enseignants, many=True)
-            return Response(serializer.data)
+            return Response(data)
         except Exception as e:
             import traceback
             return Response({
@@ -88,6 +111,8 @@ class EnseignantViewSet(viewsets.ViewSet):
                     prenom=data['prenom'],
                     email=email,
                     matricule=matricule,
+                    telephone=data.get('telephone'),
+                    specialite=data.get('specialite'),
                     user_id=user_id
                 )
                 
@@ -105,6 +130,24 @@ class EnseignantViewSet(viewsets.ViewSet):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def retrieve(self, request, pk=None):
+        try:
+            enseignant = self.repo.get_by_id(pk)
+            if not enseignant:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            
+            # Enrichissement avec les matières
+            from infrastructure.persistence.django_models.models import MatiereModel
+            matieres = MatiereModel.objects.filter(enseignant_id=pk)
+            
+            data = EnseignantSerializer(enseignant).data
+            data['matieres'] = [m.libelle for m in matieres]
+            data['matiere_ids'] = [m.id for m in matieres]
+            
+            return Response(data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def update(self, request, pk=None):
         enseignant = self.repo.get_by_id(pk)
         if not enseignant:
@@ -112,10 +155,13 @@ class EnseignantViewSet(viewsets.ViewSet):
         
         serializer = EnseignantSerializer(data=request.data)
         if serializer.is_valid():
-            enseignant._nom = serializer.validated_data['nom']
-            enseignant._prenom = serializer.validated_data['prenom']
-            enseignant._email = serializer.validated_data['email']
-            enseignant._matricule = serializer.validated_data['matricule']
+            data = serializer.validated_data
+            enseignant._nom = data['nom']
+            enseignant._prenom = data['prenom']
+            enseignant._email = data['email']
+            enseignant._matricule = data['matricule']
+            enseignant._telephone = data.get('telephone')
+            enseignant._specialite = data.get('specialite')
             self.repo.save(enseignant)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

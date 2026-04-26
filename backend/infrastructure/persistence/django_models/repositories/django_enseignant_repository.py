@@ -12,6 +12,8 @@ class DjangoEnseignantRepository(IEnseignantRepository):
                 'prenom': enseignant.prenom,
                 'email': enseignant.email,
                 'matricule': enseignant.matricule,
+                'numero_telephone': enseignant.telephone,
+                'specialite': enseignant.specialite,
                 'user_id': enseignant.user_id
             }
         )
@@ -44,6 +46,8 @@ class DjangoEnseignantRepository(IEnseignantRepository):
             email=model.email,
             id=model.id,
             matricule=model.matricule,
+            telephone=model.numero_telephone,
+            specialite=model.specialite,
             user_id=model.user_id
         )
 

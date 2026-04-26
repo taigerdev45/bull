@@ -30,6 +30,8 @@ class EnseignantModel(BasePersistenceModel):
     prenom = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     matricule = models.CharField(max_length=50, unique=True)
+    numero_telephone = models.CharField(max_length=20, null=True, blank=True)
+    specialite = models.CharField(max_length=200, null=True, blank=True)
     user_id = models.CharField(max_length=128, unique=True, null=True, blank=True) # Firebase UID
     
     def __str__(self):

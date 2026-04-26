@@ -8,12 +8,15 @@ class Enseignant(BaseEntity):
     """
 
     def __init__(self, nom: str, prenom: str, email: str, matricule: str, 
+                 telephone: Optional[str] = None, specialite: Optional[str] = None,
                  user_id: Optional[str] = None, id: Optional[str] = None):
         super().__init__(id)
         self._nom = nom
         self._prenom = prenom
         self._email = email
         self._matricule = matricule
+        self._telephone = telephone
+        self._specialite = specialite
         self._user_id = user_id
         self._matiere_ids: List[str] = []
 
@@ -28,6 +31,14 @@ class Enseignant(BaseEntity):
     @property
     def matricule(self) -> str:
         return self._matricule
+
+    @property
+    def telephone(self) -> Optional[str]:
+        return self._telephone
+
+    @property
+    def specialite(self) -> Optional[str]:
+        return self._specialite
 
     @property
     def user_id(self) -> Optional[str]:
