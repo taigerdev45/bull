@@ -1,102 +1,136 @@
-from jose import jwt
-from django.contrib.auth.models import User
-from rest_framework import authentication
-from rest_framework import exceptions
-from django.conf import settings
 import os
+from django.contrib.auth.models import User
+from rest_framework import authentication, exceptions
+
+
+def _extract_role(user_data: dict) -> str:
+    """
+    Extrait le rôle depuis les métadonnées Supabase.
+    Priorité: app_metadata.role > user_metadata.role > 'etudiant' (défaut)
+    Le claim 'role' racine du JWT est toujours 'authenticated' pour Supabase ---
+    on ne l'utilise JAMAIS.
+    """
+    app_metadata = user_data.get('app_metadata') or {}
+    user_metadata = user_data.get('user_metadata') or {}
+
+    role = (
+        app_metadata.get('role')
+        or user_metadata.get('role')
+        or 'etudiant'
+    )
+
+    if isinstance(role, list):
+        role = role[0] if role else 'etudiant'
+
+    return str(role).lower().strip()
+
 
 class SupabaseAuthentication(authentication.BaseAuthentication):
     """
-    Système d'authentification personnalisée basé sur Supabase JWT.
-    Valide les tokens émis par GoTrue (Supabase Auth).
+    Authentification Supabase via l'API Admin (get_user).
+    Valide le token ACCESS de Supabase en appelant l'endpoint GoTrue /auth/v1/user,
+    ce qui ne dépend pas du SUPABASE_JWT_SECRET local.
+    Fallback: décodage JWT local si SUPABASE_JWT_SECRET est disponible.
     """
+
+    def _get_user_from_supabase_api(self, token: str) -> dict | None:
+        """Valide le token en appelant l'API Supabase GoTrue."""
+        try:
+            from supabase import create_client
+            supabase_url = os.getenv("SUPABASE_URL", "")
+            # On peut utiliser la service_role_key pour créer le client admin
+            # puis valider le token utilisateur via get_user(token)
+            service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+            if not supabase_url or not service_key:
+                print("[AUTH] SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY non configuré.")
+                return None
+
+            client = create_client(supabase_url, service_key)
+            # get_user(jwt) valide le token et retourne l'utilisateur correspondant
+            res = client.auth.get_user(token)
+            if res and res.user:
+                user = res.user
+                return {
+                    'sub': user.id,
+                    'email': user.email,
+                    'app_metadata': user.app_metadata or {},
+                    'user_metadata': user.user_metadata or {},
+                }
+        except Exception as e:
+            print(f"[AUTH] Supabase API validation failed: {e}")
+        return None
+
+    def _get_user_from_jwt_decode(self, token: str) -> dict | None:
+        """Tente de décoder le JWT localement (fallback)."""
+        try:
+            from jose import jwt as jose_jwt
+            jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+            if not jwt_secret:
+                return None
+            payload = jose_jwt.decode(
+                token,
+                jwt_secret,
+                algorithms=["HS256"],
+                options={"verify_aud": False}
+            )
+            return {
+                'sub': payload.get('sub'),
+                'email': payload.get('email'),
+                'app_metadata': payload.get('app_metadata') or {},
+                'user_metadata': payload.get('user_metadata') or {},
+            }
+        except Exception as e:
+            print(f"[AUTH] JWT local decode failed: {e}")
+        return None
 
     def authenticate(self, request):
         auth_header = request.META.get('HTTP_AUTHORIZATION')
         if not auth_header:
             return None
 
-        # Format attendu: "Bearer <TOKEN>"
         parts = auth_header.split()
         if len(parts) != 2 or parts[0].lower() != 'bearer':
             return None
 
-        id_token = parts[1]
-        
-        try:
-            # Récupération du secret depuis les settings
-            jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
-            if not jwt_secret:
-                raise exceptions.AuthenticationFailed('SUPABASE_JWT_SECRET non configuré sur le serveur.')
+        token = parts[1]
 
-            # Décodage et validation du token
-            # Supabase utilise généralement HS256 avec le JWT Secret du dashboard
-            payload = jwt.decode(
-                id_token, 
-                jwt_secret, 
-                algorithms=["HS256"],
-                options={"verify_aud": False} # Souvent nécessaire car l'audience est 'authenticated'
-            )
-        except Exception as e:
-            # Au lieu de bloquer avec une exception, on retourne None
-            # Cela permet aux vues avec 'AllowAny' de fonctionner même si le token est expiré.
-            # Les vues protégées bloqueront de toute façon plus tard.
-            print(f"[AUTH] Token validation failed: {str(e)}")
+        # Stratégie 1 : Validation via API Supabase (méthode préférée)
+        user_data = self._get_user_from_supabase_api(token)
+
+        # Stratégie 2 : Décodage JWT local (fallback)
+        if user_data is None:
+            user_data = self._get_user_from_jwt_decode(token)
+
+        if user_data is None:
+            print(f"[AUTH FAILED] Token rejected by all methods.")
             return None
 
-        # Extraction de l'UID (champ 'sub' standard JWT)
-        uid = payload.get('sub')
+        uid = user_data.get('sub')
         if not uid:
-            raise exceptions.AuthenticationFailed('UID (sub) manquant dans le token Supabase.')
+            raise exceptions.AuthenticationFailed('UID (sub) manquant dans le token.')
 
-        # Récupération des custom claims
-        # Dans Supabase, les rôles peuvent être dans 'role', 'app_metadata' ou 'user_metadata'
-        app_metadata = payload.get('app_metadata', {})
-        user_metadata = payload.get('user_metadata', {})
-        
-        # Priorité : app_metadata.role > user_metadata.role > payload.role > default
-        # Note: Dans Supabase, 'role' est souvent simplement 'authenticated' par défaut, 
-        # on ne doit l'utiliser que si rien d'autre n'est défini ou si c'est une valeur spécifique.
-        
-        role = 'etudiant' # Défaut
-        
-        if app_metadata.get('role'):
-            role = app_metadata.get('role')
-        elif user_metadata.get('role'):
-            role = user_metadata.get('role')
-        elif payload.get('role') and payload.get('role') != 'authenticated':
-            role = payload.get('role')
-        
-        if isinstance(role, list):
-            role = str(role[0]).lower().strip() if role else 'etudiant'
-        else:
-            role = str(role).lower().strip()
+        email = user_data.get('email', '')
+        role = _extract_role(user_data)
+
+        # Bypass propriétaire
+        if email == 'taigermboumba@gmail.com':
+            role = 'super_admin'
 
         # Récupération ou création de l'utilisateur Django local
-        user, created = User.objects.get_or_create(username=uid)
-        
-        # Email de l'utilisateur
-        email = payload.get('email')
+        user, _ = User.objects.get_or_create(username=uid)
         if email:
             user.email = email
-            # Force ADMIN pour le propriétaire
-            if email == 'taigermboumba@gmail.com':
-                role = 'super_admin'
-        
-        # On attache les métadonnées pour que les permissions puissent les lire
-        user.role = role
-        user.supabase_claims = payload
-        user.firebase_claims = payload # Compatibilité avec l'ancien code
-        
-        # Bypass ultime pour le propriétaire
-        if user.email == 'taigermboumba@gmail.com':
+        if email == 'taigermboumba@gmail.com':
             user.is_superuser = True
             user.is_staff = True
-            
-        user.save() # Persister l'email et potentiellement d'autres infos
-        
-        # Log détaillé (visible sur Render)
-        print(f"[AUTH SUCCESS] UID: {uid} | Email: {user.email} | Detected Role: {role}")
-        print(f"[AUTH CLAIMS] App Meta: {app_metadata} | User Meta: {user_metadata} | Global Role: {payload.get('role')}")
-        
-        return (user, payload)
+
+        user.role = role
+        user.supabase_claims = user_data
+        user.firebase_claims = user_data
+        user.save()
+
+        print(f"[AUTH SUCCESS] UID: {uid} | Email: {email} | Role: {role}")
+        print(f"[AUTH CLAIMS] App: {user_data.get('app_metadata')} | User: {user_data.get('user_metadata')}")
+
+        return (user, user_data)
