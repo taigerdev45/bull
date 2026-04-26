@@ -309,8 +309,8 @@ const handleLogin = async () => {
 
 .premium-card {
   flex: 1;
-  background: rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
   padding: 3rem 1.5rem;
@@ -321,31 +321,31 @@ const handleLogin = async () => {
   text-align: center;
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   cursor: pointer;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
 }
 
 .premium-card:hover {
-  transform: translateY(-12px);
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 1);
+  border-color: white;
+  color: black;
 }
 
-/* Borders colorés en bas */
-.etudiant-border { border-bottom: 6px solid #3b82f6; }
-.enseignant-border { border-bottom: 6px solid #10b981; }
-.secretariat-border { border-bottom: 6px solid #8b5cf6; }
-.admin-border { border-bottom: 6px solid #f59e0b; }
+/* Borders monochrome */
+.etudiant-border { border-bottom: 6px solid #ffffff; }
+.enseignant-border { border-bottom: 6px solid #cccccc; }
+.secretariat-border { border-bottom: 6px solid #999999; }
+.admin-border { border-bottom: 6px solid #666666; }
 
 .premium-card h2 {
   font-size: 1.8rem;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 1.25rem;
 }
 
 .premium-card p {
   font-size: 1rem;
   line-height: 1.6;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 /* Login Overlay */
@@ -355,26 +355,24 @@ const handleLogin = async () => {
 }
 
 .glass-morphism {
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: white;
   border-radius: 2rem;
   padding: 4rem 3rem;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+  color: black;
 }
 
 .back-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: #666;
   font-size: 0.9rem;
   cursor: pointer;
   margin-bottom: 2.5rem;
   padding: 0;
-  transition: color 0.2s;
 }
 
-.back-btn:hover { color: white; }
+.back-btn:hover { color: black; }
 
 .role-badge {
   display: inline-block;
@@ -384,31 +382,28 @@ const handleLogin = async () => {
   font-weight: 800;
   text-transform: uppercase;
   margin-bottom: 1.5rem;
+  background: #f1f5f9;
+  color: black;
 }
 
-.etudiant-badge { background: #3b82f633; color: #60a5fa; }
-.enseignant-badge { background: #10b98133; color: #34d399; }
-.secretariat-badge { background: #8b5cf633; color: #a78bfa; }
-.admin-badge { background: #f59e0b33; color: #fbbf24; }
-
 .form-group { margin-bottom: 1.5rem; }
-.form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.75rem; color: #cbd5e1; }
+.form-group label { display: block; font-size: 0.9rem; margin-bottom: 0.75rem; color: #333; font-weight: 600; }
 .form-group input {
   width: 100%;
-  padding: 1rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 0.8rem;
-  color: white;
+  color: black;
   transition: all 0.3s;
 }
 
-.form-group input:focus { border-color: #3b82f6; outline: none; background: #0f172a; }
+.form-group input:focus { border-color: black; outline: none; background: white; }
 
 .login-btn {
   width: 100%;
   padding: 1.25rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: black;
   color: white;
   font-weight: 800;
   border-radius: 0.8rem;

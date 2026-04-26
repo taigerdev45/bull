@@ -2,39 +2,47 @@
   <div class="dashboard-container">
     <div class="welcome-banner">
       <div class="welcome-text">
-        <h1>Espace Secrétariat 👋</h1>
+        <h1>Espace Secrétariat</h1>
         <p>Gestion administrative et suivi des résultats ASUR.</p>
       </div>
       <div class="current-semestre-badge">
-        <span>Session Actuelle :</span>
+        <span>Session :</span>
         <strong>2025-2026</strong>
       </div>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card-p">
-        <div class="s-icon">🎓</div>
+        <div class="s-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>
+        </div>
         <div class="s-info">
           <span class="s-label">Étudiants</span>
           <span class="s-value">{{ studentCount }}</span>
         </div>
       </div>
       <div class="stat-card-p">
-        <div class="s-icon">🕒</div>
+        <div class="s-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
         <div class="s-info">
           <span class="s-label">Absences (S5)</span>
           <span class="s-value">{{ totalAbsences }}h</span>
         </div>
       </div>
       <div class="stat-card-p">
-        <div class="s-icon">👨‍🏫</div>
+        <div class="s-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+        </div>
         <div class="s-info">
           <span class="s-label">Corps Enseignant</span>
           <span class="s-value">{{ teacherCount }}</span>
         </div>
       </div>
       <div class="stat-card-p">
-        <div class="s-icon">📄</div>
+        <div class="s-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>
+        </div>
         <div class="s-info">
           <span class="s-label">PVs Générés</span>
           <span class="s-value">12</span>
@@ -116,22 +124,21 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #000046, #1cb5e0);
-  padding: 2.5rem;
+  background: var(--bg-sidebar);
+  padding: 3rem;
   border-radius: var(--radius-xl);
   color: white;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
 }
 
-.welcome-text h1 { font-size: 2rem; font-weight: 800; margin: 0; }
-.welcome-text p { opacity: 0.9; font-size: 1.1rem; margin-top: 0.5rem; }
+.welcome-text h1 { font-size: 2.2rem; font-weight: 800; margin: 0; }
+.welcome-text p { opacity: 0.6; font-size: 1.1rem; margin-top: 0.5rem; }
 
 .current-semestre-badge {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  padding: 0.75rem 1.5rem;
-  border-radius: 999px;
-  display: flex; gap: 0.5rem; align-items: center;
+  background: rgba(255,255,255,0.1);
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  display: flex; gap: 0.75rem; align-items: center;
   border: 1px solid rgba(255,255,255,0.2);
 }
 
@@ -152,10 +159,20 @@ onMounted(async () => {
   box-shadow: var(--shadow-sm);
 }
 
-.s-icon { font-size: 2rem; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 12px; }
+.s-icon { 
+  font-size: 1.5rem; 
+  width: 50px; 
+  height: 50px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  background: #f1f5f9; 
+  border-radius: 12px; 
+  color: black;
+}
 .s-info { display: flex; flex-direction: column; }
-.s-label { font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-.s-value { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+.s-label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.s-value { font-size: 1.5rem; font-weight: 800; color: black; }
 
 .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
 

@@ -10,7 +10,7 @@ export default defineNuxtConfig({
       name: 'Bull ASUR',
       short_name: 'BullASUR',
       description: 'Système de Gestion des Notes et Bulletins Académiques',
-      theme_color: '#1e40af',
+      theme_color: '#000000',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',

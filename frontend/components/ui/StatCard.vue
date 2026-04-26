@@ -1,15 +1,17 @@
 <template>
   <div class="stat-card">
-    <div class="stat-icon" :style="{ backgroundColor: color + '15', color: color }">
+    <div class="stat-icon-monochrome">
       <slot name="icon">📊</slot>
     </div>
     <div class="stat-info">
       <span class="stat-label">{{ label }}</span>
       <h3 class="stat-value">{{ value }}</h3>
-      <p v-if="trend" class="stat-trend" :class="trendClass">
-        {{ trend > 0 ? '↑' : '↓' }} {{ Math.abs(trend) }}% 
+      <div v-if="trend" class="trend-container">
+        <span class="stat-trend" :class="trendClass">
+          {{ trend > 0 ? '↑' : '↓' }} {{ Math.abs(trend) }}%
+        </span>
         <span class="trend-text">ce mois</span>
-      </p>
+      </div>
     </div>
   </div>
 </template>
@@ -27,28 +29,31 @@ const trendClass = computed(() => props.trend > 0 ? 'trend-up' : 'trend-down')
 
 <style scoped>
 .stat-card {
-  background: var(--bg-surface);
-  padding: 1.5rem;
+  background: white;
+  padding: 1.75rem;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 1.5rem;
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
+  transition: all 0.3s;
 }
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: black;
 }
-.stat-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: var(--radius-md);
+.stat-icon-monochrome {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  background: #f1f5f9;
+  color: black;
+  font-size: 1.4rem;
 }
 .stat-info {
   display: flex;
@@ -56,22 +61,29 @@ const trendClass = computed(() => props.trend > 0 ? 'trend-up' : 'trend-down')
 }
 .stat-label {
   font-size: 0.75rem;
-  color: var(--text-secondary);
-  font-weight: 600;
+  color: #64748b;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .stat-value {
-  font-size: 1.75rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  color: var(--text-primary);
-  margin: 0.1rem 0;
+  color: black;
+  margin: 0.2rem 0;
+}
+.trend-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .stat-trend {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
-.trend-up { color: #10b981; }
-.trend-down { color: #ef4444; }
-.trend-text { color: var(--text-muted); font-weight: 400; }
+.trend-up { background: #f1f5f9; color: black; }
+.trend-down { background: #f1f5f9; color: #666; }
+.trend-text { color: #94a3b8; font-size: 0.75rem; }
 </style>

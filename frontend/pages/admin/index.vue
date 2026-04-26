@@ -2,8 +2,8 @@
   <div class="dashboard-container">
     <div class="welcome-banner">
       <div class="welcome-text">
-        <h1>Bon retour, Administrateur 👋</h1>
-        <p>Voici un aperçu de l'activité globale de Bull ASUR.</p>
+        <h1>Bon retour, Administrateur</h1>
+        <p>Aperçu de l'activité globale du système.</p>
       </div>
       <div class="current-semestre-badge">
         <span>Semestre Actif :</span>
@@ -12,17 +12,25 @@
     </div>
 
     <div class="stats-grid">
-      <StatCard label="Étudiants Inscrits" value="128" :trend="12" color="#2563eb">
-        <template #icon>👨‍🎓</template>
+      <StatCard label="Étudiants Inscrits" value="128" :trend="12">
+        <template #icon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>
+        </template>
       </StatCard>
-      <StatCard label="Matières Actives" value="16" :trend="0" color="#7c3aed">
-        <template #icon>📖</template>
+      <StatCard label="Matières Actives" value="16" :trend="0">
+        <template #icon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>
+        </template>
       </StatCard>
-      <StatCard label="Notes Saisies" value="1,240" :trend="8" color="#10b981">
-        <template #icon>📝</template>
+      <StatCard label="Notes Saisies" value="1,240" :trend="8">
+        <template #icon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        </template>
       </StatCard>
-      <StatCard label="Taux Absences" value="2.4%" :trend="-5" color="#ef4444">
-        <template #icon>⚠️</template>
+      <StatCard label="Taux Absences" value="2.4%" :trend="-5">
+        <template #icon>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </template>
       </StatCard>
     </div>
 
@@ -51,20 +59,28 @@
         </div>
         <div class="card-body">
           <div class="action-buttons">
-            <NuxtLink to="/etudiants" class="action-btn-p">
-              <span class="a-icon">➕</span>
+            <NuxtLink to="/secretariat/etudiants" class="action-btn-p">
+              <span class="a-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="16" y1="11" x2="22" y2="11"></line></svg>
+              </span>
               Inscrire Étudiant
             </NuxtLink>
-            <NuxtLink to="/referentiels" class="action-btn-p">
-              <span class="a-icon">🔍</span>
+            <NuxtLink to="/admin/referentiels" class="action-btn-p">
+              <span class="a-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </span>
               Manager UEs
             </NuxtLink>
             <NuxtLink to="/admin/logs" class="action-btn-p">
-              <span class="a-icon">📑</span>
+              <span class="a-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+              </span>
               Consultation Logs
             </NuxtLink>
             <NuxtLink to="/profil" class="action-btn-p">
-              <span class="a-icon">⚙️</span>
+              <span class="a-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"></path></svg>
+              </span>
               Configuration profil
             </NuxtLink>
           </div>
@@ -90,23 +106,22 @@ useHead({ title: 'Dashboard | Bull ASUR' })
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-  padding: 2.5rem;
+  background: var(--bg-sidebar);
+  padding: 3rem;
   border-radius: var(--radius-xl);
   color: white;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
-.welcome-text h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-.welcome-text p { opacity: 0.8; font-size: 1.1rem; }
+.welcome-text h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+.welcome-text p { opacity: 0.6; font-size: 1.1rem; }
 
 .current-semestre-badge {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  padding: 0.75rem 1.5rem;
-  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  padding: 1rem 2rem;
+  border-radius: 12px;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-items: center;
   border: 1px solid rgba(255,255,255,0.2);
 }

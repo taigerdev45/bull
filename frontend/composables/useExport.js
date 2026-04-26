@@ -1,3 +1,4 @@
+// Imports client-side uniquement
 import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
@@ -9,13 +10,18 @@ export const useExport = () => {
    * @param {String} filename - Nom du fichier de sortie
    */
   const exportToExcel = (data, filename = 'export.xlsx') => {
+    if (!process.client) return
     if (!data || !data.length) return alert("Aucune donnée à exporter")
     
-    // Nettoyage optionnel des données pour le plat (json_to_sheet aime les objets plats)
-    const worksheet = XLSX.utils.json_to_sheet(data)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Données')
-    XLSX.writeFile(workbook, filename)
+    try {
+      const worksheet = XLSX.utils.json_to_sheet(data)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Données')
+      XLSX.writeFile(workbook, filename)
+    } catch (error) {
+      console.error("Erreur lors de l'export Excel:", error)
+      alert("Erreur lors de la génération du fichier Excel.")
+    }
   }
 
   /**
@@ -26,6 +32,7 @@ export const useExport = () => {
    * @param {String} orientation - 'p' (portrait) ou 'l' (landscape)
    */
   const exportToPDF = (headers, rows, filename = 'export.pdf', orientation = 'p') => {
+    if (!process.client) return
     if (!rows || !rows.length) return alert("Aucune donnée à exporter")
 
     const doc = new jsPDF({
