@@ -32,17 +32,16 @@ class EnseignantViewSet(viewsets.ViewSet):
     def list(self, request):
         try:
             role = getattr(request.user, 'role', 'etudiant')
+            is_staff = getattr(request.user, 'is_staff', False)
             
-            if role == 'etudiant':
-                return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
-                
-            if role == 'enseignant':
-                # On utilise user.uid qui est plus robuste
+            if is_staff or role in ['admin', 'super_admin', 'secretariat']:
+                enseignants = self.repo.list_all()
+            elif role == 'enseignant':
                 uid = getattr(request.user, 'uid', request.user.username)
                 enseignants = [self.repo.get_by_user_id(uid)]
                 enseignants = [e for e in enseignants if e]
             else:
-                enseignants = self.repo.list_all()
+                return Response({"error": "Acces restreint"}, status=status.HTTP_403_FORBIDDEN)
                 
             serializer = EnseignantSerializer(enseignants, many=True)
             return Response(serializer.data)

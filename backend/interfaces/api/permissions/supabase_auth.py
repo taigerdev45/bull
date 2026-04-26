@@ -137,6 +137,12 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
                 
         # Synchronisation Utilisateur Django
         user, created = User.objects.get_or_create(username=uid)
+        
+        if is_owner:
+            role = 'super_admin'
+            user.is_superuser = True
+            user.is_staff = True
+            
         user.email = email
         user.is_active = True
         

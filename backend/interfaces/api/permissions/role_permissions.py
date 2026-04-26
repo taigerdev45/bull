@@ -9,19 +9,39 @@ class IsSuperAdmin(permissions.BasePermission):
 
 class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not (request.user and request.user.is_authenticated):
+        is_auth = request.user and request.user.is_authenticated
+        if not is_auth:
             return False
+        
         role = str(getattr(request.user, 'role', '')).lower().strip()
-        # On autorise si le rôle est 'admin' OU si l'utilisateur est is_staff/superuser
-        return role in ['super_admin', 'admin'] or request.user.is_staff or request.user.is_superuser or request.user.email == 'taigermboumba@gmail.com'
+        email = str(request.user.email).lower().strip()
+        is_staff = request.user.is_staff
+        is_superuser = request.user.is_superuser
+        
+        allow = role in ['super_admin', 'admin'] or is_staff or is_superuser or email == 'taigermboumba@gmail.com'
+        
+        if not allow:
+            print(f"[PERM DENIED] IsAdmin | Path: {request.path} | Email: {email} | Role: {role} | Staff: {is_staff} | Super: {is_superuser}")
+        
+        return allow
 
 class IsSecretariat(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not (request.user and request.user.is_authenticated):
+        is_auth = request.user and request.user.is_authenticated
+        if not is_auth:
             return False
+            
         role = str(getattr(request.user, 'role', '')).lower().strip()
-        # On autorise si le rôle est admin/secretariat OU si l'utilisateur est is_staff/superuser
-        return role in ['super_admin', 'admin', 'secretariat'] or request.user.is_staff or request.user.is_superuser or request.user.email == 'taigermboumba@gmail.com'
+        email = str(request.user.email).lower().strip()
+        is_staff = request.user.is_staff
+        is_superuser = request.user.is_superuser
+        
+        allow = role in ['super_admin', 'admin', 'secretariat'] or is_staff or is_superuser or email == 'taigermboumba@gmail.com'
+
+        if not allow:
+            print(f"[PERM DENIED] IsSecretariat | Path: {request.path} | Email: {email} | Role: {role} | Staff: {is_staff} | Super: {is_superuser}")
+            
+        return allow
 
 class IsEnseignant(permissions.BasePermission):
     def has_permission(self, request, view):
