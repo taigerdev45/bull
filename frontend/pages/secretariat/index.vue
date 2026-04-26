@@ -154,7 +154,7 @@ onMounted(async () => {
 .s-head .icon { font-size: 1.5rem; }
 .s-head h3 { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; }
 
-.s-body .value { font-size: 4rem; font-weight: 900; letter-spacing: -3px; line-height: 1; display: block; margin-bottom: 0.5rem; color: #000; }
+.s-body .value { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; line-height: 1; display: block; margin-bottom: 0.5rem; color: #000; }
 .s-body .meta { font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
 
 .main-grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }

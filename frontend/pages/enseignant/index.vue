@@ -61,7 +61,7 @@ useHead({ title: 'Dashboard Enseignant | Bull ASUR' })
 .stat-icon.modules { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
 .stat-icon.grades { background-color: rgba(37, 99, 235, 0.1); color: #3b82f6; }
 .stat-icon.alert { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.stat-content h3 { font-size: 1.8rem; font-weight: 700; line-height: 1.2; }
+.stat-content h3 { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
 .stat-content p { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; }
 .actions-panel h3 { font-size: 1.2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
 .shortcut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }

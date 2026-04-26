@@ -67,7 +67,7 @@ const trendClass = computed(() => props.trend > 0 ? 'trend-up' : 'trend-down')
   letter-spacing: 0.5px;
 }
 .stat-value {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: black;
   margin: 0.2rem 0;

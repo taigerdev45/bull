@@ -331,7 +331,7 @@ onMounted(loadEtudiants)
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; margin-bottom: 4rem; }
 .stat-card { padding: 3rem 2rem; text-align: center; border: 1px solid #f1f5f9; background: #fff; }
-.stat-card h4 { font-size: 4rem; font-weight: 900; letter-spacing: -4px; color: #000; line-height: 0.8; margin-bottom: 1rem; }
+.stat-card h4 { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; color: #000; line-height: 1; margin-bottom: 1rem; }
 .stat-card p { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #64748b; }
 
 .actions-section { padding: 4rem 3rem; margin-bottom: 5rem; }

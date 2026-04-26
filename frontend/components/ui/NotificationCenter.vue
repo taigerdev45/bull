@@ -51,14 +51,25 @@ import { ref, computed } from 'vue'
 
 const isOpen = ref(false)
 
-// Simulation de données (Idéalement via un Store Pinia ou Composable)
+// Simulation de données avec timestamps
 const notifications = ref([
-  { id: 1, type: 'grade', title: 'Nouvelle Note', message: 'Votre note de Java a été publiée : 16.5/20', time: 'Il y a 10 min', read: false },
-  { id: 2, type: 'absence', title: 'Alerte Absence', message: 'Une absence a été signalée en Mathématiques.', time: 'Hier', read: false },
-  { id: 3, type: 'system', title: 'Sécurité', message: 'Connexion détectée depuis un nouvel appareil.', time: 'Il y a 2 jours', read: true }
+  { id: 1, type: 'grade', title: 'Nouvelle Note', message: 'Votre note de Java a été publiée : 16.5/20', time: 'Il y a 10 min', read: false, createdAt: Date.now() },
+  { id: 2, type: 'absence', title: 'Alerte Absence', message: 'Une absence a été signalée en Mathématiques.', time: 'Hier', read: false, createdAt: Date.now() - 86400000 },
+  { id: 3, type: 'system', title: 'Sécurité', message: 'Connexion détectée depuis un nouvel appareil.', time: 'Il y a 5 jours', read: true, createdAt: Date.now() - (5 * 86400000) }
 ])
 
 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+
+onMounted(() => {
+  // Auto-cleanup: Supprimer les notifications lues de plus de 4 jours
+  const fourDaysInMs = 4 * 24 * 60 * 60 * 1000
+  const now = Date.now()
+  
+  notifications.value = notifications.value.filter(n => {
+    const isOld = (now - n.createdAt) > fourDaysInMs
+    return !(n.read && isOld)
+  })
+})
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value

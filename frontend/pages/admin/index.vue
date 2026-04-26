@@ -113,7 +113,7 @@ useHead({ title: 'Dashboard | Bull ASUR' })
   box-shadow: 0 20px 40px rgba(0,0,0,0.2);
 }
 
-.welcome-text h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+.welcome-text h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 0.5rem; }
 .welcome-text p { opacity: 0.6; font-size: 1.1rem; }
 
 .current-semestre-badge {
