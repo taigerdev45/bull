@@ -126,6 +126,7 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
             user.is_staff = True
 
         user.role = role
+        user.uid = uid
         user.supabase_claims = user_data
         user.firebase_claims = user_data
         user.save()

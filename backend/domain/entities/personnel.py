@@ -21,6 +21,14 @@ class Personnel(BaseEntity):
         self._user_id = user_id
 
     @property
+    def nom(self) -> str:
+        return self._nom
+
+    @property
+    def prenom(self) -> str:
+        return self._prenom
+
+    @property
     def nom_complet(self) -> str:
         return f"{self._prenom} {self._nom}"
 
