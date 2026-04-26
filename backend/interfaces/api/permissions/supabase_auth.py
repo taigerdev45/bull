@@ -37,6 +37,7 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
             service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
             if not supabase_url or not service_key:
+                print(f"[AUTH ERROR] Supabase Keys are MISSING in environment variables.")
                 return None
 
             client = create_client(supabase_url, service_key)

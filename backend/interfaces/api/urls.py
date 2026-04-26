@@ -15,6 +15,7 @@ from interfaces.api.views.enseignant_view import EnseignantViewSet
 from interfaces.api.views.auth_view import ChangePasswordView, LoginView
 from interfaces.api.views.me_view import MeView
 from interfaces.api.views.debug_auth_view import DebugAuthView
+from interfaces.api.views.list_personnel_view import ListPersonnelDebugView
 from interfaces.api.views.personnel_viewset import PersonnelViewSet
 from application.startup import initialiser_abonnements
 
@@ -37,6 +38,7 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/me/', MeView.as_view(), name='me'),
     path('auth/debug/', DebugAuthView.as_view(), name='debug_auth'),
+    path('auth/list-personnel/', ListPersonnelDebugView.as_view(), name='list_personnel_debug'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('resultats/semestre/<str:etudiant_id>/', ResultatSemestreView.as_view()),
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),

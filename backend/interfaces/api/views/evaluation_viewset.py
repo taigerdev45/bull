@@ -37,10 +37,10 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             
         repo = self._get_repo()
         
-        # On utilise le rôle attaché à l'objet User (qui peut être forcé par SupabaseAuthService)
+        is_staff = getattr(user, 'is_staff', False)
         role = getattr(user, 'role', 'etudiant')
         
-        if role in ['admin', 'super_admin', 'secretariat']:
+        if is_staff or role in ['admin', 'super_admin', 'secretariat']:
             return repo.obtenir_tout() if hasattr(repo, 'obtenir_tout') else []
             
         claims = getattr(user, 'firebase_claims', {})
@@ -102,7 +102,7 @@ class EvaluationViewSet(viewsets.ModelViewSet):
                 matiere_id=item.get('matiere_id'),
                 type_eval=item.get('type'),
                 note=item.get('note'),
-                saisie_par=request.user.uid
+                saisie_par=request.user.username
             )
             commands.append(cmd)
             
@@ -131,10 +131,11 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='matiere/(?P<matiere_id>[^/.]+)')
     def list_par_matiere(self, request, matiere_id=None):
         """Notes d'une matière spécifique."""
+        # Seule une personne autorisée peut lister par matière
+        is_staff = getattr(request.user, 'is_staff', False)
         role = getattr(request.user, 'role', 'etudiant')
         
-        # Seul le staff ou les enseignants peuvent lister par matière
-        if role == 'etudiant':
+        if not is_staff and role == 'etudiant':
             return Response({"error": "Action réservée au staff"}, status=status.HTTP_403_FORBIDDEN)
             
         evals = self._get_repo().obtenir_par_matiere(matiere_id)
