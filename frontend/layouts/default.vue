@@ -1,7 +1,10 @@
 <template>
   <div class="app-layout">
+    <!-- Overlay pour Mobile -->
+    <div v-if="isSidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
+
     <!-- Sidebar Premium -->
-    <aside class="sidebar">
+    <aside class="sidebar" :class="{ 'is-open': isSidebarOpen }">
       <div class="sidebar-brand">
         <div class="logo-box">
           <span class="logo-text">B</span>
@@ -10,12 +13,14 @@
           <h1>Bull ASUR</h1>
           <p>Gestion Académique</p>
         </div>
+        <!-- Bouton fermer sur mobile -->
+        <button class="mobile-close" @click="closeSidebar">✕</button>
       </div>
 
       <nav class="sidebar-nav">
         <div class="nav-section">
           <span class="nav-section-title">Menu Principal</span>
-          <NuxtLink :to="`/${currentRole}`" class="nav-link">
+          <NuxtLink :to="`/${currentRole}`" class="nav-link" @click="closeSidebar">
             <span class="nav-icon">🏠</span>
             Dashboard
           </NuxtLink>
@@ -23,7 +28,7 @@
 
         <div class="nav-section">
           <span class="nav-section-title">Gestion</span>
-          <NuxtLink v-for="link in allowedLinks" :key="link.path" :to="link.path" class="nav-link">
+          <NuxtLink v-for="link in allowedLinks" :key="link.path" :to="link.path" class="nav-link" @click="closeSidebar">
             <span class="nav-icon">{{ link.icon }}</span>
             {{ link.label }}
           </NuxtLink>
@@ -50,6 +55,10 @@
     <div class="main-wrapper">
       <header class="navbar">
         <div class="navbar-left">
+          <!-- Bouton Menu Hamburger -->
+          <button class="hamburger-btn" @click="toggleSidebar">
+            <span>☰</span>
+          </button>
           <h2 class="page-title">{{ currentRoute }}</h2>
         </div>
         <div class="navbar-right">
@@ -74,13 +83,27 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import NotificationSystem from '~/components/ui/NotificationSystem.vue'
 
 const route = useRoute()
+const isSidebarOpen = ref(false)
 const currentRole = useCookie('authRole', { default: () => 'etudiant' })
-const userName = useCookie('authName') // On suppose qu'on a stocké le nom
+const userName = useCookie('authName')
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
+
+const closeSidebar = () => {
+  isSidebarOpen.value = false
+}
+
+// Fermer la sidebar lors du changement de route (mobile)
+watch(() => route.path, () => {
+  closeSidebar()
+})
 
 const avatarColor = computed(() => {
   const colors = ['#2563eb', '#10b981', '#f59e0b', '#7c3aed', '#db2777']
@@ -95,15 +118,15 @@ const currentRoute = computed(() => {
 })
 
 const allLinks = [
-  { path: '/etudiants', label: 'Étudiants', icon: '🎓', roles: ['admin', 'secretariat'] },
-  { path: '/secretariat/absences', label: 'Absences', icon: '🕒', roles: ['admin', 'secretariat'] },
-  { path: '/secretariat/enseignants', label: 'Enseignants', icon: '👨‍🏫', roles: ['admin', 'secretariat'] },
-  { path: '/deliberations', label: 'Délibérations', icon: '⚖️', roles: ['admin', 'secretariat'] },
-  { path: '/referentiels', label: 'Référentiels', icon: '⚙️', roles: ['admin', 'secretariat'] },
-  { path: '/bulletins', label: 'Bulletins', icon: '📄', roles: ['admin', 'secretariat', 'etudiant', 'enseignant'] },
-  { path: '/saisie', label: 'Saisie Notes', icon: '📝', roles: ['admin', 'secretariat', 'enseignant'] },
+  { path: '/etudiants', label: 'Étudiants', icon: '🎓', roles: ['admin', 'secretariat', 'super_admin', 'staff'] },
+  { path: '/secretariat/absences', label: 'Absences', icon: '🕒', roles: ['admin', 'secretariat', 'super_admin', 'staff'] },
+  { path: '/secretariat/enseignants', label: 'Enseignants', icon: '👨‍🏫', roles: ['admin', 'secretariat', 'super_admin', 'staff'] },
+  { path: '/deliberations', label: 'Délibérations', icon: '⚖️', roles: ['admin', 'secretariat', 'super_admin', 'staff'] },
+  { path: '/referentiels', label: 'Référentiels', icon: '⚙️', roles: ['admin', 'secretariat', 'super_admin', 'staff'] },
+  { path: '/bulletins', label: 'Bulletins', icon: '📄', roles: ['admin', 'secretariat', 'super_admin', 'staff', 'etudiant', 'enseignant'] },
+  { path: '/saisie', label: 'Saisie Notes', icon: '📝', roles: ['admin', 'secretariat', 'super_admin', 'staff', 'enseignant'] },
   { path: '/personnel', label: 'Personnel', icon: '👥', roles: ['admin', 'super_admin'] },
-  { path: '/profil', label: 'Profil', icon: '👤', roles: ['admin', 'secretariat', 'enseignant', 'etudiant'] }
+  { path: '/profil', label: 'Profil', icon: '👤', roles: ['admin', 'secretariat', 'super_admin', 'staff', 'enseignant', 'etudiant'] }
 ]
 
 const allowedLinks = computed(() => {
@@ -127,6 +150,21 @@ const logout = () => {
   min-height: 100vh;
 }
 
+/* Sidebar Overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Sidebar */
 .sidebar {
   width: var(--sidebar-width);
@@ -136,7 +174,8 @@ const logout = () => {
   flex-direction: column;
   position: fixed;
   top: 0; left: 0; bottom: 0;
-  z-index: 20;
+  z-index: 110;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-brand {
@@ -144,6 +183,17 @@ const logout = () => {
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
+}
+
+.mobile-close {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-left: auto;
 }
 
 .logo-box {
@@ -283,6 +333,7 @@ const logout = () => {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-main);
+  transition: margin 0.3s ease;
 }
 
 .navbar {
@@ -297,6 +348,22 @@ const logout = () => {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0.5rem;
 }
 
 .page-title {
@@ -357,8 +424,40 @@ const logout = () => {
   width: 100%;
 }
 
+/* Mobile Responsive Styles */
 @media (max-width: 1024px) {
-  .sidebar { transform: translateX(-100%); }
-  .main-wrapper { margin-left: 0; }
+  .sidebar { 
+    transform: translateX(-100%); 
+    width: 280px;
+  }
+  
+  .sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+  }
+
+  .main-wrapper { 
+    margin-left: 0; 
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+
+  .mobile-close {
+    display: block;
+  }
+
+  .navbar {
+    padding: 0 1rem;
+  }
+
+  .search-bar {
+    display: none; /* Cache la recherche sur mobile pour plus d'espace */
+  }
+
+  .page-content {
+    padding: 1rem;
+  }
 }
 </style>
