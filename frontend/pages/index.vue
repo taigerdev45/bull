@@ -273,8 +273,8 @@ const handleLogin = async () => {
 }
 
 .landing-logo {
-  height: 120px;
-  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+  height: 140px;
+  object-fit: contain;
 }
 
 @keyframes float {

@@ -109,40 +109,46 @@ const currentRoute = computed(() => {
 
 const allLinks = [
   { 
-    path: '/admin/referentiels', 
-    label: 'Architecture', 
-    roles: ['admin', 'super_admin'], 
-    iconSvg: '⚙️'
+    path: '/secretariat/edition-bulletins', 
+    label: 'Architecture Académique', 
+    roles: ['admin', 'super_admin', 'secretariat'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>'
   },
   { 
     path: '/secretariat/etudiants', 
     label: 'Registre Étudiants', 
     roles: ['admin', 'secretariat', 'super_admin'], 
-    iconSvg: '👥'
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>'
   },
   { 
     path: '/secretariat/enseignants', 
     label: 'Intervenants', 
     roles: ['admin', 'secretariat', 'super_admin'], 
-    iconSvg: '👨‍🏫'
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>'
   },
   { 
     path: '/secretariat/absences', 
     label: 'Journal Absences', 
     roles: ['admin', 'secretariat', 'super_admin'], 
-    iconSvg: '⌛'
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>'
   },
   { 
     path: '/secretariat/bulletins', 
     label: 'Bulletins & Jury', 
     roles: ['admin', 'secretariat', 'super_admin', 'etudiant', 'enseignant'], 
-    iconSvg: '📄'
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>'
   },
   { 
     path: '/secretariat/modification-notes', 
     label: 'Mise à jour Notes', 
     roles: ['admin', 'secretariat', 'super_admin', 'enseignant'], 
-    iconSvg: '✏️'
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
+  },
+  { 
+    path: '/profil', 
+    label: 'Mon Profil', 
+    roles: ['admin', 'secretariat', 'super_admin', 'enseignant', 'etudiant'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'
   }
 ]
 
