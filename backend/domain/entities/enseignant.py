@@ -18,8 +18,12 @@ class Enseignant(BaseEntity):
         self._matiere_ids: List[str] = []
 
     @property
-    def matricule(self) -> str:
-        return self._matricule
+    def nom(self) -> str:
+        return self._nom
+
+    @property
+    def prenom(self) -> str:
+        return self._prenom
 
     @property
     def user_id(self) -> Optional[str]:
