@@ -203,7 +203,7 @@ const logout = () => {
 .navbar-p { 
   height: 80px; background: rgba(255,255,255,0.8); backdrop-filter: blur(12px); 
   border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; 
-  justify-content: space-between; padding: 0 3rem; sticky: top: 0; z-index: 100;
+  justify-content: space-between; padding: 0 3rem; position: sticky; top: 0; z-index: 100;
 }
 
 .nav-left-p { display: flex; align-items: center; gap: 2rem; }
