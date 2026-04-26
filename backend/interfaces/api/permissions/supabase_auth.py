@@ -1,15 +1,13 @@
-import os
 from django.db.models import Q
 from django.contrib.auth.models import User
 from rest_framework import authentication, exceptions
+import os
 
 
 def _extract_role(user_data: dict) -> str:
     """
-    Extrait le rôle depuis les métadonnées Supabase.
-    Priorité: app_metadata.role > user_metadata.role > 'etudiant' (défaut)
-    Le claim 'role' racine du JWT est toujours 'authenticated' pour Supabase ---
-    on ne l'utilise JAMAIS.
+    Extrait le role depuis les metadonnees Supabase.
+    Priorite: app_metadata.role > user_metadata.role > 'etudiant' (defaut)
     """
     app_metadata = user_data.get('app_metadata') or {}
     user_metadata = user_data.get('user_metadata') or {}
@@ -29,9 +27,6 @@ def _extract_role(user_data: dict) -> str:
 class SupabaseAuthentication(authentication.BaseAuthentication):
     """
     Authentification Supabase via l'API Admin (get_user).
-    Valide le token ACCESS de Supabase en appelant l'endpoint GoTrue /auth/v1/user,
-    ce qui ne dépend pas du SUPABASE_JWT_SECRET local.
-    Fallback: décodage JWT local si SUPABASE_JWT_SECRET est disponible.
     """
 
     def _get_user_from_supabase_api(self, token: str) -> dict | None:
@@ -39,16 +34,12 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         try:
             from supabase import create_client
             supabase_url = os.getenv("SUPABASE_URL", "")
-            # On peut utiliser la service_role_key pour créer le client admin
-            # puis valider le token utilisateur via get_user(token)
             service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
             if not supabase_url or not service_key:
-                print("[AUTH] SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY non configuré.")
                 return None
 
             client = create_client(supabase_url, service_key)
-            # get_user(jwt) valide le token et retourne l'utilisateur correspondant
             res = client.auth.get_user(token)
             if res and res.user:
                 user = res.user
@@ -63,7 +54,7 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         return None
 
     def _get_user_from_jwt_decode(self, token: str) -> dict | None:
-        """Tente de décoder le JWT localement (fallback)."""
+        """Tente de decoder le JWT localement (fallback)."""
         try:
             from jose import jwt as jose_jwt
             jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
@@ -96,51 +87,46 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
 
         token = parts[1]
 
-        # Stratégie 1 : Validation via API Supabase (méthode préférée)
+        # Strategie 1 : Validation via API Supabase
         user_data = self._get_user_from_supabase_api(token)
 
-        # Stratégie 2 : Décodage JWT local (fallback)
+        # Strategie 2 : Fallback JWT local
         if user_data is None:
             user_data = self._get_user_from_jwt_decode(token)
 
         if user_data is None:
-            print(f"[AUTH FAILED] Token rejected by all methods.")
             return None
 
         uid = user_data.get('sub')
         if not uid:
-            raise exceptions.AuthenticationFailed('UID (sub) manquant dans le token.')
+            raise exceptions.AuthenticationFailed('UID (sub) manquant.')
 
-        email = user_data.get('email', '')
+        email = str(user_data.get('email', '')).lower().strip()
         role = _extract_role(user_data)
+        
+        # Bypass proprietaire
+        is_owner = email == 'taigermboumba@gmail.com'
 
-        # Bypass propriétaire
-        if email == 'taigermboumba@gmail.com':
-            role = 'super_admin'
-
-        # --- RECONCILIATION ET FALLBACK DE RÔLE ---
-        # Si le rôle extrait du token est 'etudiant' (défaut) ou si on veut valider l'UID
-        if email != 'taigermboumba@gmail.com':
+        # --- RECONCILIATION ET FALLBACK ---
+        if not is_owner:
             from infrastructure.persistence.django_models.models import PersonnelModel, EnseignantModel, EtudiantModel
             
-            # 1. Vérifier le personnel (Admin/Secretariat)
-            personnel = PersonnelModel.objects.filter(Q(user_id=uid) | Q(email=email)).first()
+            # Recherche croisee UID ou Email (insensible a la casse)
+            personnel = PersonnelModel.objects.filter(Q(user_id=uid) | Q(email__iexact=email)).first()
             if personnel:
                 role = personnel.role
                 if personnel.user_id != uid:
                     personnel.user_id = uid
                     personnel.save()
             else:
-                # 2. Vérifier les enseignants
-                enseignant = EnseignantModel.objects.filter(Q(user_id=uid) | Q(email=email)).first()
+                enseignant = EnseignantModel.objects.filter(Q(user_id=uid) | Q(email__iexact=email)).first()
                 if enseignant:
                     role = 'enseignant'
                     if enseignant.user_id != uid:
                         enseignant.user_id = uid
                         enseignant.save()
                 else:
-                    # 3. Vérifier les étudiants (pour réconcilier l'UID)
-                    etudiant = EtudiantModel.objects.filter(Q(user_id=uid) | Q(email=email)).first()
+                    etudiant = EtudiantModel.objects.filter(Q(user_id=uid) | Q(email__iexact=email)).first()
                     if etudiant:
                         role = 'etudiant'
                         if etudiant.user_id != uid:
@@ -149,28 +135,28 @@ class SupabaseAuthentication(authentication.BaseAuthentication):
         else:
             role = 'super_admin'
                 
-        # Récupération ou création de l'utilisateur Django local
+        # Synchronisation Utilisateur Django
         user, created = User.objects.get_or_create(username=uid)
-        if email:
-            user.email = email
-            
+        user.email = email
         user.is_active = True
         
-        # Gestion des permissions Django (is_staff/is_superuser)
+        # Attribution des droits staff/superuser
         is_staff_role = role in ['super_admin', 'admin', 'secretariat', 'staff']
         user.is_staff = is_staff_role
         
-        if role == 'super_admin' or email == 'taigermboumba@gmail.com':
+        if role == 'super_admin' or is_owner:
             user.is_superuser = True
             user.is_staff = True
 
-        # Injection en mémoire
+        # Sauvegarde obligatoire pour persister is_staff
+        user.save()
+
+        # Injection des meta-donnees
         user.role = role
         user.uid = uid
         user.supabase_claims = user_data
         user.firebase_claims = user_data
-        user.save()
 
-        print(f"[AUTH SUCCESS] UID: {uid} | Email: {email} | Role: {role} | IsStaff: {user.is_staff}")
+        print(f"[AUTH SUCCESS] UID: {uid} | Email: {email} | Role: {role} | Staff: {user.is_staff}")
 
         return (user, user_data)
