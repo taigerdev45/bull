@@ -44,7 +44,7 @@ export const useExport = () => {
       doc.text(`Date : ${new Date().toLocaleDateString()}`, doc.internal.pageSize.width - 60, 28)
 
       // Tableau Monochrome
-      doc.autoTable({
+      autoTable(doc, {
         head: [headers],
         body: rows,
         startY: 40,
@@ -90,7 +90,7 @@ export const useExport = () => {
       doc.text(`Date d'édition : ${new Date().toLocaleDateString()}`, 140, 60)
 
       // Tableau (Mock data pour l'exemple de structure)
-      doc.autoTable({
+      autoTable(doc, {
         startY: 70,
         head: [['Unité d\'Enseignement', 'Matière', 'Note / 20', 'Crédits', 'Obs']],
         body: [

@@ -61,7 +61,7 @@ export default defineNuxtConfig({
     devOptions: {
       enabled: true,
       suppressWarnings: true,
-      navigateFallbackAllowlist: [/^\/$/],
+      navigateFallbackAllowlist: [/^(?!\/__).*/], // Autorise tout sauf les chemins internes Firebase/ServiceWorker
       type: 'module'
     }
   },
@@ -69,15 +69,15 @@ export default defineNuxtConfig({
     head: {
       title: 'Bull ASUR - Excellence Académique',
       meta: [
-        { name: 'description', content: 'Modern SaaS platform for academic grading and bulletin generation.' },
+        { name: 'description', content: 'Plateforme SaaS moderne pour la gestion académique et la génération de bulletins.' },
         { name: 'theme-color', content: '#000000' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/icon.png' },
-        { rel: 'apple-touch-icon', href: '/icon.png' },
-        { rel: 'manifest', href: '/_nuxt/manifest.webmanifest' }
+        { rel: 'apple-touch-icon', href: '/icon.png' }
       ]
     }
   },

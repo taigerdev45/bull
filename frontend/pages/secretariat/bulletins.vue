@@ -209,7 +209,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useApi } from '~/composables/useApi'
 
 const { fetchApi } = useApi()
-const { exportToExcel, exportToPDF } = useExport()
+const { exportToExcel, exportToPDF, generateBulletin } = useExport()
 
 // État Global
 const etudiants = ref([])
