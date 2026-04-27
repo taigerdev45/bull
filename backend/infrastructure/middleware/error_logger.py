@@ -8,15 +8,6 @@ class DRFErrorLoggingMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-        if response.status_code == 400:
-            try:
-                body = request.body.decode('utf-8')
-            except:
-                body = "Unreadable body"
-            error_msg = f"[400 BAD REQUEST] Path: {request.path} | Body: {body} | Response: {response.data if hasattr(response, 'data') else 'No data'}"
-            logger.error(error_msg)
-            print(error_msg)
-
         if response.status_code == 403:
             user = request.user
             auth = getattr(request, 'auth', 'None')
