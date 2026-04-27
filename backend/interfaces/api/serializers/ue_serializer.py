@@ -18,7 +18,7 @@ class MatiereSerializer(serializers.Serializer):
 class UESerializer(serializers.Serializer):
     """Sérialiseur pour les Unités d'Enseignement (UE)."""
     id = serializers.CharField(read_only=True)
-    code = serializers.CharField(max_length=10)
+    code = serializers.CharField(max_length=50)
     libelle = serializers.CharField(max_length=200)
     credits = serializers.IntegerField(min_value=1)
     semestre_id = serializers.CharField()

@@ -32,7 +32,7 @@ class EnseignantModel(BasePersistenceModel):
     matricule = models.CharField(max_length=50, unique=True)
     numero_telephone = models.CharField(max_length=20, null=True, blank=True)
     specialite = models.CharField(max_length=200, null=True, blank=True)
-    user_id = models.CharField(max_length=128, unique=True, null=True, blank=True) # Firebase UID
+    user_id = models.CharField(max_length=128, unique=True, null=True, blank=True) # Supabase UID
     
     def __str__(self):
         return f"{self.prenom} {self.nom}"
@@ -52,7 +52,7 @@ class EtudiantModel(BasePersistenceModel):
     prenom = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     matricule = models.CharField(max_length=50, unique=True)
-    user_id = models.CharField(max_length=128, unique=True, null=True, blank=True) # Firebase UID
+    user_id = models.CharField(max_length=128, unique=True, null=True, blank=True) # Supabase UID
     date_naissance = models.DateField()
     lieu_naissance = models.CharField(max_length=200, null=True, blank=True)
     bac = models.CharField(max_length=100, null=True, blank=True)
@@ -96,7 +96,7 @@ class PersonnelModel(BasePersistenceModel):
     email = models.EmailField(unique=True)
     numero_telephone = models.CharField(max_length=20, null=True, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    user_id = models.CharField(max_length=128, unique=True) # Firebase UID
+    user_id = models.CharField(max_length=128, unique=True) # Supabase UID
     derniere_connexion = models.DateTimeField(null=True, blank=True)
     
     def __str__(self):
