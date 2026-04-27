@@ -92,14 +92,21 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     def bulk_creer(self, request):
         """Action pour la saisie multiple de notes."""
         data = request.data
-        if not isinstance(data, list):
-            return Response({"error": "Format invalide, une liste est attendue."}, status=status.HTTP_400_BAD_REQUEST)
+        evaluations_list = []
+        
+        # Support du format { evaluations: [...] } ou [...]
+        if isinstance(data, dict) and 'evaluations' in data:
+            evaluations_list = data['evaluations']
+        elif isinstance(data, list):
+            evaluations_list = data
+        else:
+            return Response({"error": "Format invalide. Liste ou objet {evaluations:[]} attendu."}, status=status.HTTP_400_BAD_REQUEST)
             
         commands = []
-        for item in data:
+        for item in evaluations_list:
             cmd = CreerEvaluationCommand(
                 etudiant_id=item.get('etudiant_id'),
-                matiere_id=item.get('matiere_id'),
+                matiere_id=item.get('matiere_id') or data.get('matiere_id'),
                 type_eval=item.get('type'),
                 note=item.get('note'),
                 saisie_par=request.user.username
