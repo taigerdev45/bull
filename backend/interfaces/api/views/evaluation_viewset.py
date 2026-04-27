@@ -140,14 +140,26 @@ class EvaluationViewSet(viewsets.ModelViewSet):
                 )
                 commands.append(cmd)
                 
-            if not commands:
-                return Response({"error": "Aucune donnée valide à enregistrer."}, status=status.HTTP_400_BAD_REQUEST)
-
-            self._get_handler().handle_bulk_creer(commands)
-            return Response({"status": "Notes enregistrées avec succès"}, status=status.HTTP_201_CREATED)
+            success_count = 0
+            errors = []
             
-        except (KeyError, ValueError) as e:
-            return Response({"error": f"Données invalides : {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+            for cmd in commands:
+                try:
+                    self._get_handler().handle_creer(cmd)
+                    success_count += 1
+                except Exception as e:
+                    errors.append({
+                        "etudiant_id": cmd.etudiant_id,
+                        "error": str(e)
+                    })
+
+            return Response({
+                "status": "Traitement terminé",
+                "success_count": success_count,
+                "error_count": len(errors),
+                "details": errors
+            }, status=status.HTTP_201_CREATED if success_count > 0 else status.HTTP_400_BAD_REQUEST)
+            
         except Exception as e:
             import traceback
             error_trace = traceback.format_exc()

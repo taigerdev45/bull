@@ -16,7 +16,9 @@
     <div class="stats-grid">
       <div class="stat-card premium-card">
         <div class="s-head">
-          <span class="icon">👥</span>
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"></path></svg>
+          </span>
           <h3>Effectif Global</h3>
         </div>
         <div class="s-body">
@@ -26,7 +28,9 @@
       </div>
       <div class="stat-card premium-card">
         <div class="s-head">
-          <span class="icon">⌛</span>
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </span>
           <h3>Heures d'Abscences</h3>
         </div>
         <div class="s-body">
@@ -36,7 +40,9 @@
       </div>
       <div class="stat-card premium-card">
         <div class="s-head">
-          <span class="icon">👨‍🏫</span>
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"></path></svg>
+          </span>
           <h3>Intervenants</h3>
         </div>
         <div class="s-body">
@@ -46,7 +52,9 @@
       </div>
       <div class="stat-card premium-card">
         <div class="s-head">
-          <span class="icon">📄</span>
+          <span class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6m-8 5h5m-5 4h5m-9-9h1"></path></svg>
+          </span>
           <h3>Documents</h3>
         </div>
         <div class="s-body">
@@ -155,8 +163,13 @@ onMounted(loadData)
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2rem; margin-bottom: 5rem; }
 .stat-card { padding: 3rem 2rem; background: #fff; }
-.s-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
-.s-head .icon { font-size: 1.5rem; }
+.s-head .icon { 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  opacity: 0.8;
+}
 .s-head h3 { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; }
 
 .s-body .value { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; line-height: 1; display: block; margin-bottom: 0.5rem; color: #000; }

@@ -26,31 +26,39 @@
 
     <div class="stats-overview">
       <div class="stat-card">
-        <div class="stat-icon success">🎓</div>
+        <div class="stat-icon-mono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+        </div>
         <div class="stat-details">
           <span class="label">Taux de Réussite</span>
-          <span class="value success">{{ stats.taux_reussite?.toFixed(1) }}%</span>
+          <span class="value-mono">{{ stats.taux_reussite?.toFixed(1) }}%</span>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon info">📊</div>
+        <div class="stat-icon-mono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24"><path d="M12 20V10M18 20V4M6 20v-4"></path></svg>
+        </div>
         <div class="stat-details">
           <span class="label">Moyenne Générale</span>
-          <span class="value">{{ stats.moyenne_classe?.toFixed(2) }}</span>
+          <span class="value-mono">{{ stats.moyenne_classe?.toFixed(2) }}</span>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon danger">📉</div>
+        <div class="stat-icon-mono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24"><path d="M23 18l-9-9-6 6-6-6"></path></svg>
+        </div>
         <div class="stat-details">
           <span class="label">Moyenne Min</span>
-          <span class="value">{{ stats.min_moyenne?.toFixed(2) }}</span>
+          <span class="value-mono">{{ stats.min_moyenne?.toFixed(2) }}</span>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon excellent">📈</div>
+        <div class="stat-icon-mono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24"><path d="M23 6l-9 9-6-6-6 6"></path></svg>
+        </div>
         <div class="stat-details">
           <span class="label">Moyenne Max</span>
-          <span class="value">{{ stats.max_moyenne?.toFixed(2) }}</span>
+          <span class="value-mono">{{ stats.max_moyenne?.toFixed(2) }}</span>
         </div>
       </div>
     </div>
@@ -139,7 +147,9 @@
                 </span>
               </td>
               <td class="center">
-                <button class="btn-icon" title="Voir Bulletin" @click="viewBulletin(res.id)">📄</button>
+                <button class="btn-icon" title="Voir Bulletin" @click="viewBulletin(res.id)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" style="margin: auto;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><path d="M14 2v6h6m-8 5h5m-5 4h5m-9-9h1"></path></svg>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -283,19 +293,17 @@ onMounted(fetchStats)
   transform: translateY(-5px);
 }
 
-.stat-icon {
+.stat-icon-mono {
   width: 56px;
   height: 56px;
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  background: #f1f5f9;
+  color: #000;
+  font-size: 1.2rem;
 }
-
-.stat-icon.success { background: #ecfdf5; }
-.stat-icon.info { background: #eff6ff; }
-.stat-icon.warning { background: #fffbeb; }
 
 .stat-details {
   display: flex;
@@ -303,19 +311,20 @@ onMounted(fetchStats)
 }
 
 .stat-details .label {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 600;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.stat-details .value {
+.stat-details .value-mono {
   font-size: 1.5rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-weight: 900;
+  color: #000;
 }
 
-.value.success { color: #10b981; }
+.value.success { color: #000; }
 
 .pv-card {
   background: white;
@@ -512,14 +521,14 @@ onMounted(fetchStats)
 .m-bar {
   height: 100%;
   border-radius: 5px;
-  background: #000080;
+  background: #000;
 }
 
 .m-bar.très-bien { background: #000; }
 .m-bar.bien { background: #1e293b; }
 .m-bar.assez-bien { background: #475569; }
 .m-bar.passable { background: #94a3b8; }
-.m-bar.ajourné { background: #ef4444; }
+.m-bar.ajourné { background: #cbd5e1; }
 
 .m-count {
   width: 30px;

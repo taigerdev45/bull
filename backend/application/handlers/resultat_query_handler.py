@@ -60,29 +60,33 @@ class ResultatQueryHandler:
         )
 
     def executer_stats_query(self, query: ObtenirStatsPromotionQuery) -> Dict:
-        # Récupération des résultats du semestre
-        from infrastructure.persistence.django_models.models import ResultatSemestreModel, ResultatUEModel, UEModel
-        from django.db.models import Avg, Max, Min, Count
+        from infrastructure.persistence.django_models.models import ResultatSemestreModel, ResultatUEModel
         
+        # Récupération optimisée avec prefetch
         qs = ResultatSemestreModel.objects.all().select_related('etudiant')
         if query.semestre:
             qs = qs.filter(numero_semestre=query.semestre)
             
+        # Récupération de tous les résultats d'UE du semestre en une seule fois
+        ues_results_all = ResultatUEModel.objects.filter(
+            ue__semestre_id=str(query.semestre)
+        ).select_related('ue', 'etudiant')
+        
+        # Indexation par étudiant pour accès rapide
+        ues_by_student = {}
+        for ur in ues_results_all:
+            sid = ur.etudiant.id
+            if sid not in ues_by_student:
+                ues_by_student[sid] = []
+            ues_by_student[sid].append(ur)
+
         resultats = []
         somme_moyennes = 0
         nb_valide = 0
-        
-        # Pour les stats par UE
         ues_stats = {} # {ue_code: [moyennes]}
-        
-        # Pour la distribution des mentions
         mentions_dist = {
-            "Excellent": 0,
-            "Très Bien": 0,
-            "Bien": 0,
-            "Assez Bien": 0,
-            "Passable": 0,
-            "Ajourné": 0
+            "Excellent": 0, "Très Bien": 0, "Bien": 0,
+            "Assez Bien": 0, "Passable": 0, "Ajourné": 0
         }
 
         for res in qs:
@@ -90,18 +94,16 @@ class ResultatQueryHandler:
             moyenne = res.valeur_moyenne
             somme_moyennes += moyenne
             
-            if moyenne >= 10:
-                nb_valide += 1
+            if moyenne >= 10: nb_valide += 1
                 
-            # Mention simple
             if moyenne >= 16: mentions_dist["Très Bien"] += 1
             elif moyenne >= 14: mentions_dist["Bien"] += 1
             elif moyenne >= 12: mentions_dist["Assez Bien"] += 1
             elif moyenne >= 10: mentions_dist["Passable"] += 1
             else: mentions_dist["Ajourné"] += 1
 
-            # Récupérer les moyennes d'UE
-            ues_res = ResultatUEModel.objects.filter(etudiant=etudiant, ue__semestre_id=str(res.numero_semestre))
+            # Utilisation du cache local au lieu de requêtes répétées
+            ues_res = ues_by_student.get(etudiant.id, [])
             
             detail_ues = {}
             for ur in ues_res:
