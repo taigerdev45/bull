@@ -3,7 +3,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   // Pages publiques qui ne nécessitent pas d'auth
   const publicPages = ['/']
-  const isPublicPage = publicPages.includes(to.path)
+  const isPublicPage = publicPages.includes(to.path) || to.path.startsWith('/verify/')
 
   if (!token.value && !isPublicPage) {
     return navigateTo('/')
