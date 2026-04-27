@@ -83,6 +83,16 @@ class SupabaseAuthService:
         except Exception as e:
             raise Exception(f"Erreur lors de la mise à jour du mot de passe Supabase: {str(e)}")
 
+    def update_user_metadata(self, uid: str, metadata: Dict[str, Any]):
+        """Met à jour les métadonnées de l'utilisateur (ex: nom d'affichage)."""
+        if not self.client:
+            raise Exception("Supabase non configuré.")
+            
+        try:
+            self.client.auth.admin.update_user_by_id(uid, {"user_metadata": metadata})
+        except Exception as e:
+            raise Exception(f"Erreur lors de la mise à jour des métadonnées Supabase: {str(e)}")
+
     def authenticate(self, email: str, password: str) -> Dict[str, Any]:
         """
         Authentifie un utilisateur auprès de Supabase et retourne la session (incluant le JWT).

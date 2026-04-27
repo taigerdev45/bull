@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <!-- PWA Install Prompt (Fixed) -->
+    <!-- PWA Install Prompt -->
     <client-only>
       <div v-if="installPrompt" class="install-card-fixed premium-card">
         <p>Installer Bull ASUR sur votre appareil ?</p>
@@ -41,60 +41,79 @@
       <!-- Étape 1 : Sélection du Rôle -->
       <transition name="fade-slide" mode="out-in">
         <div v-if="!showLoginForm" key="selection" class="roles-container">
-          <div @click="selectRole('etudiant')" class="premium-card etudiant-border">
+          <div @click="selectRole('etudiant')" class="premium-card role-card etudiant-border">
             <div class="card-content">
+              <div class="role-icon">🎓</div>
               <h2>Étudiant</h2>
               <p>Profil & Résultats</p>
             </div>
           </div>
 
-          <div @click="selectRole('enseignant')" class="premium-card enseignant-border">
+          <div @click="selectRole('enseignant')" class="premium-card role-card enseignant-border">
             <div class="card-content">
+              <div class="role-icon">📖</div>
               <h2>Enseignant</h2>
               <p>Saisie & Matières</p>
             </div>
           </div>
 
-          <div @click="selectRole('secretariat')" class="premium-card secretariat-border">
+          <div @click="selectRole('secretariat')" class="premium-card role-card secretariat-border">
             <div class="card-content">
+              <div class="role-icon">🏢</div>
               <h2>Secrétariat</h2>
               <p>Administration</p>
             </div>
           </div>
 
-          <div @click="selectRole('admin')" class="premium-card admin-border">
+          <div @click="selectRole('admin')" class="premium-card role-card admin-border">
             <div class="card-content">
+              <div class="role-icon">⚙️</div>
               <h2>Admin</h2>
               <p>Maintenance</p>
             </div>
           </div>
         </div>
 
-        <div v-else key="login" class="login-overlay">
-          <div class="login-card glass-morphism">
-            <button class="back-btn" @click="showLoginForm = false">
-              ← Retour
-            </button>
-            <div class="login-header">
-              <span class="role-badge">{{ roleTitle }}</span>
-              <h2>Authentification</h2>
+        <!-- FORMULAIRE DE CONNEXION PREMIUM -->
+        <div v-else key="login" class="login-container">
+          <div class="login-card-premium glass-morphism">
+            <div class="login-header-p">
+              <button class="back-link" @click="showLoginForm = false">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Changer de rôle
+              </button>
+              <div class="badge-container">
+                <span class="role-chip" :class="selectedRole">{{ roleTitle }}</span>
+              </div>
+              <h2>Identification</h2>
+              <p class="login-desc">Veuillez renseigner vos identifiants pour accéder à votre espace de travail.</p>
             </div>
             
-            <form class="login-form" @submit.prevent="handleLogin">
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email" v-model="username" placeholder="identifiant@inptic.ga" required autocomplete="email" />
+            <form class="login-form-p" @submit.prevent="handleLogin">
+              <div class="input-group-p">
+                <label>Identifiant Académique</label>
+                <div class="input-wrapper">
+                  <span class="i-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                  <input type="email" v-model="username" placeholder="votre.nom@inptic.ga" required autocomplete="email" />
+                </div>
               </div>
               
-              <div class="form-group">
+              <div class="input-group-p">
                 <label>Mot de passe</label>
-                <input type="password" v-model="password" placeholder="••••••••" required autocomplete="current-password" />
+                <div class="input-wrapper">
+                  <span class="i-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+                  <input type="password" v-model="password" placeholder="••••••••" required autocomplete="current-password" />
+                </div>
               </div>
               
-              <button type="submit" class="login-btn" :disabled="loading">
-                <span v-if="!loading">Se Connecter</span>
-                <span v-else class="loader"></span>
-              </button>
+              <div class="form-footer-p">
+                <button type="submit" class="submit-btn-p" :disabled="loading">
+                  <div class="btn-shine"></div>
+                  <span v-if="!loading">Accéder au Système</span>
+                  <div v-else class="loader-p"></div>
+                </button>
+                <a href="#" class="forgot-link">Problème de connexion ?</a>
+              </div>
             </form>
           </div>
         </div>
@@ -125,7 +144,7 @@
       </section>
 
       <footer class="landing-footer">
-        <p>&copy; 2026 INPTIC - Bull ASUR</p>
+        <p>&copy; 2026 INPTIC - Bull ASUR v2.5</p>
       </footer>
     </div>
   </div>
@@ -143,8 +162,7 @@ const router = useRouter(); const { fetchApi } = useApi()
 const installPrompt = ref(null)
 onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault()
-    installPrompt.value = e
+    e.preventDefault(); installPrompt.value = e
   })
 })
 const installApp = async () => {
@@ -154,61 +172,32 @@ const installApp = async () => {
   if (outcome === 'accepted') installPrompt.value = null
 }
 
-// Bubble Animation Logic (Antigravity Magnetic Ball)
+// Bubble Animation Logic
 const bubbleCanvas = ref(null)
 let ctx = null; let particles = []
 const bubbleCount = 90
 const mouse = { x: -100, y: -100 }
 
 class Particle {
-  constructor() {
-    this.reset()
-  }
+  constructor() { this.reset() }
   reset() {
-    this.x = Math.random() * window.innerWidth
-    this.y = Math.random() * window.innerHeight
-    this.size = Math.random() * 2 + 0.5
-    this.baseX = this.x
-    this.baseY = this.y
-    this.density = (Math.random() * 25) + 5
-    this.friction = 0.96
-    this.vx = 0; this.vy = 0
+    this.x = Math.random() * window.innerWidth; this.y = Math.random() * window.innerHeight
+    this.size = Math.random() * 2 + 0.5; this.density = (Math.random() * 25) + 5
+    this.friction = 0.96; this.vx = 0; this.vy = 0
     this.color = "rgba(255, 255, 255, " + (Math.random() * 0.4 + 0.2) + ")"
   }
   update() {
-    let dx = mouse.x - this.x
-    let dy = mouse.y - this.y
-    let distance = Math.sqrt(dx * dx + dy * dy)
-    let forceDirectionX = dx / distance
-    let forceDirectionY = dy / distance
-    
-    // Antigravity ball formation
-    const radius = 45 
-    let force = (radius - distance) / radius
-    
-    if (distance < radius) {
-      this.vx += forceDirectionX * force * 2
-      this.vy += forceDirectionY * force * 2
-    } else {
-      this.vx += (mouse.x - this.x) / this.density
-      this.vy += (mouse.y - this.y) / this.density
-    }
-
-    this.vx *= this.friction; this.vy *= this.friction
-    this.x += this.vx; this.y += this.vy
+    let dx = mouse.x - this.x; let dy = mouse.y - this.y
+    let distance = Math.sqrt(dx * dx + dy * dy); let forceDirectionX = dx / distance; let forceDirectionY = dy / distance
+    const radius = 45; let force = (radius - distance) / radius
+    if (distance < radius) { this.vx += forceDirectionX * force * 2; this.vy += forceDirectionY * force * 2 }
+    else { this.vx += (mouse.x - this.x) / this.density; this.vy += (mouse.y - this.y) / this.density }
+    this.vx *= this.friction; this.vy *= this.friction; this.x += this.vx; this.y += this.vy
   }
-  draw() {
-    ctx.fillStyle = this.color
-    ctx.beginPath()
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-    ctx.fill()
-  }
+  draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill() }
 }
 
-const handleMouseMove = (e) => {
-  mouse.x = e.clientX; mouse.y = e.clientY
-}
-
+const handleMouseMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY }
 const animate = () => {
   if (!ctx || !bubbleCanvas.value) return
   ctx.clearRect(0, 0, bubbleCanvas.value.width, bubbleCanvas.value.height)
@@ -218,18 +207,12 @@ const animate = () => {
 
 onMounted(() => {
   if (bubbleCanvas.value) {
-    bubbleCanvas.value.width = window.innerWidth
-    bubbleCanvas.value.height = window.innerHeight
+    bubbleCanvas.value.width = window.innerWidth; bubbleCanvas.value.height = window.innerHeight
     ctx = bubbleCanvas.value.getContext('2d')
     for (let i = 0; i < bubbleCount; i++) particles.push(new Particle())
     animate()
   }
-  window.addEventListener('resize', () => {
-    if (bubbleCanvas.value) {
-      bubbleCanvas.value.width = window.innerWidth
-      bubbleCanvas.value.height = window.innerHeight
-    }
-  })
+  window.addEventListener('resize', () => { if (bubbleCanvas.value) { bubbleCanvas.value.width = window.innerWidth; bubbleCanvas.value.height = window.innerHeight } })
 })
 
 const selectedRole = ref(null); const showLoginForm = ref(false)
@@ -251,14 +234,14 @@ const handleLogin = async () => {
       useCookie('authId').value = res.user.id
       router.push(`/${res.user.role}`)
     }
-  } catch (e) { alert("Accès refusé") } finally { loading.value = false }
+  } catch (e) { alert("Accès refusé - Veuillez vérifier vos identifiants") } finally { loading.value = false }
 }
 </script>
 
 <style scoped>
-.landing-page { position: relative; min-height: 100vh; width: 100%; display: flex; flex-direction: column; background-image: url('~/assets/images/acceuil_bull.jpeg'); background-size: cover; background-position: center; overflow: hidden; }
+.landing-page { position: relative; min-height: 100vh; width: 100%; display: flex; flex-direction: column; background-image: url('~/assets/images/acceuil_bull.jpeg'); background-size: cover; background-position: center; overflow: hidden; font-family: 'Inter', sans-serif; }
 .bubble-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 1; }
+.overlay { position: absolute; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%); backdrop-filter: blur(2px); z-index: 1; }
 
 .top-banner { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 2rem 4rem; color: white; font-size: 0.7rem; font-weight: 800; }
 .separator { width: 40px; height: 3px; background: #fff; margin-top: 8px; }
@@ -266,47 +249,82 @@ const handleLogin = async () => {
 .content-wrapper { position: relative; z-index: 5; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4rem 2rem; overflow-y: auto; scrollbar-width: none; }
 .content-wrapper::-webkit-scrollbar { display: none; }
 
-.landing-header { text-align: center; margin-bottom: 5rem; }
-.landing-logo { height: 160px; filter: none; margin-bottom: 2rem; position: relative; z-index: 10; }
+.landing-header { text-align: center; margin-bottom: 4rem; }
+.landing-logo { height: 140px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2)); margin-bottom: 2rem; position: relative; z-index: 10; }
 .landing-header h1 { font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 950; letter-spacing: -3px; color: #fff; line-height: 1; margin-bottom: 1rem; }
-.subtitle { font-size: 1.1rem; color: rgba(255,255,255,0.8); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.subtitle { font-size: 1rem; color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }
 
-.roles-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; width: 100%; max-width: 1100px; margin-bottom: 6rem; }
-.premium-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; color: white; cursor: pointer; transition: all 0.3s; min-height: 120px; display: flex; align-items: center; justify-content: center; }
-.premium-card:hover { background: #fff; color: #000; transform: translateY(-5px); border-color: #fff; }
-.premium-card h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.25rem; }
-.premium-card p { font-size: 0.75rem; opacity: 0.6; font-weight: 700; text-transform: uppercase; }
+/* Role Cards */
+.roles-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; width: 100%; max-width: 1100px; margin-bottom: 6rem; }
+.role-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2.5rem 1.5rem; text-align: center; color: white; cursor: pointer; transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1); min-height: 160px; display: flex; align-items: center; justify-content: center; }
+.role-card:hover { background: #fff; color: #000; transform: translateY(-10px) scale(1.02); box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+.role-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.role-card h2 { font-size: 1.4rem; font-weight: 950; margin-bottom: 0.25rem; }
+.role-card p { font-size: 0.75rem; opacity: 0.6; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-.login-card { background: #fff; color: #000; padding: 3rem; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
-.back-btn { background: transparent; border: none; font-weight: 800; color: #94a3b8; cursor: pointer; margin-bottom: 1.5rem; padding: 0; }
-.role-badge { padding: 0.4rem 0.8rem; background: #000; color: #fff; border-radius: 4px; font-size: 0.65rem; font-weight: 950; text-transform: uppercase; margin-bottom: 1rem; display: inline-block; }
+/* FORMULAIRE DE CONNEXION PREMIUM */
+.login-container { width: 100%; display: flex; justify-content: center; margin-bottom: 6rem; }
+.login-card-premium { background: rgba(255,255,255,0.95); backdrop-filter: blur(40px); color: #000; padding: 3.5rem; border-radius: 32px; width: 100%; max-width: 500px; box-shadow: 0 60px 120px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; }
 
-/* SEO Cards Modern */
+.back-link { background: #000; color: #fff; border: none; font-weight: 900; font-size: 0.75rem; cursor: pointer; margin-bottom: 2.5rem; padding: 0.6rem 1.2rem; border-radius: 50px; display: flex; align-items: center; gap: 0.5rem; transition: 0.3s; }
+.back-link:hover { transform: translateX(-5px); opacity: 0.8; }
+
+.login-header-p { text-align: left; margin-bottom: 2.5rem; }
+.badge-container { margin-bottom: 1rem; }
+.role-chip { padding: 0.5rem 1.5rem; border-radius: 50px; font-size: 0.7rem; font-weight: 950; text-transform: uppercase; letter-spacing: 2px; background: #f1f5f9; color: #64748b; }
+.role-chip.admin { background: #fee2e2; color: #ef4444; }
+.role-chip.etudiant { background: #dcfce7; color: #16a34a; }
+.role-chip.enseignant { background: #e0f2fe; color: #0284c7; }
+.role-chip.secretariat { background: #fef9c3; color: #ca8a04; }
+
+.login-header-p h2 { font-size: 2.2rem; font-weight: 950; letter-spacing: -1px; margin-bottom: 0.5rem; }
+.login-desc { color: #64748b; font-size: 0.95rem; line-height: 1.5; font-weight: 600; }
+
+.input-group-p { margin-bottom: 1.8rem; }
+.input-group-p label { display: block; font-size: 0.8rem; font-weight: 950; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.75rem; letter-spacing: 1px; }
+.input-wrapper { position: relative; display: flex; align-items: center; }
+.input-wrapper .i-icon { position: absolute; left: 1.25rem; color: #cbd5e1; transition: 0.3s; }
+.input-wrapper input { width: 100%; padding: 1.25rem 1.25rem 1.25rem 3.5rem; background: #f8fafc; border: 2.5px solid #f1f5f9; border-radius: 18px; font-weight: 800; font-size: 1rem; color: #000; transition: all 0.3s; }
+.input-wrapper input:focus { border-color: #000; outline: none; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+.input-wrapper input:focus + .i-icon { color: #000; }
+
+.form-footer-p { margin-top: 3rem; }
+.submit-btn-p { width: 100%; padding: 1.4rem; background: #000; color: #fff; font-weight: 950; border-radius: 20px; border: none; cursor: pointer; position: relative; overflow: hidden; font-size: 1.1rem; transition: 0.3s; }
+.submit-btn-p:hover { transform: scale(1.02); box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+.btn-shine { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(45deg); animation: shine 3s infinite; }
+@keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
+
+.forgot-link { display: block; text-align: center; margin-top: 1.5rem; font-size: 0.85rem; font-weight: 900; color: #94a3b8; text-decoration: none; transition: 0.3s; }
+.forgot-link:hover { color: #000; }
+
+.loader-p { width: 24px; height: 24px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; margin: 0 auto; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SEO Cards */
 .seo-content { width: 100%; max-width: 1200px; margin-top: 4rem; padding-top: 4rem; border-top: 1px solid rgba(255,255,255,0.1); }
 .seo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
 .seo-card-premium { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 2.5rem; transition: all 0.3s; }
 .seo-card-premium:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-.seo-card-premium h3 { font-size: 1.1rem; font-weight: 900; color: #fff; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-.seo-card-premium p { font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.6); font-weight: 500; }
+.seo-card-premium h3 { font-size: 1.1rem; font-weight: 950; color: #fff; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+.seo-card-premium p { font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.6); font-weight: 600; }
 
-.landing-footer { margin-top: 8rem; color: rgba(255,255,255,0.25); font-size: 0.75rem; font-weight: 700; text-align: center; }
+.landing-footer { margin-top: 8rem; color: rgba(255,255,255,0.25); font-size: 0.75rem; font-weight: 800; text-align: center; }
 
-/* Fixed Install Prompt */
-.install-card-fixed { position: fixed; bottom: 2rem; left: 2rem; z-index: 1000; background: #fff; color: #000; padding: 1.5rem 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 1rem; border: none; min-height: auto; }
-.install-card-fixed p { font-weight: 800; font-size: 0.9rem; }
-.install-card-fixed .actions { display: flex; gap: 1rem; }
-.btn-install { background: #000; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 800; cursor: pointer; }
-.btn-dismiss { background: #f1f5f9; color: #64748b; border: none; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 800; cursor: pointer; }
+/* Install Prompt */
+.install-card-fixed { position: fixed; bottom: 2rem; left: 2rem; z-index: 1000; background: #fff; color: #000; padding: 1.5rem 2rem; border-radius: 20px; box-shadow: 0 40px 80px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1rem; }
+.install-card-fixed p { font-weight: 900; font-size: 0.9rem; }
+.btn-install { background: #000; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 950; cursor: pointer; }
+.btn-dismiss { background: #f1f5f9; color: #64748b; border: none; padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 950; cursor: pointer; }
 
 @media (max-width: 640px) {
   .roles-container { grid-template-columns: 1fr; gap: 1rem; }
-  .premium-card { min-height: 100px; padding: 1.5rem; }
+  .login-card-premium { padding: 2.5rem; border-radius: 24px; }
+  .login-header-p h2 { font-size: 1.8rem; }
   .landing-header h1 { font-size: 2.2rem; }
-  .top-banner { padding: 1.5rem; }
   .install-card-fixed { left: 1rem; right: 1rem; bottom: 1rem; }
 }
 
-.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.4s ease; }
-.fade-slide-enter-from { opacity: 0; transform: translateY(20px); }
-.fade-slide-leave-to { opacity: 0; transform: translateY(-20px); }
+.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-slide-enter-from { opacity: 0; transform: translateY(30px); }
+.fade-slide-leave-to { opacity: 0; transform: translateY(-30px); }
 </style>
