@@ -125,11 +125,17 @@ class EvaluationViewSet(viewsets.ModelViewSet):
                 }
                 final_type = type_map.get(type_eval, type_eval)
 
+                # Conversion de la note avec gestion des erreurs (chaînes vides, etc.)
+                try:
+                    final_note = float(note_val) if (note_val is not None and str(note_val).strip() != "") else None
+                except (ValueError, TypeError):
+                    final_note = None
+
                 cmd = CreerEvaluationCommand(
                     etudiant_id=str(etudiant_id),
                     matiere_id=str(matiere_id),
                     type_eval=final_type,
-                    note=float(note_val) if note_val is not None else None,
+                    note=final_note,
                     saisie_par=saisie_par
                 )
                 commands.append(cmd)
