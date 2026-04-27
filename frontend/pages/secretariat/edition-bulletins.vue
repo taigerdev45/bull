@@ -217,12 +217,18 @@
                   <input v-model="formData.libelle" required class="form-control" placeholder="Mathématiques">
                 </div>
               </div>
-              <div class="form-group mt-1">
-                <label>Cycles Associé</label>
-                <select v-model="formData.semestre_id" required class="form-control">
-                  <option value="">Sélectionner un cycle...</option>
-                  <option v-for="s in semestres" :key="s.id" :value="s.id">{{ s.libelle }} ({{ s.annee_universitaire }})</option>
-                </select>
+              <div class="form-row mt-1">
+                <div class="form-group">
+                  <label>Cycles Associé</label>
+                  <select v-model="formData.semestre_id" required class="form-control">
+                    <option value="">Sélectionner un cycle...</option>
+                    <option v-for="s in semestres" :key="s.id" :value="s.id">{{ s.libelle }} ({{ s.annee_universitaire }})</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Crédits ECTS</label>
+                  <input type="number" v-model="formData.credits" required class="form-control" placeholder="6">
+                </div>
               </div>
             </div>
 
@@ -358,7 +364,11 @@ const getEtudiantLibelle = (id) => {
 
 const openModal = (type, mode, item = null) => {
   modalType.value = type; modalMode.value = mode; currentItem.value = item
-  formData.value = item ? { ...item } : {}
+  if (item) {
+    formData.value = { ...item }
+  } else {
+    formData.value = type === 'ue' ? { credits: 6, code: '', libelle: '', semestre_id: '' } : {}
+  }
   showModal.value = true
 }
 
@@ -374,7 +384,8 @@ const saveItem = async () => {
     await fetchApi(url, { method: modalMode.value === 'add' ? 'POST' : 'PATCH', body: formData.value })
     await loadAllData(); closeModal()
   } catch (err) {
-    alert("Erreur de sauvegarde")
+    const errorDetails = err.data ? JSON.stringify(err.data) : "Vérifiez la connexion et les champs."
+    alert(`Erreur de sauvegarde : ${errorDetails}`)
   } finally { loading.value = false }
 }
 
