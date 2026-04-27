@@ -143,6 +143,12 @@ const allLinks = [
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
   },
   { 
+    path: '/personnel', 
+    label: 'Gestion Personnel', 
+    roles: ['admin', 'super_admin'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 00-3-3.87"></path><path d="M16 3.13a4 4 0 010 7.75"></path></svg>'
+  },
+  { 
     path: '/profil', 
     label: 'Mon Profil', 
     roles: ['admin', 'secretariat', 'super_admin', 'enseignant', 'etudiant'], 
