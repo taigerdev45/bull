@@ -25,10 +25,9 @@ class IsEnseignantMatiere(permissions.BasePermission):
                 return False
                 
             try:
-                matiere_repo = Container.matiere_repo()
-                matiere = matiere_repo.get_by_id(matiere_id)
-                # request.user.uid est le Firebase UID. enseignant_id le stocke.
-                if matiere and str(matiere.enseignant_id) == str(request.user.uid):
+                from infrastructure.persistence.django_models.models import MatiereModel
+                m_model = MatiereModel.objects.get(id=matiere_id)
+                if m_model.enseignant and str(m_model.enseignant.user_id) == str(request.user.uid):
                     return True
             except Exception as e:
                 print(f"Erreur vérification permission matiere: {e}")

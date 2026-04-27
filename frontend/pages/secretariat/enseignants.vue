@@ -120,24 +120,31 @@
                 <input type="email" v-model="formData.email" required class="form-control" placeholder="a.diop@uadb.edu">
               </div>
               <div class="form-group stack">
-                <label>Matricule (Accès)</label>
-                <input v-model="formData.matricule" required class="form-control" placeholder="ENS-001">
+                <label>Mot de passe (Accès)</label>
+                <input type="password" v-model="formData.password" :required="modalMode === 'add'" class="form-control" placeholder="••••••••">
+              </div>
+            </div>
+
+            <div class="form-row mt-1">
+              <div class="form-group stack">
+                <label>Matricule Unique</label>
+                <input v-model="formData.matricule" required class="form-control" placeholder="ENS001">
+              </div>
+              <div class="form-group stack">
+                <label>Domaine / Spécialité</label>
+                <input v-model="formData.specialite" class="form-control" placeholder="Informatique">
               </div>
             </div>
 
             <div class="security-note">
               <p>🧬 <strong>Accès Académique</strong></p>
-              <span>Authentification par matricule activée par défaut.</span>
+              <span>L'enseignant pourra se connecter avec son email et le mot de passe défini.</span>
             </div>
 
             <div class="form-row">
               <div class="form-group stack">
                 <label>Téléphone</label>
                 <input v-model="formData.telephone" class="form-control" placeholder="+221 ...">
-              </div>
-              <div class="form-group stack">
-                <label>Domaine / Spécialité</label>
-                <input v-model="formData.specialite" class="form-control" placeholder="Informatique">
               </div>
             </div>
 

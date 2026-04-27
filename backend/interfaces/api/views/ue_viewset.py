@@ -56,7 +56,8 @@ class UEViewSet(viewsets.ViewSet):
                 
                 # Filtrage pour enseignant
                 if not is_staff and role == 'enseignant':
-                    matieres = [m for m in matieres if m.enseignant_id == request.user.username]
+                    uid = getattr(request.user, 'uid', request.user.username)
+                    matieres = [m for m in matieres if m.enseignant and m.enseignant.user_id == uid]
                     if not matieres:
                         continue
                 
