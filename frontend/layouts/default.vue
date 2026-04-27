@@ -133,7 +133,7 @@ const allLinks = [
   { 
     path: '/secretariat/bulletins', 
     label: 'Bulletins & Jury', 
-    roles: ['admin', 'secretariat', 'super_admin', 'etudiant', 'enseignant'], 
+    roles: ['admin', 'secretariat', 'super_admin'], 
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path></svg>'
   },
   { 
@@ -172,7 +172,7 @@ const logout = () => {
 /* Sidebar Premium */
 .sidebar-p { 
   width: 280px; background: #000; color: #fff; display: flex; flex-direction: column; 
-  position: fixed; top: 0; left: 0; height: 100dvh; z-index: 1000; 
+  position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; z-index: 1000; 
   box-shadow: 10px 0 30px rgba(0,0,0,0.1); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
   overscroll-behavior: contain;

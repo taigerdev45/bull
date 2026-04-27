@@ -151,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePageMeta({ layout: 'empty' })
@@ -174,8 +174,8 @@ const installApp = async () => {
 
 // Bubble Animation Logic
 const bubbleCanvas = ref(null)
-let ctx = null; let particles = []
-const bubbleCount = 90
+let ctx = null; let particles = []; let animationFrame = null
+const bubbleCount = 60
 const mouse = { x: -100, y: -100 }
 
 class Particle {
@@ -188,7 +188,8 @@ class Particle {
   }
   update() {
     let dx = mouse.x - this.x; let dy = mouse.y - this.y
-    let distance = Math.sqrt(dx * dx + dy * dy); let forceDirectionX = dx / distance; let forceDirectionY = dy / distance
+    let distance = Math.sqrt(dx * dx + dy * dy) || 1
+    let forceDirectionX = dx / distance; let forceDirectionY = dy / distance
     const radius = 45; let force = (radius - distance) / radius
     if (distance < radius) { this.vx += forceDirectionX * force * 2; this.vy += forceDirectionY * force * 2 }
     else { this.vx += (mouse.x - this.x) / this.density; this.vy += (mouse.y - this.y) / this.density }
@@ -202,17 +203,29 @@ const animate = () => {
   if (!ctx || !bubbleCanvas.value) return
   ctx.clearRect(0, 0, bubbleCanvas.value.width, bubbleCanvas.value.height)
   particles.forEach(p => { p.update(); p.draw() })
-  requestAnimationFrame(animate)
+  animationFrame = requestAnimationFrame(animate)
+}
+
+const resizeCanvas = () => {
+  if (bubbleCanvas.value) {
+    bubbleCanvas.value.width = window.innerWidth
+    bubbleCanvas.value.height = window.innerHeight
+  }
 }
 
 onMounted(() => {
   if (bubbleCanvas.value) {
-    bubbleCanvas.value.width = window.innerWidth; bubbleCanvas.value.height = window.innerHeight
+    resizeCanvas()
     ctx = bubbleCanvas.value.getContext('2d')
     for (let i = 0; i < bubbleCount; i++) particles.push(new Particle())
     animate()
   }
-  window.addEventListener('resize', () => { if (bubbleCanvas.value) { bubbleCanvas.value.width = window.innerWidth; bubbleCanvas.value.height = window.innerHeight } })
+  window.addEventListener('resize', resizeCanvas)
+})
+
+onBeforeUnmount(() => {
+  if (animationFrame) cancelAnimationFrame(animationFrame)
+  window.removeEventListener('resize', resizeCanvas)
 })
 
 const selectedRole = ref(null); const showLoginForm = ref(false)
