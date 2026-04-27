@@ -161,7 +161,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useApi } from '~/composables/useApi'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const { fetchApi } = useApi()
 const { exportToExcel, exportToPDF } = useExport()
 useHead({ title: 'Console de Notation | Bull ASUR' })
@@ -198,6 +200,20 @@ const stats = computed(() => {
 const loadInitial = async () => {
   const [s, u, m, e] = await Promise.all([fetchApi('/semestres/'), fetchApi('/ues/'), fetchApi('/matieres/'), fetchApi('/etudiants/')])
   semestres.value = s; ues.value = u; matieres.value = m; etudiants.value = e
+  
+  // Lecture des paramètres URL (Auto-sélection depuis Dashboard)
+  if (route.query.ue_id) {
+    const ue = ues.value.find(x => x.id == route.query.ue_id)
+    if (ue) {
+      filters.value.semestre_id = ue.semestre_id
+      filters.value.ue_id = ue.id
+    }
+  }
+  
+  if (route.query.matiere_id) {
+    filters.value.matiere_id = route.query.matiere_id
+    await loadNotes()
+  }
 }
 
 const loadNotes = async () => {

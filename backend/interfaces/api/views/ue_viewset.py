@@ -46,10 +46,20 @@ class UEViewSet(viewsets.ViewSet):
 
     def list(self, request):
         try:
+            role = getattr(request.user, 'role', 'etudiant')
+            is_staff = role in ['admin', 'super_admin', 'secretariat']
+            
             ues = self.ue_repo.list_all()
             result = []
             for ue in ues:
                 matieres = self.matiere_repo.get_by_ue(ue.id)
+                
+                # Filtrage pour enseignant
+                if not is_staff and role == 'enseignant':
+                    matieres = [m for m in matieres if m.enseignant_id == request.user.username]
+                    if not matieres:
+                        continue
+                
                 result.append(ue_to_dict(ue, matieres))
             return Response(result)
         except Exception as e:
@@ -133,17 +143,21 @@ class MatiereViewSet(viewsets.ViewSet):
         return [permissions.IsAuthenticated()]
 
     @inject
-    def __init__(self, matiere_repo=Provide[Container.matiere_repo], **kwargs):
+    def __init__(self, 
+                 matiere_repo=Provide[Container.matiere_repo], 
+                 audit_service=Provide[Container.audit_service],
+                 **kwargs):
         super().__init__(**kwargs)
         self.matiere_repo = matiere_repo
+        self.audit_service = audit_service
 
     def list(self, request):
         try:
             is_staff = getattr(request.user, 'is_staff', False)
             role = getattr(request.user, 'role', 'etudiant')
             
-            # Si c'est un enseignant, on peut filtrer ses matières
-            if not is_staff and role == 'enseignant':
+            # Si c'est un enseignant, on ne renvoie que ses matières
+            if role == 'enseignant' and not is_staff:
                 matieres = self.matiere_repo.get_by_enseignant(request.user.username)
             else:
                 matieres = self.matiere_repo.list_all()
@@ -228,5 +242,20 @@ class MatiereViewSet(viewsets.ViewSet):
         enseignant_id = request.data.get('enseignant_id')
         if not enseignant_id:
             return Response({"error": "enseignant_id requis"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        matiere = self.matiere_repo.get_by_id(pk)
+        if not matiere:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+            
         self.matiere_repo.attribuer_enseignant(pk, enseignant_id)
+        
+        # Traçabilité (Notification système)
+        self.audit_service.logger_action({
+            "action_type": "USER_MGMT",
+            "user_name": request.user.username,
+            "target_id": pk,
+            "details": f"Attribution de la matière '{matiere.libelle}' à l'enseignant {enseignant_id}",
+            "status": "SUCCESS"
+        })
+        
         return Response({"status": "enseignant attribué"})
