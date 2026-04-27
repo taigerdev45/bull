@@ -43,7 +43,6 @@
         <div v-if="!showLoginForm" key="selection" class="roles-container">
           <div @click="selectRole('etudiant')" class="premium-card role-card etudiant-border">
             <div class="card-content">
-              <div class="role-icon">🎓</div>
               <h2>Étudiant</h2>
               <p>Profil & Résultats</p>
             </div>
@@ -51,7 +50,6 @@
 
           <div @click="selectRole('enseignant')" class="premium-card role-card enseignant-border">
             <div class="card-content">
-              <div class="role-icon">📖</div>
               <h2>Enseignant</h2>
               <p>Saisie & Matières</p>
             </div>
@@ -59,7 +57,6 @@
 
           <div @click="selectRole('secretariat')" class="premium-card role-card secretariat-border">
             <div class="card-content">
-              <div class="role-icon">🏢</div>
               <h2>Secrétariat</h2>
               <p>Administration</p>
             </div>
@@ -67,7 +64,6 @@
 
           <div @click="selectRole('admin')" class="premium-card role-card admin-border">
             <div class="card-content">
-              <div class="role-icon">⚙️</div>
               <h2>Admin</h2>
               <p>Maintenance</p>
             </div>
@@ -330,11 +326,26 @@ const handleLogin = async () => {
 .btn-dismiss { background: #f1f5f9; color: #64748b; border: none; padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 950; cursor: pointer; }
 
 @media (max-width: 640px) {
-  .roles-container { grid-template-columns: 1fr; gap: 1rem; }
-  .login-card-premium { padding: 2.5rem; border-radius: 24px; }
+  .top-banner { padding: 1.5rem 2rem; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; }
+  .separator { margin: 4px auto 0; }
+  
+  .content-wrapper { padding: 2rem 1.5rem; }
+  .landing-header { margin-bottom: 2.5rem; }
+  .landing-logo { height: 90px; margin-bottom: 1.5rem; }
+  .landing-header h1 { font-size: 2.5rem; letter-spacing: -1.5px; }
+  .subtitle { font-size: 0.8rem; letter-spacing: 1px; }
+
+  .roles-container { grid-template-columns: 1fr; gap: 1rem; margin-bottom: 4rem; }
+  .role-card { padding: 2rem 1.5rem; min-height: 120px; }
+  
+  .login-card-premium { padding: 2.5rem 1.5rem; border-radius: 24px; }
   .login-header-p h2 { font-size: 1.8rem; }
-  .landing-header h1 { font-size: 2.2rem; }
-  .install-card-fixed { left: 1rem; right: 1rem; bottom: 1rem; }
+  .submit-btn-p { padding: 1.2rem; font-size: 1rem; }
+  
+  .seo-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .seo-card-premium { padding: 1.5rem; }
+  
+  .install-card-fixed { left: 1rem; right: 1rem; bottom: 1rem; align-items: center; text-align: center; }
 }
 
 .fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
