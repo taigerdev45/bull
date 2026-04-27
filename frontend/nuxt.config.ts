@@ -6,30 +6,53 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt'
   ],
   pwa: {
+    registerType: 'autoUpdate',
     manifest: {
       name: 'Bull ASUR',
       short_name: 'BullASUR',
-      description: 'Système de Gestion des Notes et Bulletins Académiques',
+      description: 'Système de Gestion des Notes et Bulletins Académiques - LP ASUR',
       theme_color: '#000000',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',
+      start_url: '/',
+      scope: '/',
       icons: [
         {
-          src: 'icon.png',
+          src: '/icon.png',
           sizes: '192x192',
           type: 'image/png'
         },
         {
-          src: 'icon.png',
+          src: '/icon.png',
           sizes: '512x512',
-          type: 'image/png'
+          type: 'image/png',
+          purpose: 'any'
+        },
+        {
+          src: '/icon.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable'
         }
       ]
     },
     workbox: {
       navigateFallback: '/',
-      globPatterns: ['**/*.{js,css,html,png,svg,ico}']
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/.*\/api\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            expiration: {
+              maxEntries: 100,
+              maxAgeSeconds: 60 * 60 * 24 // 24 heures
+            }
+          }
+        }
+      ]
     },
     client: {
       installPrompt: true,
@@ -37,7 +60,9 @@ export default defineNuxtConfig({
     },
     devOptions: {
       enabled: true,
-      type: 'classic',
+      suppressWarnings: true,
+      navigateFallbackAllowlist: [/^\/$/],
+      type: 'module'
     }
   },
   app: {
@@ -45,11 +70,14 @@ export default defineNuxtConfig({
       title: 'Bull ASUR - Excellence Académique',
       meta: [
         { name: 'description', content: 'Modern SaaS platform for academic grading and bulletin generation.' },
-        { name: 'theme-color', content: '#000000' }
+        { name: 'theme-color', content: '#000000' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/icon.png' },
-        { rel: 'apple-touch-icon', href: '/icon.png' }
+        { rel: 'apple-touch-icon', href: '/icon.png' },
+        { rel: 'manifest', href: '/_nuxt/manifest.webmanifest' }
       ]
     }
   },
