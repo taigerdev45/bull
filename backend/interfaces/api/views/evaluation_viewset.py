@@ -129,12 +129,12 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             self._get_handler().handle_bulk_creer(commands)
             return Response({"status": "Notes enregistrées avec succès"}, status=status.HTTP_201_CREATED)
             
-        except KeyError as e:
-            return Response({"error": f"Type d'évaluation invalide: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        except (KeyError, ValueError) as e:
+            return Response({"error": f"Données invalides : {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             import traceback
             print(traceback.format_exc())
-            return Response({"error": f"Erreur serveur: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": f"Erreur serveur : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @extend_schema(
         summary="Lister les notes d'un étudiant",
