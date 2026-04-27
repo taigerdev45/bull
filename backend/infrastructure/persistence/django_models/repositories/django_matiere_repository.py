@@ -42,20 +42,21 @@ class DjangoMatiereRepository(IMatiereRepository):
             return None
 
     def list_all(self) -> List[Matiere]:
-        models = MatiereModel.objects.all()
-        return [self._to_entity(m) for m in models]
+        instances = MatiereModel.objects.all()
+        return [self._to_entity(m) for m in instances]
 
     def get_by_ue(self, ue_id: str) -> List[Matiere]:
-        models = MatiereModel.objects.filter(ue_id=ue_id)
-        return [self._to_entity(m) for m in models]
+        instances = MatiereModel.objects.filter(ue_id=ue_id)
+        return [self._to_entity(m) for m in instances]
 
     def get_by_enseignant(self, enseignant_id: str) -> List[Matiere]:
         # On tente de filtrer par le user_id (UID Supabase) ou par l'ID technique
-        models = MatiereModel.objects.filter(
-            models.Q(enseignant__user_id=enseignant_id) | 
-            models.Q(enseignant_id=enseignant_id)
+        from django.db.models import Q
+        queryset = MatiereModel.objects.filter(
+            Q(enseignant__user_id=enseignant_id) | 
+            Q(enseignant_id=enseignant_id)
         )
-        return [self._to_entity(m) for m in models]
+        return [self._to_entity(m) for m in queryset]
 
     def attribuer_enseignant(self, matiere_id: str, enseignant_id: str) -> None:
         MatiereModel.objects.filter(id=matiere_id).update(enseignant_id=enseignant_id)
