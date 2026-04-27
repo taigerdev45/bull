@@ -171,11 +171,10 @@ const logout = () => {
 
 .sidebar-header { padding: 3rem 2rem; text-align: center; }
 .logo-outer { 
-  width: 60px; height: 60px; background: #fff; margin: 0 auto 1.5rem; 
-  border-radius: 18px; padding: 12px; transform: rotate(-3deg);
-  box-shadow: 10px 10px 20px rgba(0,0,0,0.3);
+  width: 70px; height: 70px; margin: 0 auto 1.5rem; 
+  padding: 0; transform: none;
 }
-.logo-outer img { width: 100%; height: 100%; object-fit: contain; }
+.logo-outer img { width: 100%; height: 100%; object-fit: contain; filter: none; }
 .brand-name h2 { font-size: 1.4rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 0.25rem; }
 .brand-name .tagline { font-size: 0.65rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px; }
 

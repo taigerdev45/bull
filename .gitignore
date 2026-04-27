@@ -13,6 +13,7 @@ frontend/.yarn/*
 frontend/.next/
 frontend/out/
 frontend/build/
+frontend/cahier_de_charge.txt
 frontend/.env
 frontend/.env.local
 
