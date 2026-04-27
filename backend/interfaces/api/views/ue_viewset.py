@@ -76,8 +76,10 @@ class UEViewSet(viewsets.ViewSet):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
+        print(f"[DEBUG API] POST /api/ues/ | DATA: {request.data}")
         serializer = UESerializer(data=request.data)
         if serializer.is_valid():
+            print(f"[DEBUG API] Validation SUCCESS")
             from domain.entities.ue import UE
             ue = UE(
                 code=serializer.validated_data['code'],
@@ -89,7 +91,10 @@ class UEViewSet(viewsets.ViewSet):
                 self.ue_repo.save(ue)
                 return Response(ue_to_dict(ue), status=status.HTTP_201_CREATED)
             except Exception as e:
+                print(f"[DEBUG API] Save FAILURE: {str(e)}")
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        print(f"[DEBUG API] Validation FAILURE: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):

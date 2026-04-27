@@ -45,10 +45,10 @@
 
       <div class="sidebar-footer-p">
         <div class="profile-mini">
-          <div class="avatar-p">{{ currentRole.charAt(0).toUpperCase() }}</div>
+          <div class="avatar-p">{{ (currentRole || 'E').charAt(0).toUpperCase() }}</div>
           <div class="meta-p">
-            <span class="name-p">{{ userName || 'Admin' }}</span>
-            <span class="role-p">{{ currentRole }}</span>
+            <span class="name-p">{{ userName || 'Utilisateur' }}</span>
+            <span class="role-p">{{ currentRole || 'etudiant' }}</span>
           </div>
         </div>
         <button @click="logout" class="btn-logout-p" title="Sortie">✕</button>
@@ -102,7 +102,7 @@ const currentRoute = computed(() => {
   if (path === '/') return 'Authentification'
   const parts = path.split('/')
   const last = parts[parts.length - 1]
-  return last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, ' ')
+  return (last || '').charAt(0).toUpperCase() + (last || '').slice(1).replace(/-/g, ' ')
 })
 
 const allLinks = [
