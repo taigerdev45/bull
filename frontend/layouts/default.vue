@@ -152,6 +152,13 @@ const allLinks = [
 
 const allowedLinks = computed(() => allLinks.filter(l => l.roles.includes(currentRole.value)))
 
+// Bloquer le scroll du body quand la sidebar mobile est ouverte
+watch(isSidebarOpen, (val) => {
+  if (process.client) {
+    document.body.style.overflow = val ? 'hidden' : ''
+  }
+})
+
 const logout = () => {
   const t = useCookie('auth_token'); const r = useCookie('authRole'); const i = useCookie('authId')
   t.value = null; r.value = null; i.value = null
@@ -165,9 +172,16 @@ const logout = () => {
 /* Sidebar Premium */
 .sidebar-p { 
   width: 280px; background: #000; color: #fff; display: flex; flex-direction: column; 
-  position: fixed; top: 0; left: 0; bottom: 0; z-index: 1000; 
+  position: fixed; top: 0; left: 0; height: 100dvh; z-index: 1000; 
   box-shadow: 10px 0 30px rgba(0,0,0,0.1); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
 }
+
+.sidebar-p::-webkit-scrollbar { width: 5px; }
+.sidebar-p::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
 .sidebar-header { padding: 3rem 2rem; text-align: center; }
 .logo-outer { 

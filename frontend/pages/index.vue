@@ -246,7 +246,7 @@ const handleLogin = async () => {
 .top-banner { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 2rem 4rem; color: white; font-size: 0.7rem; font-weight: 800; }
 .separator { width: 40px; height: 3px; background: #fff; margin-top: 8px; }
 
-.content-wrapper { position: relative; z-index: 5; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4rem 2rem; overflow-y: auto; scrollbar-width: none; }
+.content-wrapper { position: relative; z-index: 5; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 4rem 2rem; }
 .content-wrapper::-webkit-scrollbar { display: none; }
 
 .landing-header { text-align: center; margin-bottom: 4rem; }
