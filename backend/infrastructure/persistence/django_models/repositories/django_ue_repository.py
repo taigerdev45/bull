@@ -18,15 +18,25 @@ class DjangoUERepository(IUERepository):
                     libelle=f"Semestre {sem_id}"
                 )
         
-        UEModel.objects.update_or_create(
-            id=ue.id,
-            defaults={
-                'code': ue.code,
-                'libelle': ue.libelle,
-                'credits': ue.credits,
-                'semestre': semestre
-            }
-        )
+        # Recherche de l'UE existante par ID ou par Code pour éviter les IntegrityError
+        ue_model = UEModel.objects.filter(id=ue.id).first()
+        if not ue_model:
+            ue_model = UEModel.objects.filter(code=ue.code).first()
+            
+        if ue_model:
+            ue_model.code = ue.code
+            ue_model.libelle = ue.libelle
+            ue_model.credits = ue.credits
+            ue_model.semestre = semestre
+            ue_model.save()
+        else:
+            UEModel.objects.create(
+                id=ue.id,
+                code=ue.code,
+                libelle=ue.libelle,
+                credits=ue.credits,
+                semestre=semestre
+            )
 
     def get_by_id(self, ue_id: str) -> Optional[UE]:
         try:

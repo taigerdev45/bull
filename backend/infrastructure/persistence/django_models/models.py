@@ -17,7 +17,7 @@ class SemestreModel(BasePersistenceModel):
         return self.libelle
 
 class UEModel(BasePersistenceModel):
-    code = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=50, unique=True)
     libelle = models.CharField(max_length=200)
     credits = models.IntegerField(default=0)
     semestre = models.ForeignKey(SemestreModel, on_delete=models.CASCADE, related_name='ues')
