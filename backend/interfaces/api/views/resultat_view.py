@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, views, status, permissions
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
@@ -10,6 +12,7 @@ from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat, 
     tags=['Résultats'],
     parameters=[OpenApiParameter("semestre", OpenApiTypes.INT, OpenApiParameter.QUERY)]
 )
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class ResultatSemestreView(views.APIView):
     def get(self, request, etudiant_id):
         # Securite: un etudiant ne peut voir que ses propres resultats
@@ -30,6 +33,7 @@ class ResultatSemestreView(views.APIView):
         return Response(serializer.data)
 
 @extend_schema(tags=['Résultats'])
+@method_decorator(cache_page(60 * 15), name='dispatch') # Plus long pour l'annuel
 class ResultatAnnuelView(views.APIView):
     def get(self, request, etudiant_id):
         # Securite: un etudiant ne peut voir que ses propres resultats

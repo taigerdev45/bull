@@ -43,11 +43,12 @@ export default defineNuxtConfig({
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/.*\/api\/.*/i,
-          handler: 'NetworkFirst',
+          handler: 'StaleWhileRevalidate',
           options: {
             cacheName: 'api-cache',
+            cacheableResponse: { statuses: [0, 200] },
             expiration: {
-              maxEntries: 100,
+              maxEntries: 200,
               maxAgeSeconds: 60 * 60 * 24 // 24 heures
             }
           }
