@@ -8,7 +8,7 @@
         </div>
         <div class="session-info">
           <span class="label">Période Académique</span>
-          <span class="value">2025 - 2026</span>
+          <span class="value">{{ stats.promotion || '2025 - 2026' }}</span>
         </div>
       </div>
     </div>
@@ -20,7 +20,7 @@
           <h3>Effectif Global</h3>
         </div>
         <div class="s-body">
-          <span class="value">{{ studentCount }}</span>
+          <span class="value">{{ stats.total_students }}</span>
           <span class="meta">Étudiants Inscrits</span>
         </div>
       </div>
@@ -30,8 +30,8 @@
           <h3>Heures d'Abscences</h3>
         </div>
         <div class="s-body">
-          <span class="value text-black">{{ totalAbsences }}H</span>
-          <span class="meta">Total Cumulé S5</span>
+          <span class="value text-black">{{ stats.total_absences }}H</span>
+          <span class="meta">Total Cumulé</span>
         </div>
       </div>
       <div class="stat-card premium-card">
@@ -40,7 +40,7 @@
           <h3>Intervenants</h3>
         </div>
         <div class="s-body">
-          <span class="value">{{ teacherCount }}</span>
+          <span class="value">{{ stats.total_teachers }}</span>
           <span class="meta">Corps Enseignant</span>
         </div>
       </div>
@@ -50,8 +50,8 @@
           <h3>Documents</h3>
         </div>
         <div class="s-body">
-          <span class="value">142</span>
-          <span class="meta">PV & Bulletins (S5)</span>
+          <span class="value">{{ stats.total_documents }}</span>
+          <span class="meta">Générés ce semestre</span>
         </div>
       </div>
     </div>
@@ -64,13 +64,14 @@
           <NuxtLink to="/secretariat/bulletins" class="btn-link">Editer les bulletins →</NuxtLink>
         </div>
         <div class="section-body">
-          <div v-for="i in 5" :key="i" class="activity-item">
-            <span class="timestamp">12:4{{ i }}</span>
+          <div v-for="log in recentLogs" :key="log.id" class="activity-item">
+            <span class="timestamp">{{ formatTime(log.timestamp) }}</span>
             <div class="msg">
-              <p>Mise à jour des notes : <strong>Unité {{ i+102 }} - Java</strong></p>
-              <span class="author">Effectué par : Admin Académique</span>
+              <p>{{ log.details }}</p>
+              <span class="author">Par : {{ log.user_name }}</span>
             </div>
           </div>
+          <div v-if="recentLogs.length === 0" class="no-activity">Aucune activité récente détectée.</div>
         </div>
       </div>
 
@@ -112,24 +113,28 @@ import { useApi } from '~/composables/useApi'
 useHead({ title: 'Dashboard Secrétariat | Bull ASUR' })
 
 const { fetchApi } = useApi()
-const studentCount = ref('--')
-const teacherCount = ref('--')
-const totalAbsences = ref('--')
+const stats = ref({ total_students: 0, total_teachers: 0, total_documents: 0, total_absences: 0 })
+const recentLogs = ref([])
 
-onMounted(async () => {
+const loadData = async () => {
   try {
-    const [ets, tchs, abs] = await Promise.allSettled([
-      fetchApi('/etudiants/'),
-      fetchApi('/enseignants/'),
-      fetchApi('/absences/')
+    const [sData, lData] = await Promise.all([
+      fetchApi('/stats/dashboard/'),
+      fetchApi('/audit/logs/')
     ])
-    if (ets.status === 'fulfilled') studentCount.value = ets.value.length
-    if (tchs.status === 'fulfilled') teacherCount.value = tchs.value.length
-    if (abs.status === 'fulfilled') {
-      totalAbsences.value = abs.value.reduce((acc, curr) => acc + (curr.nombre_heures || 0), 0)
-    }
-  } catch (e) {}
-})
+    stats.value = sData || stats.value
+    recentLogs.value = (lData || []).slice(0, 6)
+  } catch (e) {
+    console.error("Dashboard error:", e)
+  }
+}
+
+const formatTime = (ts) => {
+  const d = new Date(ts)
+  return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0')
+}
+
+onMounted(loadData)
 </script>
 
 <style scoped>

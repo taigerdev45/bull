@@ -5,11 +5,11 @@ from interfaces.api.views.etudiant_view import EtudiantViewSet, VerifyBulletinVi
 from interfaces.api.views.absence_viewset import AbsenceViewSet
 from interfaces.api.views.evaluation_viewset import EvaluationViewSet
 from interfaces.api.views.resultat_view import ResultatSemestreView, ResultatAnnuelView, PromotionStatsView
-from interfaces.api.views.bulletin_view import BulletinView
+from interfaces.api.views.bulletin_view import BulletinView, SummaryBulletinListView
 from interfaces.api.views.import_export_view import ImportEvaluationsView, ExportResultatsView
 from interfaces.api.views.ue_viewset import UEViewSet, MatiereViewSet
 from interfaces.api.views.audit_viewset import AuditViewSet
-from interfaces.api.views.parametres_view import ParametresView
+from interfaces.api.views.parametres_view import ParametresView, DashboardStatsView
 from interfaces.api.views.semestre_view import SemestreViewSet
 from interfaces.api.views.enseignant_view import EnseignantViewSet
 from interfaces.api.views.auth_view import ChangePasswordView, LoginView
@@ -47,5 +47,6 @@ urlpatterns = [
     path('import/evaluations/', ImportEvaluationsView.as_view()),
     path('export/resultats/', ExportResultatsView.as_view()),
     path('parametres/', ParametresView.as_view(), name='parametres'),
+    path('stats/dashboard/', DashboardStatsView.as_view(), name='stats_dashboard'),
     path('verify-bulletin/<str:matricule>/', VerifyBulletinView.as_view(), name='verify_bulletin'),
 ]

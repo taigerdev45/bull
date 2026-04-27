@@ -84,14 +84,10 @@ const fetchLogs = async () => {
   loading.value = true
   try {
     const res = await fetchApi('/audit/logs/')
-    logs.value = Array.isArray(res) ? res : [
-      // Fallback/Mock data
-      { id: 1, timestamp: new Date().toISOString(), user_name: 'Admin Principal', action_type: 'NOTE_UPDATE', target_id: 'NSOME.Y', details: 'Modification note Algorithmique (14.5 -> 15.2)', status: 'SUCCESS' },
-      { id: 2, timestamp: new Date(Date.now() - 3600000).toISOString(), user_name: 'Secrétariat ASUR', action_type: 'DOC_GEN', target_id: 'MAT-4422', details: 'Génération Bulletin Semestre 5', status: 'SUCCESS' },
-      { id: 3, timestamp: new Date(Date.now() - 7200000).toISOString(), user_name: 'NSOME Yannick', action_type: 'LOGIN', target_id: 'IP: 154.0.12.1', details: 'Connexion réussie', status: 'SUCCESS' }
-    ]
+    logs.value = Array.isArray(res) ? res : []
   } catch (e) {
-    console.error(e)
+    console.error("Audit log error:", e)
+    logs.value = []
   } finally {
     loading.value = false
   }

@@ -92,21 +92,21 @@ const absencesCount = ref(6)
 const fetchResults = async () => {
   try {
     isLoading.value = true
-    const authId = useCookie('authId').value || 'TEST'
-    const response = await fetchApi(`/resultats/semestre/${authId}/`)
-    studentResults.value = response
-  } catch (error) {
-    console.error('Failed to fetch:', error)
-    // Mock
-    studentResults.value = {
-      moyenne_generale: 12.85,
-      credits_acquis: 26,
-      ues: [
-        { id: 'UE5-1', libelle: 'Enseignement Général', moyenne_ue: 11.50 },
-        { id: 'UE5-2', libelle: 'Connaissances LAN', moyenne_ue: 14.20 },
-        { id: 'UE5-3', libelle: 'Sécurité Réseaux', moyenne_ue: 12.10 }
-      ]
+    const authId = useCookie('authId').value
+    const matricule = useCookie('authMatricule').value // Assumons qu'on a le matricule en cookie
+    
+    const [resData, absData] = await Promise.all([
+      fetchApi(`/resultats/semestre/${authId}/`),
+      fetchApi('/absences/')
+    ])
+    
+    studentResults.value = resData
+    if (Array.isArray(absData)) {
+      absencesCount.value = absData.reduce((acc, curr) => acc + (curr.nombre_heures || 0), 0)
     }
+  } catch (error) {
+    console.error('Failed to fetch real data:', error)
+    studentResults.value = null
   } finally {
     isLoading.value = false
   }

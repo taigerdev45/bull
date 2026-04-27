@@ -3,6 +3,42 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from interfaces.api.serializers.resultat_serializer import BulletinSerializer
 from infrastructure.config.dependency_injection import Container
+from dependency_injector.wiring import inject, Provide
+
+@extend_schema(tags=['Résultats'])
+class SummaryBulletinListView(views.APIView):
+    """Fournit le bilan synthétique de tous les étudiants pour le registre."""
+    
+    @inject
+    def __init__(self, etudiant_repo=Provide[Container.etudiant_repo], 
+                 resultat_handler=Provide[Container.resultat_query_handler], **kwargs):
+        super().__init__(**kwargs)
+        self.etudiant_repo = etudiant_repo
+        self.resultat_handler = resultat_handler
+
+    def get(self, request):
+        etudiants = self.etudiant_repo.list_all()
+        resultats = []
+        for e in etudiants:
+            try:
+                res_s5 = self.resultat_handler.obtenir_resultat_semestre(e.matricule, 5)
+                res_annuel = self.resultat_handler.obtenir_resultat_annuel(e.matricule)
+                resultats.append({
+                    "id": e.id,
+                    "matricule": e.matricule,
+                    "nom": e.nom,
+                    "prenom": e.prenom,
+                    "moyenne_S5": round(res_s5.moyenne_generale, 2) if res_s5 else None,
+                    "moyenne_S6": None,
+                    "moyenne_annuelle": round(res_annuel.moyenne_generale, 2) if res_annuel else None,
+                    "decision_jury": res_annuel.decision if res_annuel else "En cours"
+                })
+            except Exception:
+                resultats.append({
+                    "id": e.id, "matricule": e.matricule, "nom": e.nom, "prenom": e.prenom,
+                    "moyenne_S5": None, "moyenne_S6": None, "moyenne_annuelle": None, "decision_jury": "N/A"
+                })
+        return Response(resultats)
 
 @extend_schema(
     tags=['Résultats'],

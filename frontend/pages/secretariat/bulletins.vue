@@ -254,16 +254,11 @@ const filteredEtudiants = computed(() => {
 const loadEtudiants = async () => {
   loading.value = true
   try {
-    const data = await fetchApi('/etudiants/')
-    etudiants.value = data.map(e => ({
-      ...e,
-      moyenne_S5: (Math.random() * 8 + 10).toFixed(2),
-      moyenne_S6: (Math.random() * 8 + 10).toFixed(2),
-      moyenne_annuelle: (Math.random() * 8 + 10).toFixed(2),
-      decision_jury: Math.random() > 0.4 ? 'Diplômé(e)' : (Math.random() > 0.5 ? 'Admissible' : 'Redouble la Licence 3')
-    }))
+    const data = await fetchApi('/bulletins/summary/')
+    etudiants.value = Array.isArray(data) ? data : []
   } catch (err) {
-    console.error(err)
+    console.error("Load registry error:", err)
+    etudiants.value = []
   } finally {
     loading.value = false
   }

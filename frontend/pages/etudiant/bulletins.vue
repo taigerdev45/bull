@@ -62,19 +62,19 @@
             <div v-for="ue in studentData.ues" :key="ue.id" class="ue-row">
               <div class="ue-header-p">
                 <div class="ue-title">
-                  <span class="ue-code">{{ ue.id }}</span>
+                  <span class="ue-code">{{ ue.code }}</span>
                   <h4>{{ ue.libelle }}</h4>
                 </div>
                 <div class="ue-score" :class="{ 'low': ue.moyenne_ue < 10 }">
-                  {{ ue.moyenne_ue.toFixed(2) }}
+                  {{ ue.moyenne_ue?.toFixed(2) || '0.00' }}
                   <small>/ 20</small>
                 </div>
               </div>
               
               <div class="matieres-grid">
-                <div v-for="n in 3" :key="n" class="matiere-item">
-                  <span class="m-name">Matière de Spécialité {{ n }}</span>
-                  <span class="m-note">{{ (Math.random() * 5 + 10).toFixed(2) }}</span>
+                <div v-for="m in ue.matieres" :key="m.id" class="matiere-item">
+                  <span class="m-name">{{ m.libelle }}</span>
+                  <span class="m-note">{{ m.moyenne?.toFixed(2) || '---' }}</span>
                 </div>
               </div>
             </div>
@@ -89,14 +89,14 @@
           <p class="desc">Dernières absences signalées par le corps enseignant.</p>
           
           <div class="absences-list">
-            <div v-for="n in 2" :key="n" class="abs-item">
+            <div v-for="abs in absences" :key="abs.id" class="abs-item">
               <div class="abs-date">
-                <span class="day">1{{ n }} Oct</span>
-                <span class="year">2026</span>
+                <span class="day">{{ new Date(abs.date).toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'}) }}</span>
+                <span class="year">{{ new Date(abs.date).getFullYear() }}</span>
               </div>
               <div class="abs-meta">
-                <span class="abs-subject">Réseaux Mobiles</span>
-                <span class="abs-duration">2 Heures - Injustifié</span>
+                <span class="abs-subject">{{ abs.matiere_libelle || 'Cours' }}</span>
+                <span class="abs-duration">{{ abs.nombre_heures }} Heures - {{ abs.justifiee ? 'Justifiée' : 'Injustifiée' }}</span>
               </div>
             </div>
           </div>
@@ -112,6 +112,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useApi } from '~/composables/useApi'
 
 useHead({ title: 'Mes Notes | Bull ASUR' })
 
@@ -122,29 +123,25 @@ const studentData = ref({
   credits_acquis: 0,
   ues: []
 })
-const absencesCount = ref(6)
+const absences = ref([])
+const absencesCount = computed(() => absences.value.reduce((acc, curr) => acc + (curr.nombre_heures || 0), 0))
 
 const loadData = async () => {
   isLoading.value = true
   try {
-    const authId = useCookie('authId').value || 'TEST'
-    // On simule/récupère les données
-    const data = await fetchApi(`/resultats/semestre/${authId}/`)
-    if (data) {
-      studentData.value = data
-    }
+    const authId = useCookie('authId').value
+    
+    const [resData, absData] = await Promise.all([
+      fetchApi(`/resultats/semestre/${authId}/?semestre=5`),
+      fetchApi('/absences/')
+    ])
+    
+    if (resData) studentData.value = resData
+    if (Array.isArray(absData)) absences.value = absData
   } catch (e) {
-    console.error("Erreur notes", e)
-    // Fallback Mock
-    studentData.value = {
-      moyenne_generale: 13.42,
-      credits_acquis: 24,
-      ues: [
-        { id: 'UE5-1', libelle: 'Réseaux & Protocoles', moyenne_ue: 14.20 },
-        { id: 'UE5-2', libelle: 'Développement Web', moyenne_ue: 12.80 },
-        { id: 'UE5-3', libelle: 'Management & Anglais', moyenne_ue: 11.50 }
-      ]
-    }
+    console.error("Failed to fetch real student bulletins:", e)
+    studentData.value = { moyenne_generale: 0, credits_acquis: 0, ues: [] }
+    absences.value = []
   } finally {
     isLoading.value = false
   }
