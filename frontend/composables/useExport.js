@@ -43,7 +43,6 @@ export const useExport = () => {
       doc.text(`Document : ${filename.toUpperCase()}`, 15, 28)
       doc.text(`Date : ${new Date().toLocaleDateString()}`, doc.internal.pageSize.width - 60, 28)
 
-      // Tableau Monochrome
       autoTable(doc, {
         head: [headers],
         body: rows,
@@ -71,131 +70,143 @@ export const useExport = () => {
       const pageWidth = doc.internal.pageSize.width
       const pageHeight = doc.internal.pageSize.height
 
-      // ─── STYLISATION PREMIUM ───
-      // Bordure fine décorative
-      doc.setDrawColor(230, 230, 230)
-      doc.rect(5, 5, pageWidth - 10, pageHeight - 10)
-      
-      // Bande de sécurité latérale
-      doc.setFillColor(0, 0, 0)
-      doc.rect(0, 0, 3, pageHeight, 'F')
-
-      // ─── LOGO (Simulation avec un cercle noir si absent, ou texte stylisé) ───
-      // On tente d'ajouter l'icône du projet
+      // ─── LOGO & QR CODE (Sécurité) ───
       try {
-        doc.addImage('/icon.png', 'PNG', 15, 10, 15, 15)
+        doc.addImage('/icon.png', 'PNG', 10, 8, 18, 18)
       } catch (e) {
-        doc.setFillColor(0,0,0)
-        doc.circle(22, 17, 8, 'F')
-        doc.setTextColor(255,255,255)
-        doc.setFontSize(10)
-        doc.text('B', 20, 19)
+        doc.setDrawColor(0); doc.rect(10, 8, 18, 18)
       }
 
-      // Header Officiel
-      doc.setTextColor(0, 0, 0)
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.text('RÉPUBLIQUE GABONAISE', 105, 15, { align: 'center' })
-      doc.setFontSize(8)
-      doc.setFont('times', 'italic')
-      doc.text('Union - Travail - Justice', 105, 20, { align: 'center' })
-      
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.text('MINISTERE DE LA COMMUNICATION ET DE L\'ECONOMIE NUMERIQUE', 105, 28, { align: 'center' })
-      doc.text('INSTITUT NATIONAL DES POSTES ET TICS (INPTIC)', 105, 32, { align: 'center' })
-      
-      // Titre du Document
-      doc.setDrawColor(0,0,0)
-      doc.setLineWidth(0.5)
-      doc.line(70, 45, 140, 45)
+      const validationUrl = `https://bull-asur.ga/verify/${studentData.matricule || 'VALID'}`
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(validationUrl)}`
+      try {
+        doc.addImage(qrApiUrl, 'PNG', pageWidth - 35, 8, 25, 25)
+      } catch (e) {}
+
+      // ─── TITRE PRINCIPAL ───
+      doc.setTextColor(20, 20, 80)
       doc.setFontSize(16)
-      doc.setFont('helvetica', 'bold')
-      doc.text('BULLETIN DE NOTES', 105, 52, { align: 'center' })
-      doc.setFontSize(11)
-      doc.text(`${type.toUpperCase()} - SESSION 2025-2026`, 105, 60, { align: 'center' })
-      doc.line(70, 65, 140, 65)
-
-      // ─── INFOS ÉTUDIANT ───
-      doc.setFillColor(245, 245, 245)
-      doc.rect(15, 75, pageWidth - 30, 25, 'F')
-      
+      doc.setFont('times', 'bold')
+      doc.text(`Bulletin de notes du Semestre 5`, pageWidth / 2, 18, { align: 'center' })
       doc.setFontSize(10)
-      doc.setTextColor(0,0,0)
-      doc.setFont('helvetica', 'bold')
-      doc.text(`Identité : ${studentData.nom} ${studentData.prenom}`, 20, 83)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`Matricule : ${studentData.matricule || 'N/A'}`, 20, 90)
-      doc.text(`Niveau : Licence 3 ASUR`, 20, 97)
-      
-      doc.text(`Date de naissance : 12/05/2004`, 120, 83)
-      doc.text(`Lieu : Libreville`, 120, 90)
-      doc.text(`Date d'édition : ${new Date().toLocaleDateString()}`, 120, 97)
+      doc.setFont('times', 'italic')
+      doc.text(`Année universitaire : 2025/2026`, pageWidth / 2, 23, { align: 'center' })
 
-      // ─── TABLEAU DES NOTES ───
+      // ─── CLASSE INFO (BANDEAU BLEU) ───
+      doc.setFillColor(30, 45, 110)
+      doc.rect(15, 30, pageWidth - 30, 8, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Classe : Licence Professionnelle Réseaux et Télécommunications Option Administration et Sécurité des Réseaux (ASUR)', 17, 35.5)
+
+      // ─── INFOS ÉTUDIANT (TABLEAU) ───
       autoTable(doc, {
-        startY: 110,
-        head: [['Code UE', 'Unités d\'Enseignement / Matières', 'Note', 'Crédit', 'Résultat']],
+        startY: 40,
+        margin: { left: 15 },
+        tableWidth: pageWidth - 30,
         body: [
-          [{ content: 'UE5.1', rowSpan: 2, styles: { valign: 'middle', fontStyle: 'bold' } }, 'Algorithmique & Structures de données', '14.50', '4', 'Validé'],
-          ['Ingénierie Logicielle', '12.00', '3', 'Validé'],
-          [{ content: 'UE5.2', rowSpan: 2, styles: { valign: 'middle', fontStyle: 'bold' } }, 'Réseaux Mobiles (4G/5G)', '16.00', '5', 'Validé'],
-          ['Sécurité LAN/WAN', '11.50', '3', 'Validé'],
-          [{ content: 'UE5.3', rowSpan: 2, styles: { valign: 'middle', fontStyle: 'bold' } }, 'Anglais Technique', '15.00', '2', 'Validé'],
-          ['Droit de l\'informatique', '13.00', '2', 'Validé'],
+          ['Nom(s) et Prénom(s)', studentData.nom + ' ' + studentData.prenom],
+          ['Date et lieu de naissance', 'Né(e) le 12/05/2004 à Libreville']
         ],
         theme: 'grid',
-        headStyles: { fillColor: [0, 0, 0], textColor: [255,255,255], fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 4 },
+        styles: { fontSize: 9, cellPadding: 2, textColor: [0, 0, 0] },
         columnStyles: { 
-          0: { cellWidth: 25 },
-          2: { halign: 'center', fontStyle: 'bold' },
-          3: { halign: 'center' },
-          4: { halign: 'center' }
+          0: { cellWidth: 50, fontStyle: 'bold', fillColor: [240, 240, 240] }
         }
       })
 
-      // ─── SYNTHÈSE & SIGNATURES ───
-      const finalY = doc.lastAutoTable.finalY + 15
+      // ─── TABLEAU DES NOTES PRINCIPAL ───
+      const gradeBody = []
+      // UE 5.1
+      gradeBody.push([{ content: 'UE5-1 : ENSEIGNEMENT GENERAL', colSpan: 5, styles: { fillColor: [230, 235, 255], fontStyle: 'bold' } }])
+      gradeBody.push(['   Anglais technique', '2', '1.00', '14.50', '12.48'])
+      gradeBody.push(['   Management d\'équipe', '1', '1.00', '12.00', '11.20'])
+      gradeBody.push(['   Droit de l\'informatique', '2', '2.00', '13.00', '13.27'])
+      gradeBody.push([{ content: 'Moyenne UE5-1', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } }, { content: '13.16', styles: { fontStyle: 'bold' } }, '12.32'])
       
-      doc.setFontSize(11)
-      doc.setFont('helvetica', 'bold')
-      doc.text(`MOYENNE GÉNÉRALE : ${studentData.moyenne || '0.00'} / 20`, 15, finalY)
-      doc.setFontSize(10)
-      doc.text(`DÉCISION DU JURY : ${studentData.decision || 'ADMISSIBLE'}`, 15, finalY + 7)
+      // UE 5.2
+      gradeBody.push([{ content: 'UE5-2 : SYSTEMES ET RESEAUX', colSpan: 5, styles: { fillColor: [230, 235, 255], fontStyle: 'bold' } }])
+      gradeBody.push(['   Connaissance des réseaux LAN', '2', '2.00', '15.00', '12.98'])
+      gradeBody.push(['   Administration Serveurs Windows', '3', '3.00', '11.00', '10.50'])
+      gradeBody.push(['   Administration Linux', '2', '2.00', '10.50', '11.41'])
+      gradeBody.push([{ content: 'Moyenne UE5-2', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } }, { content: '12.16', styles: { fontStyle: 'bold' } }, '11.63'])
+
+      // Penalites
+      gradeBody.push([{ content: 'Pénalités d\'absences', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } }, '0 heure(s)', ''])
       
-      // Ligne de signature
+      // Moyenne Semestre
+      gradeBody.push([{ content: 'Moyenne Semestre 5', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold', fillColor: [245, 245, 245] } }, { content: studentData.moyenne || '12.66', styles: { fontStyle: 'bold', fillColor: [245, 245, 245] } }, { content: '11.80', styles: { fillColor: [245, 245, 245] } }])
+
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 2,
+        margin: { left: 15 },
+        tableWidth: pageWidth - 30,
+        head: [['', 'Crédits', 'Coefficients', 'Notes de l\'étudiant', 'Moyenne de classe']],
+        body: gradeBody,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { halign: 'center', cellWidth: 20 },
+          2: { halign: 'center', cellWidth: 25 },
+          3: { halign: 'center', cellWidth: 35, fontStyle: 'bold' },
+          4: { halign: 'center', cellWidth: 30 }
+        }
+      })
+
+      // ─── RANG & MENTION ───
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 2,
+        margin: { left: 15 },
+        tableWidth: pageWidth - 30,
+        head: [['Rang de l\'étudiant au Semestre', 'Mention']],
+        body: [['Non classé', 'Passable']],
+        theme: 'grid',
+        styles: { fontSize: 8, halign: 'center' },
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] }
+      })
+
+      // ─── ETAT DE VALIDATION ───
       doc.setFontSize(9)
-      doc.text('Le Directeur des Études', pageWidth - 70, finalY)
-      doc.setDrawColor(200, 200, 200)
-      doc.line(pageWidth - 70, finalY + 2, pageWidth - 20, finalY + 2)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Etat de la Validation des Crédits au Semestre 5', pageWidth / 2, doc.lastAutoTable.finalY + 10, { align: 'center' })
       
-      // ─── QR CODE DE VÉRIFICATION ANTI-FRAUDE ───
-      const validationUrl = `https://bull-asur.ga/verify/${studentData.matricule || 'VALID'}`
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(validationUrl)}`
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 12,
+        margin: { left: 15 },
+        tableWidth: pageWidth - 30,
+        head: [['UE5-1', 'UE5-2', 'Crédits validés au Semestre 5']],
+        body: [
+          ['12 Crédits / 12', '18 Crédits / 18', '30 Crédits / 30'],
+          ['UE Acquise par Compensation', 'UE Acquise par Compensation', 'Semestre Acquis par Compensation']
+        ],
+        theme: 'grid',
+        styles: { fontSize: 8, halign: 'center' },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0] }
+      })
+
+      // ─── DECISION DU JURY ───
+      const finalY = doc.lastAutoTable.finalY + 15
+      doc.setDrawColor(30, 45, 110)
+      doc.setLineWidth(0.8)
+      doc.line(15, finalY, pageWidth - 15, finalY)
       
-      try {
-        // Simple placeholder text if image fails, otherwise add QR
-        doc.addImage(qrApiUrl, 'PNG', 15, pageHeight - 45, 30, 30)
-        doc.setFontSize(6)
-        doc.setTextColor(150, 150, 150)
-        doc.text('Scanner pour vérifier l\'authenticité', 15, pageHeight - 12)
-        doc.text(`ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 15, pageHeight - 9)
-      } catch (e) {
-        doc.setFontSize(7)
-        doc.text('[QR CODE DE SÉCURITÉ]', 15, pageHeight - 20)
-      }
+      doc.setFontSize(10)
+      doc.text(`Décision du Jury :   ${studentData.decision || 'Semestre 5 validé'}`, 15, finalY + 8)
+      doc.line(15, finalY + 15, pageWidth - 15, finalY + 15)
 
-      // Mentions Légales
-      doc.setFontSize(7)
-      doc.setTextColor(100, 100, 100)
-      doc.text('Certification Numérique Bull ASUR - Document officiel de l\'INPTIC', pageWidth / 2, pageHeight - 10, { align: 'center' })
+      // ─── FOOTER ───
+      doc.setFontSize(9)
+      doc.setFont('times', 'bold')
+      doc.text(`Fait à Libreville, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, pageWidth / 2, finalY + 25, { align: 'center' })
+      doc.text('Le Directeur des Etudes et de la Pédagogie', pageWidth / 2, finalY + 35, { align: 'center' })
 
-      doc.save(`Bulletin_${studentData.nom}_${studentData.matricule}.pdf`)
+      doc.save(`Bulletin_${studentData.nom}_S5.pdf`)
     } catch (e) {
       console.error(e)
-      alert("Échec de la génération stylisée du bulletin")
+      alert("Erreur de génération du bulletin")
     }
   }
 
