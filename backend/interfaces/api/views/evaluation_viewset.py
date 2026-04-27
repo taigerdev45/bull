@@ -63,7 +63,7 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             matiere_id=self.request.data.get('matiere_id'),
             type_eval=self.request.data.get('type'),
             note=self.request.data.get('note'),
-            saisie_par=self.request.user.uid
+            saisie_par=getattr(self.request.user, 'uid', self.request.user.username)
         )
         eval_id = self._get_handler().handle_creer(cmd)
 
@@ -71,14 +71,14 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         cmd = ModifierEvaluationCommand(
             evaluation_id=self.kwargs.get('pk'),
             nouvelle_note=self.request.data.get('note'),
-            auteur=self.request.user.uid
+            auteur=getattr(self.request.user, 'uid', self.request.user.username)
         )
         self._get_handler().handle_modifier(cmd)
 
     def perform_destroy(self, instance):
         cmd = SupprimerEvaluationCommand(
             evaluation_id=self.kwargs.get('pk'),
-            auteur=self.request.user.uid
+            auteur=getattr(self.request.user, 'uid', self.request.user.username)
         )
         self._get_handler().handle_supprimer(cmd)
 
@@ -104,6 +104,8 @@ class EvaluationViewSet(viewsets.ModelViewSet):
                 return Response({"error": "Format invalide. Liste ou objet {evaluations:[]} attendu."}, status=status.HTTP_400_BAD_REQUEST)
                 
             commands = []
+            saisie_par = getattr(request.user, 'uid', request.user.username)
+            
             for item in evaluations_list:
                 # Validation minimale
                 etudiant_id = item.get('etudiant_id')
@@ -114,12 +116,21 @@ class EvaluationViewSet(viewsets.ModelViewSet):
                 if not all([etudiant_id, matiere_id, type_eval]):
                     continue # Skip invalid entries
 
+                # Mapping flexible du type d'évaluation (UI labels -> Enum keys)
+                type_map = {
+                    'Contrôle Continu': 'CC',
+                    'Examen Final': 'EXAMEN',
+                    'Examen': 'EXAMEN',
+                    'Rattrapage': 'RATTRAPAGE'
+                }
+                final_type = type_map.get(type_eval, type_eval)
+
                 cmd = CreerEvaluationCommand(
-                    etudiant_id=etudiant_id,
-                    matiere_id=matiere_id,
-                    type_eval=type_eval,
-                    note=note_val,
-                    saisie_par=request.user.username
+                    etudiant_id=str(etudiant_id),
+                    matiere_id=str(matiere_id),
+                    type_eval=final_type,
+                    note=float(note_val) if note_val is not None else None,
+                    saisie_par=saisie_par
                 )
                 commands.append(cmd)
                 
@@ -133,8 +144,22 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             return Response({"error": f"Données invalides : {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             import traceback
-            print(traceback.format_exc())
+            error_trace = traceback.format_exc()
+            print(f"[ERROR BULK] {error_trace}")
             return Response({"error": f"Erreur serveur : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """Résumé global pour le dashboard ou le secrétariat."""
+        repo = self._get_repo()
+        evals = repo.obtenir_tout()
+        
+        # On pourrait agréger par étudiant/matière
+        summary_data = {
+            "total_notes": len(evals),
+            "moyenne_globale": sum(e.note_valeur for e in evals if e.note_valeur) / len([e for e in evals if e.note_valeur]) if evals else 0,
+        }
+        return Response(summary_data)
 
     @extend_schema(
         summary="Lister les notes d'un étudiant",

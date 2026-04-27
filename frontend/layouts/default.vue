@@ -143,6 +143,12 @@ const allLinks = [
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>'
   },
   { 
+    path: '/deliberations', 
+    label: 'PV & Délibérations', 
+    roles: ['admin', 'secretariat', 'super_admin'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>'
+  },
+  { 
     path: '/personnel', 
     label: 'Gestion Personnel', 
     roles: ['admin', 'super_admin'], 

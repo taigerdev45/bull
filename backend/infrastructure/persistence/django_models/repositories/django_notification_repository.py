@@ -1,3 +1,4 @@
+
 from typing import List, Optional
 from domain.entities.notification import Notification
 from domain.repositories.i_notification_repository import INotificationRepository

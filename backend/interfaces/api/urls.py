@@ -45,6 +45,7 @@ urlpatterns = [
     path('resultats/semestre/<str:etudiant_id>/', ResultatSemestreView.as_view()),
     path('resultats/annuel/<str:etudiant_id>/', ResultatAnnuelView.as_view()),
     path('resultats/promotion/stats/', PromotionStatsView.as_view()),
+    path('bulletins/summary/', SummaryBulletinListView.as_view()),
     path('bulletins/donnees/<str:etudiant_id>/', BulletinView.as_view()),
     path('import/evaluations/', ImportEvaluationsView.as_view()),
     path('export/resultats/', ExportResultatsView.as_view()),

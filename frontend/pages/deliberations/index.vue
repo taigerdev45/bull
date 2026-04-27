@@ -40,10 +40,63 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon warning">👥</div>
+        <div class="stat-icon danger">📉</div>
         <div class="stat-details">
-          <span class="label">Effectif Total</span>
-          <span class="value">{{ stats.resultats?.length || 0 }}</span>
+          <span class="label">Moyenne Min</span>
+          <span class="value">{{ stats.min_moyenne?.toFixed(2) }}</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon excellent">📈</div>
+        <div class="stat-details">
+          <span class="label">Moyenne Max</span>
+          <span class="value">{{ stats.max_moyenne?.toFixed(2) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribution des Mentions & Per-UE Stats -->
+    <div class="analytics-grid">
+      <div class="pv-card mentions-dist">
+        <div class="card-header">
+          <h3>Répartition des Mentions</h3>
+        </div>
+        <div class="mentions-body">
+          <div v-for="(count, label) in stats.mentions_distribution" :key="label" class="mention-row">
+            <span class="m-label">{{ label }}</span>
+            <div class="m-bar-container">
+              <div class="m-bar" :style="{ width: (count / stats.total_etudiants * 100) + '%' }" :class="label.toLowerCase().replace(' ', '-')"></div>
+            </div>
+            <span class="m-count">{{ count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pv-card ues-stats">
+        <div class="card-header">
+          <h3>Performance par UE</h3>
+        </div>
+        <div class="table-container small">
+          <table class="modern-table compact">
+            <thead>
+              <tr>
+                <th>UE</th>
+                <th class="center">Moy</th>
+                <th class="center">Reussite</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="ue in stats.stats_par_ue" :key="ue.code">
+                <td><strong>{{ ue.code }}</strong></td>
+                <td class="center">{{ ue.moyenne?.toFixed(2) }}</td>
+                <td class="center">
+                  <span class="ue-badge" :class="ue.taux_reussite_ue >= 50 ? 'ok' : 'ko'">
+                    {{ ue.taux_reussite_ue?.toFixed(0) }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -422,5 +475,76 @@ onMounted(fetchStats)
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.mentions-body {
+  padding: 1.5rem 2rem;
+}
+
+.mention-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.m-label {
+  width: 100px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.m-bar-container {
+  flex: 1;
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.m-bar {
+  height: 100%;
+  border-radius: 5px;
+  background: #000080;
+}
+
+.m-bar.très-bien { background: #000; }
+.m-bar.bien { background: #1e293b; }
+.m-bar.assez-bien { background: #475569; }
+.m-bar.passable { background: #94a3b8; }
+.m-bar.ajourné { background: #ef4444; }
+
+.m-count {
+  width: 30px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.modern-table.compact td, .modern-table.compact th {
+  padding: 0.75rem 1rem;
+}
+
+.ue-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.ue-badge.ok { background: #dcfce7; color: #15803d; }
+.ue-badge.ko { background: #fee2e2; color: #b91c1c; }
+
+@media (max-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

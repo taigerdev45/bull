@@ -50,16 +50,21 @@ class UEViewSet(viewsets.ViewSet):
             is_staff = role in ['admin', 'super_admin', 'secretariat']
             
             ues = self.ue_repo.list_all()
+            
+            # Si c'est un enseignant, on pré-charge ses matières pour éviter le N+1
+            mes_matieres_all = []
+            if not is_staff and role == 'enseignant':
+                uid = getattr(request.user, 'uid', request.user.username)
+                mes_matieres_all = self.matiere_repo.get_by_enseignant(uid)
+            
             result = []
             for ue in ues:
                 matieres = self.matiere_repo.get_by_ue(ue.id)
                 
                 # Filtrage pour enseignant
                 if not is_staff and role == 'enseignant':
-                    uid = getattr(request.user, 'uid', request.user.username)
-                    # On évite l'import direct de modèle ici pour la stabilité
-                    mes_matieres = self.matiere_repo.get_by_enseignant(uid)
-                    matieres = [m for m in mes_matieres if m._ue_id == ue.id]
+                    # On filtre les matières de cet UE parmi celles de l'enseignant
+                    matieres = [m for m in mes_matieres_all if m._ue_id == ue.id]
                     if not matieres:
                         continue
                 

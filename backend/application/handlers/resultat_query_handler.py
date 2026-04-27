@@ -60,37 +60,89 @@ class ResultatQueryHandler:
         )
 
     def executer_stats_query(self, query: ObtenirStatsPromotionQuery) -> Dict:
-        # Simplification: on récupère tous les résultats du semestre
-        from infrastructure.persistence.django_models.models import ResultatSemestreModel, ResultatUEModel
+        # Récupération des résultats du semestre
+        from infrastructure.persistence.django_models.models import ResultatSemestreModel, ResultatUEModel, UEModel
+        from django.db.models import Avg, Max, Min, Count
         
         qs = ResultatSemestreModel.objects.all().select_related('etudiant')
         if query.semestre:
             qs = qs.filter(numero_semestre=query.semestre)
             
         resultats = []
+        somme_moyennes = 0
+        nb_valide = 0
+        
+        # Pour les stats par UE
+        ues_stats = {} # {ue_code: [moyennes]}
+        
+        # Pour la distribution des mentions
+        mentions_dist = {
+            "Excellent": 0,
+            "Très Bien": 0,
+            "Bien": 0,
+            "Assez Bien": 0,
+            "Passable": 0,
+            "Ajourné": 0
+        }
+
         for res in qs:
             etudiant = res.etudiant
-            # Récupérer les moyennes d'UE réelles pour cet étudiant et ce semestre
+            moyenne = res.valeur_moyenne
+            somme_moyennes += moyenne
+            
+            if moyenne >= 10:
+                nb_valide += 1
+                
+            # Mention simple
+            if moyenne >= 16: mentions_dist["Très Bien"] += 1
+            elif moyenne >= 14: mentions_dist["Bien"] += 1
+            elif moyenne >= 12: mentions_dist["Assez Bien"] += 1
+            elif moyenne >= 10: mentions_dist["Passable"] += 1
+            else: mentions_dist["Ajourné"] += 1
+
+            # Récupérer les moyennes d'UE
             ues_res = ResultatUEModel.objects.filter(etudiant=etudiant, ue__semestre_id=str(res.numero_semestre))
             
             detail_ues = {}
             for ur in ues_res:
-                detail_ues[ur.ue.code] = ur.valeur_moyenne
+                ue_code = ur.ue.code
+                detail_ues[ue_code] = ur.valeur_moyenne
+                if ue_code not in ues_stats:
+                    ues_stats[ue_code] = []
+                ues_stats[ue_code].append(ur.valeur_moyenne)
 
             resultats.append({
                 "id": etudiant.matricule,
                 "nom": etudiant.nom,
                 "prenom": etudiant.prenom,
-                "moyS5": res.valeur_moyenne,
+                "moyS5": moyenne,
                 "credits": res.details.get('credits_acquis', 0),
-                "decision": "Validé" if res.valeur_moyenne >= 10 else "Ajourné",
+                "decision": "Validé" if moyenne >= 10 else "Ajourné",
                 "ues": detail_ues
             })
             
+        # Calcul des stats par UE
+        final_ues_stats = []
+        for code, mops in ues_stats.items():
+            if mops:
+                final_ues_stats.append({
+                    "code": code,
+                    "moyenne": sum(mops) / len(mops),
+                    "min": min(mops),
+                    "max": max(mops),
+                    "taux_reussite_ue": len([m for m in mops if m >= 10]) / len(mops) * 100
+                })
+
+        count = len(resultats)
         return {
             "resultats": resultats,
-            "moyenne_classe": sum(r["moyS5"] for r in resultats) / len(resultats) if resultats else 0,
-            "taux_reussite": (len([r for r in resultats if r["decision"] == "Validé"]) / len(resultats) * 100) if resultats else 0
+            "total_etudiants": count,
+            "moyenne_classe": somme_moyennes / count if count else 0,
+            "taux_reussite": (nb_valide / count * 100) if count else 0,
+            "min_moyenne": min(r["moyS5"] for r in resultats) if resultats else 0,
+            "max_moyenne": max(r["moyS5"] for r in resultats) if resultats else 0,
+            "mentions_distribution": mentions_dist,
+            "stats_par_ue": final_ues_stats
         }
 
     def lister_evaluations(self, query: ListerEvaluationsEtudiantQuery) -> List:
