@@ -2,20 +2,19 @@
 skinparam participantPadding 20
 
 actor "Secrétariat" as S
+participant "Client UI (Nuxt 3)" as UI
 participant "Backend API" as B
-participant "BulletinService" as SVC
 participant "ResultatRepository" as REP
-participant "PDFGenerator (WeasyPrint)" as GEN
+participant "jsPDF Engine (Client)" as GEN
 
-S -> B : GET /api/bulletins/{etudiantId}
-B -> SVC : genererBulletin(etudiantId)
-SVC -> REP : getResultatsComplets(id)
-REP -->> SVC : Data (JSON/Entity)
+S -> UI : Cliquer "Télécharger Bulletin"
+UI -> B : GET /api/bulletins/donnees/{id}
+B -> REP : fetchScores(id)
+REP -->> B : Data (JSON)
+B -->> UI : Data (JSON)
 
-SVC -> SVC : Formater Template HTML
-SVC -> GEN : convertHTMLToPDF(html)
-GEN -->> SVC : ByteStream (PDF)
-
-SVC -->> B : Fichier PDF
-B -->> S : Flux de téléchargement (Binary)
+UI -> GEN : generatePDF(Data)
+GEN -> GEN : Build Tables & Header
+GEN -->> UI : Blob / Open Window
+UI -->> S : Téléchargement instantané
 @enduml
