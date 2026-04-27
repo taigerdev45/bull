@@ -57,7 +57,13 @@ class UEViewSet(viewsets.ViewSet):
                 # Filtrage pour enseignant
                 if not is_staff and role == 'enseignant':
                     uid = getattr(request.user, 'uid', request.user.username)
-                    matieres = [m for m in matieres if m.enseignant and m.enseignant.user_id == uid]
+                    from infrastructure.persistence.django_models.models import EnseignantModel
+                    try:
+                        enseignant_django = EnseignantModel.objects.get(user_id=uid)
+                        matieres = [m for m in matieres if m.enseignant_id == enseignant_django.id]
+                    except EnseignantModel.DoesNotExist:
+                        matieres = []
+                    
                     if not matieres:
                         continue
                 
