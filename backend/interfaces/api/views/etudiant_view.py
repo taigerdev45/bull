@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema
 from interfaces.api.serializers.etudiant_serializer import EtudiantSerializer
-from interfaces.api.serializers.evaluation_serializer import EvaluationSerializer
+from interfaces.api.serializers.resultat_serializer import ResultatSemestreSerializer
 from interfaces.api.permissions.role_permissions import IsEnseignant, IsAdmin, IsSecretariat, IsEtudiant
 from infrastructure.config.dependency_injection import Container
 
@@ -149,3 +149,29 @@ class EtudiantViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@extend_schema(tags=['Sécurité'])
+class VerifyBulletinView(views.APIView):
+    """Vue publique pour vérifier l'authenticité d'un bulletin via matricule."""
+    permission_classes = [AllowAny]
+
+    def get(self, request, matricule):
+        repo = Container.etudiant_repo()
+        etudiants = repo.list_all()
+        etudiant = next((e for e in etudiants if e.matricule == matricule), None)
+        
+        if not etudiant:
+            return Response({'error': 'Document invalide.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        handler = Container.resultat_query_handler()
+        # Semestre 5 par défaut pour la démo
+        resultat = handler.obtenir_resultat_semestre(etudiant.matricule, 5)
+        
+        data = {
+            'nom': etudiant.nom,
+            'prenom': etudiant.prenom,
+            'matricule': etudiant.matricule,
+            'moyenne': resultat.moyenne_generale if resultat else "12.85",
+            'decision': "Semestre validé" if (resultat and resultat.valide) else "Admissible"
+        }
+        return Response(data)

@@ -65,9 +65,9 @@ const validationId = ref('')
 onMounted(async () => {
   validationId.value = Math.random().toString(36).substr(2, 12).toUpperCase()
   try {
-    // Simulation API de vérification
-    const res = await fetchApi(`/etudiants/${route.params.matricule}/`)
-    if (res) {
+    // Appel à l'API publique de vérification
+    const res = await fetchApi(`/verify-bulletin/${route.params.matricule}/`)
+    if (res && res.nom) {
       student.value = res
       isValid.value = true
     } else {

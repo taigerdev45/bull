@@ -1,7 +1,7 @@
 from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
-from interfaces.api.views.etudiant_view import EtudiantViewSet
+from interfaces.api.views.etudiant_view import EtudiantViewSet, VerifyBulletinView
 from interfaces.api.views.absence_viewset import AbsenceViewSet
 from interfaces.api.views.evaluation_viewset import EvaluationViewSet
 from interfaces.api.views.resultat_view import ResultatSemestreView, ResultatAnnuelView, PromotionStatsView
@@ -47,4 +47,5 @@ urlpatterns = [
     path('import/evaluations/', ImportEvaluationsView.as_view()),
     path('export/resultats/', ExportResultatsView.as_view()),
     path('parametres/', ParametresView.as_view(), name='parametres'),
+    path('verify-bulletin/<str:matricule>/', VerifyBulletinView.as_view(), name='verify_bulletin'),
 ]
