@@ -25,8 +25,7 @@ class UESerializer(serializers.Serializer):
     matieres = MatiereSerializer(many=True, read_only=True)
 
     def validate_code(self, value):
-        # Format plus souple : UE5-1, UE1.1, etc.
-        if not re.match(r'^UE[0-9]+-[0-9]+$', value) and not re.match(r'^UE[0-9]+\.[0-9]+$', value):
-            if not re.match(r'^UE[0-9]+-[0-9]+$', value):
-                raise serializers.ValidationError("Le code UE doit être au format UE5-1, UE1.1, etc.")
-        return value
+        # Format souple : doit commencer par "UE" (insensible à la casse)
+        if not re.match(r'^UE.*$', value, re.IGNORECASE):
+            raise serializers.ValidationError("Le code UE doit commencer par 'UE' (ex: UE5-1, UE.1, UE-MATH).")
+        return value.upper()
