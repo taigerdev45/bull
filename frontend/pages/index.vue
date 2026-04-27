@@ -1,6 +1,6 @@
 <template>
   <div class="landing-page" @mousemove="handleMouseMove">
-    <!-- Overlay Effet Spatial : Bulle Sphérique de Particules -->
+    <!-- Overlay Effet Spatial : "Ballon" de Particules (Inspiration Antigravity) -->
     <canvas ref="bubbleCanvas" class="bubble-layer"></canvas>
     <div class="overlay"></div>
     
@@ -21,7 +21,6 @@
     <div class="content-wrapper">
       <header class="landing-header">
         <div class="main-logo-container">
-          <!-- Logo Restoré Couleurs d'Origine -->
           <img src="/logo.png" alt="Bull ASUR Logo Officiel" class="landing-logo">
         </div>
         <h1>Portail Bull ASUR</h1>
@@ -34,33 +33,32 @@
           <div @click="selectRole('etudiant')" class="premium-card etudiant-border">
             <div class="card-content">
               <h2>Étudiant</h2>
-              <p>Notes & Parcours</p>
+              <p>Profil & Résultats</p>
             </div>
           </div>
 
           <div @click="selectRole('enseignant')" class="premium-card enseignant-border">
             <div class="card-content">
               <h2>Enseignant</h2>
-              <p>Saisie Pédagogique</p>
+              <p>Saisie & Matières</p>
             </div>
           </div>
 
           <div @click="selectRole('secretariat')" class="premium-card secretariat-border">
             <div class="card-content">
               <h2>Secrétariat</h2>
-              <p>Gestion Administrative</p>
+              <p>Administration</p>
             </div>
           </div>
 
           <div @click="selectRole('admin')" class="premium-card admin-border">
             <div class="card-content">
               <h2>Admin</h2>
-              <p>Contrôle Système</p>
+              <p>Maintenance</p>
             </div>
           </div>
         </div>
 
-        <!-- Étape 2 : Formulaire de Connexion -->
         <div v-else key="login" class="login-overlay">
           <div class="login-card glass-morphism">
             <button class="back-btn" @click="showLoginForm = false">
@@ -95,22 +93,22 @@
       <section class="seo-content">
         <div class="seo-grid">
           <article class="seo-item">
-            <h3>Excellence Académique ASUR</h3>
-            <p>La solution logicielle Bull ASUR optimise le suivi des performances pour la Licence Professionnelle en Administration et Sécurité des Réseaux de l'INPTIC.</p>
+            <h3>ASUR Excellence</h3>
+            <p>Le système Bull ASUR est le moteur de gestion académique de l'INPTIC, spécialisé pour la Licence ASUR au Gabon.</p>
           </article>
           <article class="seo-item">
-            <h3>Digitalisation de l'INPTIC</h3>
-            <p>Plateforme centralisée permettant une gestion fluide des notes, PV et délibérations annuelles en toute sécurité et transparence.</p>
+            <h3>Digitalisation INPTIC</h3>
+            <p>Transition numérique complète pour la gestion des bulletins de notes et délibérations scolaires en temps réel.</p>
           </article>
           <article class="seo-item">
-            <h3>Technologie Cloud Gabon</h3>
-            <p>Une interface SaaS moderne, conçue pour les standards de l'éducation supérieure numérique au Gabon.</p>
+            <h3>Standard SaaS Premium</h3>
+            <p>Une expérience utilisateur haut de gamme combinant sécurité réseau et ergonomie moderne pour l'éducation.</p>
           </article>
         </div>
       </section>
 
       <footer class="landing-footer">
-        <p>&copy; 2026 INPTIC - Plateforme Bull ASUR</p>
+        <p>&copy; 2026 INPTIC - Bull ASUR</p>
       </footer>
     </div>
   </div>
@@ -124,37 +122,60 @@ definePageMeta({ layout: 'empty' })
 
 const router = useRouter(); const { fetchApi } = useApi()
 
-// Bubble Animation Logic (Spherical Sphere Formation)
+// Bubble Animation Logic (Antigravity Magnetic Ball)
 const bubbleCanvas = ref(null)
 let ctx = null; let particles = []
-const bubbleCount = 60
-const mouse = { x: 0, y: 0 }
+const bubbleCount = 80
+const mouse = { x: -100, y: -100 }
 
 class Particle {
-  constructor(index) {
-    this.index = index
+  constructor() {
     this.reset()
   }
   reset() {
-    this.radius = 80 + Math.random() * 20 // Rayon de la sphère
-    this.angle = (this.index / bubbleCount) * Math.PI * 2 + Math.random() * 0.5
-    this.size = Math.random() * 2.5 + 1
-    this.opacity = Math.random() * 0.6 + 0.2
-    this.speed = 0.02 + Math.random() * 0.02
-    this.offset = Math.random() * 10
+    this.x = Math.random() * window.innerWidth
+    this.y = Math.random() * window.innerHeight
+    this.size = Math.random() * 2 + 1
+    this.baseX = this.x
+    this.baseY = this.y
+    this.density = (Math.random() * 20) + 10
+    this.friction = 0.95
+    this.vx = 0
+    this.vy = 0
+    this.color = "rgba(255, 255, 255, " + (Math.random() * 0.5 + 0.3) + ")"
   }
   update() {
-    this.angle += this.speed
-    this.x = mouse.x + Math.cos(this.angle) * (this.radius + Math.sin(this.angle * 2) * 5)
-    this.y = mouse.y + Math.sin(this.angle) * (this.radius + Math.cos(this.angle * 2) * 5)
+    // Magnetic Pull Effect (Antigravity Style)
+    let dx = mouse.x - this.x
+    let dy = mouse.y - this.y
+    let distance = Math.sqrt(dx * dx + dy * dy)
+    let forceDirectionX = dx / distance
+    let forceDirectionY = dy / distance
+    
+    // Create a spherical ball around the mouse
+    const radius = 50 
+    let force = (radius - distance) / radius
+    
+    if (distance < radius) {
+      this.vx += forceDirectionX * force * 1.5
+      this.vy += forceDirectionY * force * 1.5
+    } else {
+      // Return to original "ball" formation or stay near mouse
+      this.vx += (mouse.x - this.x + (Math.random() - 0.5) * 60) / this.density
+      this.vy += (mouse.y - this.y + (Math.random() - 0.5) * 60) / this.density
+    }
+
+    this.vx *= this.friction
+    this.vy *= this.friction
+    this.x += this.vx
+    this.y += this.vy
   }
   draw() {
-    ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`
+    ctx.fillStyle = this.color
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+    ctx.closePath()
     ctx.fill()
-    // Subtle glow for the particles
-    ctx.shadowBlur = 4; ctx.shadowColor = "white"
   }
 }
 
@@ -163,9 +184,8 @@ const handleMouseMove = (e) => {
 }
 
 const animate = () => {
-  if (!ctx) return
+  if (!ctx || !bubbleCanvas.value) return
   ctx.clearRect(0, 0, bubbleCanvas.value.width, bubbleCanvas.value.height)
-  ctx.shadowBlur = 0 // Reset shadow for background
   particles.forEach(p => {
     p.update()
     p.draw()
@@ -178,7 +198,7 @@ onMounted(() => {
     bubbleCanvas.value.width = window.innerWidth
     bubbleCanvas.value.height = window.innerHeight
     ctx = bubbleCanvas.value.getContext('2d')
-    for (let i = 0; i < bubbleCount; i++) particles.push(new Particle(i))
+    for (let i = 0; i < bubbleCount; i++) particles.push(new Particle())
     animate()
   }
   window.addEventListener('resize', () => {
@@ -209,7 +229,7 @@ const handleLogin = async () => {
       useCookie('authId').value = res.user.id
       router.push(`/${res.user.role}`)
     }
-  } catch (e) { alert("Erreur d'identification") } finally { loading.value = false }
+  } catch (e) { alert("Accès refusé") } finally { loading.value = false }
 }
 </script>
 
@@ -229,11 +249,11 @@ const handleLogin = async () => {
 .landing-header h1 { font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 950; letter-spacing: -3px; color: #fff; line-height: 1; margin-bottom: 1rem; }
 .subtitle { font-size: 1.1rem; color: rgba(255,255,255,0.8); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
 
-.roles-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; width: 100%; max-width: 1200px; margin-bottom: 6rem; }
-.premium-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2.5rem; text-align: center; color: white; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); min-height: 140px; display: flex; align-items: center; justify-content: center; }
+.roles-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; width: 100%; max-width: 1100px; margin-bottom: 6rem; }
+.premium-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2.5rem 1.5rem; text-align: center; color: white; cursor: pointer; transition: all 0.3s; min-height: 120px; display: flex; align-items: center; justify-content: center; }
 .premium-card:hover { background: #fff; color: #000; transform: translateY(-5px); border-color: #fff; }
-.premium-card h2 { font-size: 1.4rem; font-weight: 900; margin-bottom: 0.25rem; }
-.premium-card p { font-size: 0.8rem; opacity: 0.6; font-weight: 700; text-transform: uppercase; }
+.premium-card h2 { font-size: 1.3rem; font-weight: 900; margin-bottom: 0.25rem; }
+.premium-card p { font-size: 0.75rem; opacity: 0.6; font-weight: 700; text-transform: uppercase; }
 
 .login-card { background: #fff; color: #000; padding: 3rem; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
 .back-btn { background: transparent; border: none; font-weight: 800; color: #94a3b8; cursor: pointer; margin-bottom: 1.5rem; padding: 0; }
@@ -258,7 +278,6 @@ const handleLogin = async () => {
   .premium-card { min-height: 100px; padding: 1.5rem; }
   .landing-header h1 { font-size: 2.2rem; }
   .top-banner { padding: 1.5rem; }
-  .login-card { padding: 2rem; }
 }
 
 .fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.4s ease; }
