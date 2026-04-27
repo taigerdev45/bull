@@ -230,7 +230,16 @@ const submitUE = async () => {
     ueModal.show = false
     await fetchReferentiel()
   } catch (err) {
-    ueModal.error = err.data?.code?.[0] || err.data?.error || err.data?.libelle?.[0] || 'Erreur lors de la sauvegarde. Vérifiez le format du code UE (ex: UE5-1).'
+    if (err.data && typeof err.data === 'object' && !err.data.error) {
+      // Extraire les erreurs DRF (ex: { code: ["..."], semestre_id: ["..."] })
+      const errorMsg = Object.entries(err.data)
+        .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+        .join(' | ')
+      ueModal.error = errorMsg
+    } else {
+      ueModal.error = err.data?.error || 'Erreur lors de la sauvegarde. Vérifiez les champs.'
+    }
+    console.error('Submit UE Error Body:', err.data)
   } finally {
     ueModal.loading = false
   }
