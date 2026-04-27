@@ -91,30 +91,50 @@ class EvaluationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='bulk')
     def bulk_creer(self, request):
         """Action pour la saisie multiple de notes."""
-        data = request.data
-        evaluations_list = []
-        
-        # Support du format { evaluations: [...] } ou [...]
-        if isinstance(data, dict) and 'evaluations' in data:
-            evaluations_list = data['evaluations']
-        elif isinstance(data, list):
-            evaluations_list = data
-        else:
-            return Response({"error": "Format invalide. Liste ou objet {evaluations:[]} attendu."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            data = request.data
+            evaluations_list = []
             
-        commands = []
-        for item in evaluations_list:
-            cmd = CreerEvaluationCommand(
-                etudiant_id=item.get('etudiant_id'),
-                matiere_id=item.get('matiere_id') or data.get('matiere_id'),
-                type_eval=item.get('type'),
-                note=item.get('note'),
-                saisie_par=request.user.username
-            )
-            commands.append(cmd)
+            # Support du format { evaluations: [...] } ou [...]
+            if isinstance(data, dict) and 'evaluations' in data:
+                evaluations_list = data['evaluations']
+            elif isinstance(data, list):
+                evaluations_list = data
+            else:
+                return Response({"error": "Format invalide. Liste ou objet {evaluations:[]} attendu."}, status=status.HTTP_400_BAD_REQUEST)
+                
+            commands = []
+            for item in evaluations_list:
+                # Validation minimale
+                etudiant_id = item.get('etudiant_id')
+                matiere_id = item.get('matiere_id') or data.get('matiere_id')
+                type_eval = item.get('type')
+                note_val = item.get('note')
+
+                if not all([etudiant_id, matiere_id, type_eval]):
+                    continue # Skip invalid entries
+
+                cmd = CreerEvaluationCommand(
+                    etudiant_id=etudiant_id,
+                    matiere_id=matiere_id,
+                    type_eval=type_eval,
+                    note=note_val,
+                    saisie_par=request.user.username
+                )
+                commands.append(cmd)
+                
+            if not commands:
+                return Response({"error": "Aucune donnée valide à enregistrer."}, status=status.HTTP_400_BAD_REQUEST)
+
+            self._get_handler().handle_bulk_creer(commands)
+            return Response({"status": "Notes enregistrées avec succès"}, status=status.HTTP_201_CREATED)
             
-        self._get_handler().handle_bulk_creer(commands)
-        return Response({"status": "Notes enregistrées avec succès"}, status=status.HTTP_201_CREATED)
+        except KeyError as e:
+            return Response({"error": f"Type d'évaluation invalide: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            return Response({"error": f"Erreur serveur: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @extend_schema(
         summary="Lister les notes d'un étudiant",

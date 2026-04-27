@@ -7,20 +7,23 @@ from infrastructure.persistence.django_models.models import EvaluationModel, Etu
 
 class DjangoEvaluationRepository(IEvaluationRepository):
     def creer(self, evaluation: Evaluation) -> str:
-        etudiant = EtudiantModel.objects.get(id=evaluation.etudiant_id)
-        matiere = MatiereModel.objects.get(id=evaluation.matiere_id)
-        
-        # On utilise l'ID existant ou on en génère un nouveau
-        eval_id = evaluation.id or str(uuid.uuid4())
-        
-        model = EvaluationModel.objects.create(
-            id=eval_id,
-            etudiant=etudiant,
-            matiere=matiere,
-            type=evaluation.type.name,
-            note=evaluation.note_valeur
-        )
-        return model.id
+        try:
+            etudiant = EtudiantModel.objects.get(id=evaluation.etudiant_id)
+            matiere = MatiereModel.objects.get(id=evaluation.matiere_id)
+            
+            # On utilise l'ID existant ou on en génère un nouveau
+            eval_id = evaluation.id or str(uuid.uuid4())
+            
+            model = EvaluationModel.objects.create(
+                id=eval_id,
+                etudiant=etudiant,
+                matiere=matiere,
+                type=evaluation.type.name,
+                note=evaluation.note_valeur
+            )
+            return model.id
+        except (EtudiantModel.DoesNotExist, MatiereModel.DoesNotExist) as e:
+            raise ValueError(f"Référence invalide : {str(e)}")
 
     def bulk_creer(self, evaluations: List[Evaluation]) -> List[str]:
         ids = []
