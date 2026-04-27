@@ -1,54 +1,53 @@
-# Diagramme de Composants (Component Diagram)
+# Diagramme de Composants - Bull ASUR v2.5
 
-Architecture modulaire du système Bulletin Notes.
+Architecture modulaire et hybride du système.
 
 ```mermaid
 graph TD
-    subgraph Frontend [Nuxt.3 Application]
-        UI[User Interface]
-        Store[Pinia Store / Auth]
-        API_Client[Supabase JS Client]
+    subgraph Client [Client Side / PWA]
+        UI[Premium Monochrome UI]
+        PWA[PWA / Service Worker]
+        Notif[Notification Center]
+        Export[jsPDF Engine]
     end
 
-    subgraph Backend [Django Application]
-        subgraph Interfaces
-            REST[REST API Views]
-            Middle[Supabase Auth Middleware]
-        end
-        
-        subgraph Application
-            AppSvc[Services Applicatifs]
-            Cmd[Command Handlers]
-        end
-        
-        subgraph Domain [Core Logic]
-            Entities[Entities & Value Objects]
-            Rules[Domain Services / Calc]
-        end
-        
-        subgraph "Infrastructure Layer"
-            Repo[Django Repositories]
-            Auth[Supabase Auth Adapter]
-            PDF[PDF Generators / WeasyPrint]
-        end
+    subgraph Frontend [Nuxt.3 Framework]
+        Store[Auth Store / Cookies]
+        Composables[API Composables]
+        Aura[Kinetic Aura Engine]
     end
 
-    subgraph External [Supabase Services]
-        SupaAuth[Supabase Auth]
-        Postgres[(PostgreSQL DB)]
+    subgraph Backend [Django DDD Core]
+        subgraph API_Layer
+            REST[Rest API Views]
+            JWT[JWT Validator]
+        end
+        
+        subgraph Domain_Layer
+            Calc[Moteur de Calcul DDD]
+            Rules[Règles de Validation]
+        end
+        
+        subgraph Infras_Layer
+            Repo[Django ORM]
+            Adapter[Auth Adapters]
+        </div>
     end
 
+    subgraph Cloud [Data & Auth]
+        Supa[(Supabase / Postgres)]
+    end
+
+    UI --> Notif
+    UI --> Export
+    UI --> Aura
+    PWA --> UI
     UI --> Store
-    Store --> API_Client
-    API_Client ----> REST
-    
-    REST --> Middle
-    Middle --> Auth
-    REST --> AppSvc
-    AppSvc --> Cmd
-    Cmd --> Rules
-    Rules --> Entities
-    Cmd --> Repo
-    Repo --> Postgres
-    Auth --> SupaAuth
+    Store --> Composables
+    Composables --> REST
+    REST --> JWT
+    JWT --> Calc
+    Calc --> Rules
+    Calc --> Repo
+    Repo --> Supa
 ```

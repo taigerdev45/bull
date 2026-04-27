@@ -1,6 +1,6 @@
 <template>
   <div class="landing-page" @mousemove="handleMouseMove">
-    <!-- Overlay Effet Spatial : "Ballon" de Particules (Inspiration Antigravity) -->
+    <!-- Overlay Effet Spatial : "Ballon" de Particules -->
     <canvas ref="bubbleCanvas" class="bubble-layer"></canvas>
     <div class="overlay"></div>
     
@@ -17,6 +17,17 @@
         <div class="separator"></div>
       </div>
     </div>
+
+    <!-- PWA Install Prompt (Fixed) -->
+    <client-only>
+      <div v-if="installPrompt" class="install-card-fixed premium-card">
+        <p>Installer Bull ASUR sur votre appareil ?</p>
+        <div class="actions">
+          <button @click="installApp" class="btn-install">Installer</button>
+          <button @click="installPrompt = null" class="btn-dismiss">Plus tard</button>
+        </div>
+      </div>
+    </client-only>
 
     <div class="content-wrapper">
       <header class="landing-header">
@@ -89,20 +100,26 @@
         </div>
       </transition>
 
-      <!-- SEO Content -->
+      <!-- SEO Content in Cards -->
       <section class="seo-content">
         <div class="seo-grid">
-          <article class="seo-item">
-            <h3>ASUR Excellence</h3>
-            <p>Le système Bull ASUR est le moteur de gestion académique de l'INPTIC, spécialisé pour la Licence ASUR au Gabon.</p>
+          <article class="seo-card-premium">
+            <div class="card-body-seo">
+              <h3>ASUR Excellence</h3>
+              <p>Le système Bull ASUR est le moteur de gestion académique de l'INPTIC, spécialisé pour la Licence ASUR au Gabon.</p>
+            </div>
           </article>
-          <article class="seo-item">
-            <h3>Digitalisation INPTIC</h3>
-            <p>Transition numérique complète pour la gestion des bulletins de notes et délibérations scolaires en temps réel.</p>
+          <article class="seo-card-premium">
+            <div class="card-body-seo">
+              <h3>Digitalisation INPTIC</h3>
+              <p>Transition numérique complète pour la gestion des bulletins de notes et délibérations scolaires en temps réel.</p>
+            </div>
           </article>
-          <article class="seo-item">
-            <h3>Standard SaaS Premium</h3>
-            <p>Une expérience utilisateur haut de gamme combinant sécurité réseau et ergonomie moderne pour l'éducation.</p>
+          <article class="seo-card-premium">
+            <div class="card-body-seo">
+              <h3>Standard SaaS Premium</h3>
+              <p>Une expérience utilisateur haut de gamme combinant sécurité réseau et ergonomie moderne pour l'éducation.</p>
+            </div>
           </article>
         </div>
       </section>
@@ -122,10 +139,25 @@ definePageMeta({ layout: 'empty' })
 
 const router = useRouter(); const { fetchApi } = useApi()
 
+// PWA Install Logic
+const installPrompt = ref(null)
+onMounted(() => {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    installPrompt.value = e
+  })
+})
+const installApp = async () => {
+  if (!installPrompt.value) return
+  installPrompt.value.prompt()
+  const { outcome } = await installPrompt.value.userChoice
+  if (outcome === 'accepted') installPrompt.value = null
+}
+
 // Bubble Animation Logic (Antigravity Magnetic Ball)
 const bubbleCanvas = ref(null)
 let ctx = null; let particles = []
-const bubbleCount = 80
+const bubbleCount = 90
 const mouse = { x: -100, y: -100 }
 
 class Particle {
@@ -135,46 +167,40 @@ class Particle {
   reset() {
     this.x = Math.random() * window.innerWidth
     this.y = Math.random() * window.innerHeight
-    this.size = Math.random() * 2 + 1
+    this.size = Math.random() * 2 + 0.5
     this.baseX = this.x
     this.baseY = this.y
-    this.density = (Math.random() * 20) + 10
-    this.friction = 0.95
-    this.vx = 0
-    this.vy = 0
-    this.color = "rgba(255, 255, 255, " + (Math.random() * 0.5 + 0.3) + ")"
+    this.density = (Math.random() * 25) + 5
+    this.friction = 0.96
+    this.vx = 0; this.vy = 0
+    this.color = "rgba(255, 255, 255, " + (Math.random() * 0.4 + 0.2) + ")"
   }
   update() {
-    // Magnetic Pull Effect (Antigravity Style)
     let dx = mouse.x - this.x
     let dy = mouse.y - this.y
     let distance = Math.sqrt(dx * dx + dy * dy)
     let forceDirectionX = dx / distance
     let forceDirectionY = dy / distance
     
-    // Create a spherical ball around the mouse
-    const radius = 50 
+    // Antigravity ball formation
+    const radius = 45 
     let force = (radius - distance) / radius
     
     if (distance < radius) {
-      this.vx += forceDirectionX * force * 1.5
-      this.vy += forceDirectionY * force * 1.5
+      this.vx += forceDirectionX * force * 2
+      this.vy += forceDirectionY * force * 2
     } else {
-      // Return to original "ball" formation or stay near mouse
-      this.vx += (mouse.x - this.x + (Math.random() - 0.5) * 60) / this.density
-      this.vy += (mouse.y - this.y + (Math.random() - 0.5) * 60) / this.density
+      this.vx += (mouse.x - this.x) / this.density
+      this.vy += (mouse.y - this.y) / this.density
     }
 
-    this.vx *= this.friction
-    this.vy *= this.friction
-    this.x += this.vx
-    this.y += this.vy
+    this.vx *= this.friction; this.vy *= this.friction
+    this.x += this.vx; this.y += this.vy
   }
   draw() {
     ctx.fillStyle = this.color
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-    ctx.closePath()
     ctx.fill()
   }
 }
@@ -186,10 +212,7 @@ const handleMouseMove = (e) => {
 const animate = () => {
   if (!ctx || !bubbleCanvas.value) return
   ctx.clearRect(0, 0, bubbleCanvas.value.width, bubbleCanvas.value.height)
-  particles.forEach(p => {
-    p.update()
-    p.draw()
-  })
+  particles.forEach(p => { p.update(); p.draw() })
   requestAnimationFrame(animate)
 }
 
@@ -209,8 +232,7 @@ onMounted(() => {
   })
 })
 
-const selectedRole = ref(null)
-const showLoginForm = ref(false)
+const selectedRole = ref(null); const showLoginForm = ref(false)
 const username = ref(''); const password = ref(''); const loading = ref(false)
 const roleTitle = computed(() => {
   const titles = { admin: 'Admin', secretariat: 'Secrétariat', enseignant: 'Enseignant', etudiant: 'Étudiant' }
@@ -259,25 +281,29 @@ const handleLogin = async () => {
 .back-btn { background: transparent; border: none; font-weight: 800; color: #94a3b8; cursor: pointer; margin-bottom: 1.5rem; padding: 0; }
 .role-badge { padding: 0.4rem 0.8rem; background: #000; color: #fff; border-radius: 4px; font-size: 0.65rem; font-weight: 950; text-transform: uppercase; margin-bottom: 1rem; display: inline-block; }
 
-.form-group { margin-bottom: 1.5rem; }
-.form-group label { display: block; font-size: 0.8rem; font-weight: 900; color: #64748b; margin-bottom: 0.5rem; text-align: left; text-transform: uppercase; }
-.form-group input { width: 100%; padding: 1.1rem; background: #f8fafc; border: 2px solid #f1f5f9; border-radius: 8px; font-weight: 800; }
-.form-group input:focus { border-color: #000; outline: none; }
-
-.login-btn { width: 100%; padding: 1.1rem; background: #000; color: #fff; font-weight: 900; border-radius: 8px; border: none; cursor: pointer; transition: 0.2s; }
-
-.seo-content { width: 100%; max-width: 1000px; margin-top: 4rem; padding-top: 4rem; border-top: 1px solid rgba(255,255,255,0.05); }
-.seo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; text-align: left; }
-.seo-item h3 { font-size: 1rem; font-weight: 900; color: #fff; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-.seo-item p { font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.5); font-weight: 500; }
+/* SEO Cards Modern */
+.seo-content { width: 100%; max-width: 1200px; margin-top: 4rem; padding-top: 4rem; border-top: 1px solid rgba(255,255,255,0.1); }
+.seo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+.seo-card-premium { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 2.5rem; transition: all 0.3s; }
+.seo-card-premium:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+.seo-card-premium h3 { font-size: 1.1rem; font-weight: 900; color: #fff; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+.seo-card-premium p { font-size: 0.9rem; line-height: 1.6; color: rgba(255,255,255,0.6); font-weight: 500; }
 
 .landing-footer { margin-top: 8rem; color: rgba(255,255,255,0.25); font-size: 0.75rem; font-weight: 700; text-align: center; }
+
+/* Fixed Install Prompt */
+.install-card-fixed { position: fixed; bottom: 2rem; left: 2rem; z-index: 1000; background: #fff; color: #000; padding: 1.5rem 2rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 1rem; border: none; min-height: auto; }
+.install-card-fixed p { font-weight: 800; font-size: 0.9rem; }
+.install-card-fixed .actions { display: flex; gap: 1rem; }
+.btn-install { background: #000; color: #fff; border: none; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 800; cursor: pointer; }
+.btn-dismiss { background: #f1f5f9; color: #64748b; border: none; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 800; cursor: pointer; }
 
 @media (max-width: 640px) {
   .roles-container { grid-template-columns: 1fr; gap: 1rem; }
   .premium-card { min-height: 100px; padding: 1.5rem; }
   .landing-header h1 { font-size: 2.2rem; }
   .top-banner { padding: 1.5rem; }
+  .install-card-fixed { left: 1rem; right: 1rem; bottom: 1rem; }
 }
 
 .fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.4s ease; }
