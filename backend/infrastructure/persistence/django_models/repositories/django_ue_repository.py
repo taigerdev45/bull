@@ -15,7 +15,7 @@ class DjangoUERepository(IUERepository):
             except SemestreModel.DoesNotExist:
                 semestre = SemestreModel.objects.create(
                     id=sem_id,
-                    libelle=f"Semestre {sem_id}"
+                    libelle=f"Semestre {sem_id}"[:200]
                 )
         
         # Recherche de l'UE existante par ID ou par Code pour éviter les IntegrityError

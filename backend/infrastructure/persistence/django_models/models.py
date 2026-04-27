@@ -11,13 +11,13 @@ class BasePersistenceModel(models.Model):
         abstract = True
 
 class SemestreModel(BasePersistenceModel):
-    libelle = models.CharField(max_length=50) # ex: S5, S6
+    libelle = models.CharField(max_length=200) # ex: S5, S6
     
     def __str__(self):
         return self.libelle
 
 class UEModel(BasePersistenceModel):
-    code = models.CharField(max_length=50, unique=True)
+    code = models.CharField(max_length=100, unique=True)
     libelle = models.CharField(max_length=200)
     credits = models.IntegerField(default=0)
     semestre = models.ForeignKey(SemestreModel, on_delete=models.CASCADE, related_name='ues')
