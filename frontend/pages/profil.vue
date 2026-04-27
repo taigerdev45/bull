@@ -73,33 +73,13 @@
           </button>
         </div>
 
-        <div class="premium-card preferences-card shadow-soft">
+        <!-- Section de déconnexion rapide ou autre info -->
+        <div class="premium-card info-card shadow-soft mt-2">
           <div class="side-header">
-            <div class="side-icon-box">🎨</div>
-            <h3>Préférences</h3>
+            <div class="side-icon-box">📌</div>
+            <h3>Note</h3>
           </div>
-          <div class="preferences-list">
-            <label class="switch-item">
-              <div class="switch-info">
-                <span class="sw-title">Notifications Email</span>
-                <span class="sw-desc">Recevoir mes relevés par mail</span>
-              </div>
-              <div class="switch-wrapper">
-                <input type="checkbox" checked disabled>
-                <div class="slider"></div>
-              </div>
-            </label>
-            <label class="switch-item">
-              <div class="switch-info">
-                <span class="sw-title">Thème Sombre</span>
-                <span class="sw-desc">Désactiver le mode clair</span>
-              </div>
-              <div class="switch-wrapper">
-                <input type="checkbox" disabled>
-                <div class="slider"></div>
-              </div>
-            </label>
-          </div>
+          <p class="description small">Votre profil est synchronisé avec les services centraux de l'INPTIC. Toute modification est soumise à audit.</p>
         </div>
       </div>
     </div>
