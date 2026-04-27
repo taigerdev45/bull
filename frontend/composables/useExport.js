@@ -90,7 +90,8 @@ export const useExport = () => {
       }
 
       // QR Code
-      const validationUrl = `https://bull-asur.ga/verify/${studentData.matricule || 'VALID'}`
+      const currentOrigin = process.client ? window.location.origin : 'https://bull-asur.ga'
+      const validationUrl = `${currentOrigin}/verify/${studentData.matricule || 'VALID'}`
       const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(validationUrl)}`
       try {
         doc.addImage(qrApiUrl, 'PNG', pageWidth - 42, 12, 28, 28)
