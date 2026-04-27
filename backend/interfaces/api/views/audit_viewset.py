@@ -29,6 +29,11 @@ class AuditViewSet(viewsets.ViewSet):
         logs = self.audit_service.obtenir_tous_les_logs(params)
         return Response(logs)
 
+    @action(detail=False, methods=['get'])
+    def logs(self, request):
+        """Alias pour list (pour supporter /audit/logs/)."""
+        return self.list(request)
+
     @action(detail=False, methods=['get'], url_path='etudiant/(?P<etudiant_id>[^/.]+)')
     def etudiant(self, request, etudiant_id=None):
         """Récupère l'audit pour un étudiant spécifique."""

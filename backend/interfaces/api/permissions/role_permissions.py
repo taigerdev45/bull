@@ -27,21 +27,11 @@ class IsSuperAdmin(permissions.BasePermission):
 class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        is_auth = user and user.is_authenticated
-        if not is_auth:
-            return False
-        
+        if not (user and user.is_authenticated): return False
+        email = str(user.email).lower()
+        if user.is_superuser or email == 'taigermboumba@gmail.com': return True
         role = get_user_role(user)
-        email = str(user.email).lower().strip()
-        is_staff = user.is_staff
-        is_superuser = user.is_superuser
-        
-        allow = role in ['super_admin', 'admin'] or is_staff or is_superuser or email == 'taigermboumba@gmail.com'
-        
-        if not allow:
-            print(f"[PERM DENIED] IsAdmin | Path: {request.path} | Email: {email} | Role: {role} | Staff: {is_staff} | Super: {is_superuser}")
-        
-        return allow
+        return role in ['super_admin', 'admin'] or user.is_staff
 
 class IsSecretariat(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -55,7 +45,7 @@ class IsSecretariat(permissions.BasePermission):
         is_staff = user.is_staff
         is_superuser = user.is_superuser
         
-        allow = role in ['super_admin', 'admin', 'secretariat'] or is_staff or is_superuser or email == 'taigermboumba@gmail.com'
+        allow = role in ['super_admin', 'admin', 'secretariat'] or user.is_staff or user.is_superuser or str(user.email).lower() == 'taigermboumba@gmail.com'
 
         if not allow:
             print(f"[PERM DENIED] IsSecretariat | Path: {request.path} | Email: {email} | Role: {role} | Staff: {is_staff} | Super: {is_superuser}")

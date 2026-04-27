@@ -186,8 +186,27 @@ class EnseignantViewSet(viewsets.ViewSet):
             return Response({"error": "liste attendue"}, status=status.HTTP_400_BAD_REQUEST)
         
         matiere_repo = Container.matiere_repo()
+        notification_repo = Container.notification_repo()
+        
+        assigned_names = []
         for m_id in matiere_ids:
-            matiere_repo.attribuer_enseignant(m_id, pk)
+            matiere = matiere_repo.get_by_id(m_id)
+            if matiere:
+                matiere_repo.attribuer_enseignant(m_id, pk)
+                assigned_names.append(matiere.libelle)
+        
+        if assigned_names and pk:
+            # Récupérer le user_id de l'enseignant pour la notification
+            enseignant = self.repo.get_by_id(pk)
+            if enseignant and enseignant.user_id:
+                from domain.entities.notification import Notification
+                notif = Notification(
+                    destinataire_uid=enseignant.user_id,
+                    titre="Nouvelles matières assignées",
+                    message=f"Vous avez été assigné aux matières suivantes : {', '.join(assigned_names)}",
+                    type="SUCCESS"
+                )
+                notification_repo.save(notif)
             
         return Response({"status": "matières assignées"})
 

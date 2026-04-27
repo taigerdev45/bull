@@ -11,6 +11,7 @@ from domain.repositories.i_enseignant_repository import IEnseignantRepository
 from domain.repositories.i_personnel_repository import IPersonnelRepository
 from domain.repositories.i_audit_repository import IAuditRepository
 from domain.repositories.i_config_repository import IConfigRepository
+from domain.repositories.i_notification_repository import INotificationRepository
 
 from infrastructure.persistence.django_models.repositories.django_evaluation_repository import DjangoEvaluationRepository
 from infrastructure.persistence.django_models.repositories.django_etudiant_repository import DjangoEtudiantRepository
@@ -23,6 +24,7 @@ from infrastructure.persistence.django_models.repositories.django_enseignant_rep
 from infrastructure.persistence.django_models.repositories.django_personnel_repository import DjangoPersonnelRepository
 from infrastructure.persistence.django_models.repositories.django_audit_repository import DjangoAuditRepository
 from infrastructure.persistence.django_models.repositories.django_config_repository import DjangoConfigRepository
+from infrastructure.persistence.django_models.repositories.django_notification_repository import DjangoNotificationRepository
 
 from infrastructure.auth.supabase_auth_service import SupabaseAuthService
 
@@ -60,6 +62,7 @@ class Container(containers.DeclarativeContainer):
     personnel_repo = providers.Factory(DjangoPersonnelRepository)
     audit_repo = providers.Factory(DjangoAuditRepository)
     config_repo = providers.Factory(DjangoConfigRepository)
+    notification_repo = providers.Factory(DjangoNotificationRepository)
     
     # Auth
     auth_service = providers.Singleton(SupabaseAuthService)

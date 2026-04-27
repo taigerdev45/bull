@@ -17,6 +17,7 @@ from interfaces.api.views.me_view import MeView
 from interfaces.api.views.debug_auth_view import DebugAuthView
 from interfaces.api.views.list_personnel_view import ListPersonnelDebugView
 from interfaces.api.views.personnel_viewset import PersonnelViewSet
+from interfaces.api.views.notification_view import NotificationViewSet
 from application.startup import initialiser_abonnements
 
 # Initialisation de l'audit
@@ -32,6 +33,7 @@ router.register(r'semestres', SemestreViewSet, basename='semestre')
 router.register(r'enseignants', EnseignantViewSet, basename='enseignant')
 router.register(r'personnel', PersonnelViewSet, basename='personnel')
 router.register(r'audit', AuditViewSet, basename='audit')
+router.register(r'notifications', NotificationViewSet, basename='notification')
 
 urlpatterns = [
     path('', include(router.urls)),

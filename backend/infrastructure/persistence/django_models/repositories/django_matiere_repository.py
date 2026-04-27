@@ -49,7 +49,11 @@ class DjangoMatiereRepository(IMatiereRepository):
         return [self._to_entity(m) for m in models]
 
     def get_by_enseignant(self, enseignant_id: str) -> List[Matiere]:
-        models = MatiereModel.objects.filter(enseignant_id=enseignant_id)
+        # On tente de filtrer par le user_id (UID Supabase) ou par l'ID technique
+        models = MatiereModel.objects.filter(
+            models.Q(enseignant__user_id=enseignant_id) | 
+            models.Q(enseignant_id=enseignant_id)
+        )
         return [self._to_entity(m) for m in models]
 
     def attribuer_enseignant(self, matiere_id: str, enseignant_id: str) -> None:

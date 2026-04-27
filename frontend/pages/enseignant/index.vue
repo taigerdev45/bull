@@ -21,14 +21,38 @@
           <p>Unités d'Enseignement</p>
         </div>
       </div>
-      <div class="stat-card premium-card">
-        <div class="stat-icon calendar">📅</div>
+      <div class="stat-card premium-card" @click="showNotifs = !showNotifs">
+        <div class="stat-icon calendar">🔔</div>
         <div class="stat-content">
-          <h3>S5</h3>
-          <p>Semestre Actif</p>
+          <h3>{{ unreadCount }}</h3>
+          <p>Notifications</p>
         </div>
       </div>
     </div>
+
+    <!-- Centre de Notifications -->
+    <Transition name="fade">
+      <div v-if="showNotifs" class="notification-center premium-card">
+        <div class="notif-header">
+          <h3>Notifications</h3>
+          <button v-if="unreadCount > 0" @click="markAllAsRead" class="btn-text">Tout marquer comme lu</button>
+        </div>
+        <div class="notif-list">
+          <div v-for="n in notifications" :key="n.id" :class="['notif-item', { unread: !n.is_read }]" @click="markAsRead(n)">
+            <div class="notif-icon">{{ n.type === 'SUCCESS' ? '✅' : 'ℹ️' }}</div>
+            <div class="notif-body">
+              <p class="notif-title">{{ n.titre }}</p>
+              <p class="notif-msg">{{ n.message }}</p>
+              <span class="notif-time">{{ formatDate(n.created_at) }}</span>
+            </div>
+            <div v-if="!n.is_read" class="unread-dot"></div>
+          </div>
+          <div v-if="notifications.length === 0" class="notif-empty">
+            Aucune notification
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Actions Rapides Dynamiques -->
     <div class="actions-panel">
@@ -73,22 +97,49 @@ useHead({ title: 'Dashboard Enseignant | Bull ASUR' })
 const authName = useCookie('authFullName')
 const matieres = ref([])
 const ues = ref([])
+const notifications = ref([])
 const loading = ref(true)
+const showNotifs = ref(false)
+
+const unreadCount = computed(() => notifications.value.filter(n => !n.is_read).length)
 
 const loadDashboard = async () => {
   loading.value = true
   try {
-    const [mRes, uRes] = await Promise.all([
+    const [mRes, uRes, nRes] = await Promise.all([
       fetchApi('/matieres/'),
-      fetchApi('/ues/')
+      fetchApi('/ues/'),
+      fetchApi('/notifications/')
     ])
     matieres.value = Array.isArray(mRes) ? mRes : []
     ues.value = Array.isArray(uRes) ? uRes : []
+    notifications.value = Array.isArray(nRes) ? nRes : []
   } catch (e) {
     console.error(e)
   } finally {
     loading.value = false
   }
+}
+
+const markAsRead = async (notif) => {
+  if (notif.is_read) return
+  try {
+    await fetchApi(`/notifications/${notif.id}/mark-read/`, { method: 'POST' })
+    notif.is_read = true
+  } catch (e) { console.error(e) }
+}
+
+const markAllAsRead = async () => {
+  try {
+    await fetchApi('/notifications/mark-all-read/', { method: 'POST' })
+    notifications.value.forEach(n => n.is_read = true)
+  } catch (e) { console.error(e) }
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 const goToSaisie = (matiere) => {
@@ -141,7 +192,29 @@ onMounted(loadDashboard)
 .loader-p { width: 30px; height: 30px; border: 3px solid #f1f5f9; border-top-color: #000; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.notification-center { position: absolute; top: 18rem; right: 4rem; width: 400px; z-index: 100; padding: 1.5rem; background: #fff; box-shadow: 0 30px 60px rgba(0,0,0,0.12); border-radius: 24px; animation: slideDown 0.3s ease-out; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
+.notif-header h3 { font-size: 1.2rem; font-weight: 900; }
+.btn-text { background: none; border: none; color: #64748b; font-weight: 800; font-size: 0.75rem; cursor: pointer; text-decoration: underline; }
+
+.notif-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+.notif-item { display: flex; gap: 1rem; padding: 1rem; border-radius: 16px; cursor: pointer; transition: 0.2s; position: relative; border: 1px solid transparent; }
+.notif-item:hover { background: #f8fafc; }
+.notif-item.unread { background: #f0f9ff; border-color: #bae6fd; }
+.notif-icon { font-size: 1.2rem; }
+.notif-title { font-weight: 900; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.notif-msg { font-size: 0.8rem; color: #64748b; font-weight: 600; line-height: 1.4; }
+.notif-time { font-size: 0.65rem; color: #94a3b8; font-weight: 700; margin-top: 0.5rem; display: block; }
+.unread-dot { width: 10px; height: 10px; background: #2563eb; border-radius: 50%; position: absolute; right: 1rem; top: 1rem; }
+.notif-empty { padding: 2rem; text-align: center; color: #94a3b8; font-weight: 700; font-size: 0.9rem; }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
 @media (max-width: 768px) {
+  .notification-center { width: calc(100% - 4rem); right: 2rem; top: 25rem; }
   .dashboard-enseignant { padding: 2rem; }
   .dashboard-header h1 { font-size: 2.5rem; }
   .shortcut-grid { grid-template-columns: 1fr; }

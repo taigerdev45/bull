@@ -249,6 +249,23 @@ class MatiereViewSet(viewsets.ViewSet):
             
         self.matiere_repo.attribuer_enseignant(pk, enseignant_id)
         
+        # Notification à l'enseignant
+        try:
+            enseignant_repo = Container.enseignant_repo()
+            notification_repo = Container.notification_repo()
+            enseignant = enseignant_repo.get_by_id(enseignant_id)
+            if enseignant and enseignant.user_id:
+                from domain.entities.notification import Notification
+                notif = Notification(
+                    destinataire_uid=enseignant.user_id,
+                    titre="Nouvelle matière assignée",
+                    message=f"La matière '{matiere.libelle}' vous a été attribuée.",
+                    type="INFO"
+                )
+                notification_repo.save(notif)
+        except Exception as e:
+            print(f"[NOTIF ERROR] {str(e)}")
+
         # Traçabilité (Notification système)
         self.audit_service.logger_action({
             "action_type": "USER_MGMT",

@@ -48,7 +48,7 @@
         <div class="card-inner">
           <div class="profile-section">
             <div class="avatar-monochrome">
-              {{ teacher.prenom.charAt(0) }}{{ teacher.nom.charAt(0) }}
+              {{ (teacher.prenom || '?').charAt(0) }}{{ (teacher.nom || '?').charAt(0) }}
             </div>
             <div class="id-wrap">
               <h3>{{ teacher.prenom }} {{ teacher.nom }}</h3>

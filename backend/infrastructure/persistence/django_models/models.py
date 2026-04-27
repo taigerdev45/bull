@@ -146,3 +146,13 @@ class ResultatAnnuelModel(BasePersistenceModel):
     
     def __str__(self):
         return f"{self.etudiant} - {self.annee_academique} ({self.valeur_moyenne})"
+
+class NotificationModel(BasePersistenceModel):
+    destinataire_uid = models.CharField(max_length=128) # Supabase UID
+    titre = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    type = models.CharField(max_length=50, default='INFO') # INFO, SUCCESS, WARNING
+
+    def __str__(self):
+        return f"[{'LU' if self.is_read else 'NON LU'}] {self.titre} pour {self.destinataire_uid}"
