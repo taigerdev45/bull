@@ -2,6 +2,7 @@ from typing import List, Optional
 from domain.entities.matiere import Matiere
 from domain.value_objects.coefficient import Coefficient
 from domain.repositories.i_matiere_repository import IMatiereRepository
+from django.db import models
 from infrastructure.persistence.django_models.models import MatiereModel, UEModel
 
 class DjangoMatiereRepository(IMatiereRepository):
