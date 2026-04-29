@@ -65,19 +65,30 @@
     <div class="main-body-p">
       <header class="navbar-p">
         <div class="nav-left-p">
-          <button class="menu-trigger-p" @click="isSidebarOpen = true">☰</button>
+          <button class="menu-trigger-p" @click="isSidebarOpen = true">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
           <div class="breadcrumb-p">
-            <span class="root">Bulletin</span>
+            <span class="root">Bull ASUR</span>
             <span class="sep">/</span>
             <span class="current">{{ currentRoute }}</span>
           </div>
         </div>
         <div class="nav-right-p">
           <div class="search-premium">
-            <span class="s-icon">🔍</span>
-            <input type="text" placeholder="Recherche globale...">
+            <span class="s-icon">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" placeholder="Rechercher partout...">
+            <kbd class="k-hint">⌘K</kbd>
           </div>
-          <NotificationCenter />
+          <div class="header-actions-p">
+            <NotificationCenter />
+            <div class="h-divider"></div>
+            <div class="quick-profile" @click="navigateTo('/profil')">
+              <div class="h-avatar">{{ userName?.charAt(0).toUpperCase() }}</div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -110,6 +121,30 @@ const currentRoute = computed(() => {
 })
 
 const allLinks = [
+  { 
+    path: '/admin', 
+    label: 'Tableau de Bord', 
+    roles: ['admin', 'super_admin'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>'
+  },
+  { 
+    path: '/secretariat', 
+    label: 'Tableau de Bord', 
+    roles: ['secretariat'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>'
+  },
+  { 
+    path: '/enseignant', 
+    label: 'Tableau de Bord', 
+    roles: ['enseignant'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>'
+  },
+  { 
+    path: '/etudiant', 
+    label: 'Tableau de Bord', 
+    roles: ['etudiant'], 
+    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>'
+  },
   { 
     path: '/secretariat/edition-bulletins', 
     label: 'Architecture Académique', 
@@ -165,12 +200,6 @@ const allLinks = [
     iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>'
   },
   { 
-    path: '/parametres', 
-    label: 'Paramètres', 
-    roles: ['admin', 'super_admin'], 
-    iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>'
-  },
-  { 
     path: '/profil', 
     label: 'Mon Profil', 
     roles: ['admin', 'secretariat', 'super_admin', 'enseignant', 'etudiant'], 
@@ -183,6 +212,10 @@ const navSections = computed(() => {
   
   return [
     {
+      title: 'Général',
+      links: links.filter(l => ['Tableau de Bord'].includes(l.label))
+    },
+    {
       title: 'Pédagogie',
       links: links.filter(l => ['Architecture Académique', 'Registre Étudiants', 'Intervenants', 'Journal Absences', 'Bulletins & Jury', 'PV & Délibérations'].includes(l.label))
     },
@@ -192,7 +225,7 @@ const navSections = computed(() => {
     },
     {
       title: 'Administration',
-      links: links.filter(l => ['Gestion Personnel', 'Journal d\'Audit', 'Paramètres'].includes(l.label))
+      links: links.filter(l => ['Gestion Personnel', 'Journal d\'Audit'].includes(l.label))
     },
     {
       title: 'Compte',
@@ -404,34 +437,55 @@ const logout = () => {
 }
 
 .navbar-p { 
-  height: 70px; 
-  background: white; 
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  height: 72px; 
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   display: flex; 
   align-items: center; 
   justify-content: space-between; 
-  padding: 0 2.5rem; 
+  padding: 0 2rem; 
   position: sticky; 
   top: 0; 
   z-index: 100;
+  transition: all 0.3s ease;
 }
 
+.nav-left-p { display: flex; align-items: center; gap: 1.5rem; }
+
+.breadcrumb-p {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.breadcrumb-p .root { color: #94a3b8; }
+.breadcrumb-p .sep { color: #cbd5e1; font-weight: 300; }
+.breadcrumb-p .current { color: #0f172a; }
+
+.nav-right-p { display: flex; align-items: center; gap: 2rem; }
+
 .search-premium {
-  background: #f1f5f9;
-  border-radius: 50px;
-  padding: 0.5rem 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   border: 1px solid #e2e8f0;
-  width: 320px;
-  transition: all 0.2s;
+  width: 360px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .search-premium:focus-within {
   background: white;
   border-color: #0f172a;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  width: 400px;
 }
 
 .search-premium input {
@@ -444,20 +498,73 @@ const logout = () => {
   color: #0f172a;
 }
 
+.search-premium input::placeholder { color: #94a3b8; }
+
 .search-premium .s-icon {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+}
+
+.k-hint {
+  padding: 2px 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #64748b;
+  font-family: inherit;
+  font-weight: 700;
+}
+
+.header-actions-p {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.h-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+}
+
+.quick-profile {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.quick-profile:hover { transform: scale(1.05); }
+
+.h-avatar {
+  width: 36px;
+  height: 36px;
+  background: #0f172a;
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
   font-size: 0.9rem;
-  opacity: 0.5;
 }
 
 .menu-trigger-p { 
   display: none; 
-  background: #f1f5f9; 
-  border: none; 
-  width: 36px; 
-  height: 36px; 
-  border-radius: 8px; 
+  background: white; 
+  border: 1px solid #e2e8f0; 
+  width: 40px; 
+  height: 40px; 
+  border-radius: 10px; 
   cursor: pointer; 
+  color: #0f172a;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
+
+.menu-trigger-p:hover { background: #f8fafc; border-color: #0f172a; }
 
 @media (max-width: 1024px) {
   .sidebar-p { transform: translateX(-100%); }
