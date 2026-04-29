@@ -73,7 +73,7 @@
 import { ref, computed, onMounted } from 'vue'
 const { fetchApi } = useApi()
 
-definePageMeta({ middleware: ['auth', 'admin-only'] })
+definePageMeta({ middleware: ['admin-only'] })
 useHead({ title: 'Journal d\'Audit | Bull ASUR' })
 
 const logs = ref([])

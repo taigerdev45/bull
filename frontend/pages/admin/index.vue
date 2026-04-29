@@ -99,8 +99,58 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import StatCard from '~/components/ui/StatCard.vue'
+
 useHead({ title: 'Dashboard | Bull ASUR' })
+
+const { fetchApi } = useApi()
+const activities = ref([])
+const pending = ref(true)
+
+const fetchRecentActivities = async () => {
+  try {
+    pending.value = true
+    const res = await fetchApi('/audit/')
+    activities.value = Array.isArray(res) ? res.slice(0, 6) : []
+  } catch (e) {
+    console.error("Erreur logs:", e)
+    activities.value = []
+  } finally {
+    pending.value = false
+  }
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return new Intl.DateTimeFormat('fr-FR', { 
+    hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: 'short'
+  }).format(date)
+}
+
+const formatAction = (type) => {
+  const actions = {
+    'EVAL_CREATE': 'Note saisie',
+    'EVAL_UPDATE': 'Note modifiée',
+    'EVAL_DELETE': 'Note supprimée',
+    'MATIERE_ASSIGN': 'Enseignant assigné',
+    'USER_LOGIN': 'Connexion',
+    'EXPORT': 'Export Excel'
+  }
+  return actions[type] || type
+}
+
+const getActionClass = (type) => {
+  if (!type) return 'info'
+  if (type.includes('CREATE')) return 'success'
+  if (type.includes('DELETE')) return 'danger'
+  if (type.includes('UPDATE')) return 'warning'
+  return 'info'
+}
+
+onMounted(fetchRecentActivities)
 </script>
 
 <style scoped>
@@ -228,7 +278,7 @@ useHead({ title: 'Dashboard | Bull ASUR' })
 }
 
 .action-buttons {
-...  display: flex;
+  display: flex;
   flex-direction: column;
   gap: 1rem;
 }
