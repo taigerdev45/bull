@@ -39,16 +39,24 @@
       <div class="card activity-card">
         <div class="card-header">
           <h3>Activités Récentes</h3>
-          <button class="btn-text">Voir tout</button>
+          <NuxtLink to="/admin/audit" class="btn-text">Voir tout</NuxtLink>
         </div>
         <div class="card-body">
-          <div v-for="i in 5" :key="i" class="activity-item">
-            <div class="activity-dot"></div>
+          <div v-if="pending" class="loader-container">
+            <div class="loader-p"></div>
+          </div>
+          <div v-else-if="activities.length" v-for="log in activities" :key="log.id" class="activity-item">
+            <div class="activity-dot" :class="getActionClass(log.action_type)"></div>
             <div class="activity-content">
-              <p><strong>Note ajoutée</strong> en Algorithmique par Mr. Dupont</p>
-              <span>Il y a 10 minutes</span>
+              <p>
+                <strong>{{ formatAction(log.action_type) }}</strong> 
+                par {{ log.user_email }}
+              </p>
+              <div class="activity-details" v-if="log.details">{{ log.details }}</div>
+              <span>{{ formatDate(log.created_at) }}</span>
             </div>
           </div>
+          <div v-else class="empty-state">Aucune activité récente.</div>
         </div>
       </div>
 
@@ -177,11 +185,50 @@ useHead({ title: 'Dashboard | Bull ASUR' })
   flex-shrink: 0;
 }
 
-.activity-content p { font-size: 0.95rem; color: var(--text-primary); }
+.activity-content p { font-size: 0.95rem; color: var(--text-primary); margin: 0; }
 .activity-content span { font-size: 0.8rem; color: var(--text-muted); }
 
-.action-buttons {
+.activity-details {
+  font-size: 0.75rem;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  margin: 0.4rem 0;
+  border-left: 3px solid #e2e8f0;
+}
+
+.activity-dot.success { background: #22c55e; }
+.activity-dot.warning { background: #f59e0b; }
+.activity-dot.danger { background: #ef4444; }
+.activity-dot.info { background: #3b82f6; }
+
+.loader-container {
   display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.loader-p {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f1f5f9;
+  border-top-color: #0f172a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.action-buttons {
+...  display: flex;
   flex-direction: column;
   gap: 1rem;
 }

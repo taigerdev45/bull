@@ -286,6 +286,12 @@ const logout = () => {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.sidebar-nav-p::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 .nav-group-title {
@@ -400,14 +406,47 @@ const logout = () => {
 .navbar-p { 
   height: 70px; 
   background: white; 
-  border-bottom: 1px solid #e2e8f0; 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   display: flex; 
   align-items: center; 
   justify-content: space-between; 
-  padding: 0 2rem; 
+  padding: 0 2.5rem; 
   position: sticky; 
   top: 0; 
   z-index: 100;
+}
+
+.search-premium {
+  background: #f1f5f9;
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
+  width: 320px;
+  transition: all 0.2s;
+}
+
+.search-premium:focus-within {
+  background: white;
+  border-color: #0f172a;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.search-premium input {
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: 100%;
+  outline: none;
+  color: #0f172a;
+}
+
+.search-premium .s-icon {
+  font-size: 0.9rem;
+  opacity: 0.5;
 }
 
 .menu-trigger-p { 
