@@ -16,10 +16,10 @@
     <!-- Sidebar Premium Monochrome -->
     <aside class="sidebar-p" :class="{ 'is-open': isSidebarOpen }">
       <div class="sidebar-header">
-        <div class="logo-outer">
-          <img src="/logo.png" alt="Bull Logo">
+        <div class="logo-box">
+          <img src="/logo.png" alt="Bull Logo" class="logo-img">
         </div>
-        <div class="brand-name">
+        <div class="brand-info">
           <h2>Bull ASUR</h2>
           <span class="tagline">Enterprise Edition</span>
         </div>
@@ -178,7 +178,28 @@ const allLinks = [
   }
 ]
 
-const allowedLinks = computed(() => allLinks.filter(l => l.roles.includes(currentRole.value)))
+const navSections = computed(() => {
+  const links = allLinks.filter(l => l.roles.includes(currentRole.value))
+  
+  return [
+    {
+      title: 'Pédagogie',
+      links: links.filter(l => ['Architecture Académique', 'Registre Étudiants', 'Intervenants', 'Journal Absences', 'Bulletins & Jury', 'PV & Délibérations'].includes(l.label))
+    },
+    {
+      title: 'Saisie & Notes',
+      links: links.filter(l => ['Mise à jour Notes'].includes(l.label))
+    },
+    {
+      title: 'Administration',
+      links: links.filter(l => ['Gestion Personnel', 'Journal d\'Audit', 'Paramètres'].includes(l.label))
+    },
+    {
+      title: 'Compte',
+      links: links.filter(l => ['Mon Profil'].includes(l.label))
+    }
+  ].filter(s => s.links.length > 0)
+})
 
 // Bloquer le scroll du body quand la sidebar mobile est ouverte
 watch(isSidebarOpen, (val) => {
@@ -218,10 +239,10 @@ const logout = () => {
 }
 
 .sidebar-header { 
-  padding: 2.5rem 2rem; 
+  padding: 2.5rem 1.5rem; 
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .logo-box {
@@ -232,23 +253,31 @@ const logout = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
-  color: #0f172a;
-  font-size: 1.2rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
 }
 
 .brand-info h2 {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.02em;
+  color: white;
 }
 
-.brand-info span {
-  font-size: 0.65rem;
+.brand-info .tagline {
+  display: block;
+  font-size: 0.6rem;
   color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
 }
 
 .sidebar-nav-p { 
