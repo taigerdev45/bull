@@ -28,6 +28,12 @@ L'application utilise le fichier `render.yaml` pour une configuration automatiqu
 
 Le build lancera automatiquement `./render_build.sh` qui installe les dépendances et applique les migrations Django.
 
+### Maintenance Manuelle (Migrations)
+Si vous ajoutez des modèles (comme les index d'audit), exécutez manuellement via le Shell Render ou SSH :
+```bash
+python backend/manage.py migrate
+```
+
 ## 3. Déploiement du Frontend (Nuxt 3)
 
 Le frontend peut être déployé sur **Vercel** ou **Netlify**.

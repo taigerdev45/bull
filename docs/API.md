@@ -15,6 +15,8 @@ L'authentification repose sur des jetons JWT valides.
 | `/evaluations/` | POST | Enseignant | Enregistrement d'une nouvelle note. |
 | `/absences/` | POST | Secretariat | Déclaration d'une absence justifiée/injustifiée. |
 | `/bulletins/pdf/{id}/`| GET | Staff | Téléchargement du relevé officiel. |
+| `/matieres/` | GET | Authentifié | Liste enrichie avec `enseignant_nom`. |
+| `/matieres/{id}/attribuer_enseignant/` | PATCH | Secretariat | Assigne un enseignant à une matière. |
 
 ## Moteur de Calcul (DDD)
 Les endpoints de résultats (`/resultats/`) déclenchent automatiquement l'orchestrateur de calcul qui applique :

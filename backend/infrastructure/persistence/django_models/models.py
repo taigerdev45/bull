@@ -4,7 +4,7 @@ import uuid
 class BasePersistenceModel(models.Model):
     """Classe de base pour tous les modèles de persistance."""
     id = models.CharField(primary_key=True, max_length=100, default=uuid.uuid4)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

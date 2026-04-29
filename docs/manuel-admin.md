@@ -26,6 +26,7 @@ Accédez au menu **Référentiels** (icône 📚) pour gérer la structure péda
 
 ### Matières
 - Chaque matière doit être rattachée à une UE.
+- **Assignation Enseignant** : Depuis la liste des matières, vous pouvez assigner un enseignant responsable. Cet enseignant sera le seul (avec le staff) habilité à saisir les notes pour cette matière.
 - **Coefficients** : Utilisés pour le calcul de la moyenne de l'UE.
 - **Résilience** : Lors de la création d'une matière dans le portail admin, vous pouvez utiliser soit le **UUID interne** de l'UE, soit son **Code court**. Le système fera la correspondance automatiquement.
 
@@ -38,10 +39,10 @@ Accédez à **Administration > Paramètres** pour configurer :
 
 ## 4. Surveillance et Audit
 
-Le module d'audit enregistre chaque action sensible :
-- Qui a importé un fichier Excel ?
-- Qui a modifié une note après sa saisie initiale (Horodatage + Utilisateur) ?
-- Tentatives de connexions échouées.
+Le module d'audit enregistre chaque action sensible de manière exhaustive :
+- **Traçabilité complète** : Chaque log inclut l'action, l'utilisateur, l'adresse IP et l'agent utilisateur (navigateur).
+- **Actions suivies** : Importations Excel, modifications de notes, attributions de matières, et suppressions.
+- **Filtrage** : Utilisez les filtres par type d'entité ou par date pour retrouver une action spécifique.
 
 Consultez les logs dans **Administration > Journaux d'Audit** pour garantir l'intégrité des résultats.
 

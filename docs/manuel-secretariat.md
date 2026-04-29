@@ -15,6 +15,7 @@ Le **Tableau de Bord** principal vous offre une vue analytique en temps réel :
 ### Inscription et Personnel
 - **Étudiants** : Utilisez le lien **Étudiants** de la barre latérale pour inscriptions et listes.
 - **Enseignants** : Gérez le corps enseignant via l'onglet **Enseignants**. Vous pouvez créer des comptes et assigner des matières spécifiques à chaque personnel.
+- **Référentiels** : Accédez à **Référentiels** pour configurer les UEs et les matières. Pour chaque matière, vous pouvez désormais sélectionner un **Enseignant Responsable** dans une liste déroulante pour lui donner les droits de saisie.
 
 ## 3. Saisie des Notes (Évaluations)
 Le système gère trois types d'évaluations : **CC (Contrôle Continu)**, **EXAMEN**, et **RATTRAPAGE**.

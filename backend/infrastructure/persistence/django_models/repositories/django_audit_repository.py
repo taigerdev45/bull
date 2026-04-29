@@ -4,12 +4,20 @@ from infrastructure.persistence.django_models.models import AuditLogModel
 
 class DjangoAuditRepository(IAuditRepository):
     def save(self, log_data: Dict[str, Any]) -> None:
+        # Normalisation des données pour supporter différents formats d'appel
+        action = log_data.get('action') or log_data.get('action_type') or 'INCONNUE'
+        user_uid = log_data.get('utilisateur_uid') or log_data.get('utilisateur_id') or log_data.get('user_id') or log_data.get('user_name') or 'système'
+        details = log_data.get('details')
+        if isinstance(details, dict):
+            import json
+            details = json.dumps(details, ensure_ascii=False)
+            
         AuditLogModel.objects.create(
-            action=log_data.get('action'),
-            utilisateur_uid=log_data.get('utilisateur_uid'),
-            details=log_data.get('details'),
-            entity_id=log_data.get('entity_id'),
-            entity_type=log_data.get('entity_type')
+            action=str(action)[:200],
+            utilisateur_uid=str(user_uid)[:128],
+            details=details,
+            entity_id=log_data.get('entity_id') or log_data.get('target_id'),
+            entity_type=log_data.get('entity_type') or log_data.get('entite')
         )
 
     def search_by_etudiant(self, etudiant_id: str, action: Optional[str] = None, 

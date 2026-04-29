@@ -63,7 +63,13 @@ class EvaluationViewSet(viewsets.ModelViewSet):
             matiere_id=self.request.data.get('matiere_id'),
             type_eval=self.request.data.get('type'),
             note=self.request.data.get('note'),
-            saisie_par=getattr(self.request.user, 'uid', self.request.user.username)
+            saisie_par=getattr(self.request.user, 'uid', self.request.user.username),
+            metadata={
+                'user_id': getattr(self.request.user, 'uid', self.request.user.username),
+                'user_email': getattr(self.request.user, 'email', ''),
+                'ip_address': self.request.META.get('REMOTE_ADDR'),
+                'user_agent': self.request.META.get('HTTP_USER_AGENT')
+            }
         )
         eval_id = self._get_handler().handle_creer(cmd)
 
@@ -71,14 +77,26 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         cmd = ModifierEvaluationCommand(
             evaluation_id=self.kwargs.get('pk'),
             nouvelle_note=self.request.data.get('note'),
-            auteur=getattr(self.request.user, 'uid', self.request.user.username)
+            auteur=getattr(self.request.user, 'uid', self.request.user.username),
+            metadata={
+                'user_id': getattr(self.request.user, 'uid', self.request.user.username),
+                'user_email': getattr(self.request.user, 'email', ''),
+                'ip_address': self.request.META.get('REMOTE_ADDR'),
+                'user_agent': self.request.META.get('HTTP_USER_AGENT')
+            }
         )
         self._get_handler().handle_modifier(cmd)
 
     def perform_destroy(self, instance):
         cmd = SupprimerEvaluationCommand(
             evaluation_id=self.kwargs.get('pk'),
-            auteur=getattr(self.request.user, 'uid', self.request.user.username)
+            auteur=getattr(self.request.user, 'uid', self.request.user.username),
+            metadata={
+                'user_id': getattr(self.request.user, 'uid', self.request.user.username),
+                'user_email': getattr(self.request.user, 'email', ''),
+                'ip_address': self.request.META.get('REMOTE_ADDR'),
+                'user_agent': self.request.META.get('HTTP_USER_AGENT')
+            }
         )
         self._get_handler().handle_supprimer(cmd)
 
@@ -136,7 +154,13 @@ class EvaluationViewSet(viewsets.ModelViewSet):
                     matiere_id=str(matiere_id),
                     type_eval=final_type,
                     note=final_note,
-                    saisie_par=saisie_par
+                    saisie_par=saisie_par,
+                    metadata={
+                        'user_id': saisie_par,
+                        'user_email': getattr(request.user, 'email', ''),
+                        'ip_address': request.META.get('REMOTE_ADDR'),
+                        'user_agent': request.META.get('HTTP_USER_AGENT')
+                    }
                 )
                 commands.append(cmd)
                 

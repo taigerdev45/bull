@@ -7,7 +7,7 @@ from infrastructure.config.dependency_injection import Container
 from interfaces.api.serializers.ue_serializer import UESerializer, MatiereSerializer
 from interfaces.api.permissions.role_permissions import IsAdmin, IsSecretariat
 
-def ue_to_dict(ue, matieres=None):
+def ue_to_dict(ue, matieres=None, teacher_map=None):
     """Convertit une entité UE en dict JSON-serializable."""
     return {
         "id": ue.id,
@@ -15,11 +15,12 @@ def ue_to_dict(ue, matieres=None):
         "libelle": ue.libelle,
         "credits": ue.credits,
         "semestre_id": ue._semestre_id,
-        "matieres": [matiere_to_dict(m) for m in (matieres or [])],
+        "matieres": [matiere_to_dict(m, teacher_map) for m in (matieres or [])],
     }
 
-def matiere_to_dict(m):
+def matiere_to_dict(m, teacher_map=None):
     """Convertit une entité Matiere en dict JSON-serializable."""
+    teacher_name = teacher_map.get(m.enseignant_id) if (teacher_map and m.enseignant_id) else None
     return {
         "id": m.id,
         "libelle": m.libelle,
@@ -27,6 +28,7 @@ def matiere_to_dict(m):
         "credits": m.credits,
         "ue_id": m._ue_id,
         "enseignant_id": m.enseignant_id,
+        "enseignant_nom": teacher_name
     }
 
 @extend_schema(tags=['Académique'])
@@ -39,10 +41,15 @@ class UEViewSet(viewsets.ViewSet):
         return [permissions.IsAuthenticated()]
 
     @inject
-    def __init__(self, ue_repo=Provide[Container.ue_repo], matiere_repo=Provide[Container.matiere_repo], **kwargs):
+    def __init__(self, 
+                 ue_repo=Provide[Container.ue_repo], 
+                 matiere_repo=Provide[Container.matiere_repo],
+                 enseignant_repo=Provide[Container.enseignant_repo],
+                 **kwargs):
         super().__init__(**kwargs)
         self.ue_repo = ue_repo
         self.matiere_repo = matiere_repo
+        self.enseignant_repo = enseignant_repo
 
     def list(self, request):
         try:
@@ -51,6 +58,13 @@ class UEViewSet(viewsets.ViewSet):
             
             ues = self.ue_repo.list_all()
             
+            # Mapping des enseignants pour éviter N+1 requêtes
+            try:
+                all_enseignants = self.enseignant_repo.list_all()
+                teacher_map = {e.id: f"{e.prenom} {e.nom}" for e in all_enseignants}
+            except:
+                teacher_map = {}
+
             # Si c'est un enseignant, on pré-charge ses matières pour éviter le N+1
             mes_matieres_all = []
             if not is_staff and role == 'enseignant':
@@ -68,7 +82,7 @@ class UEViewSet(viewsets.ViewSet):
                     if not matieres:
                         continue
                 
-                result.append(ue_to_dict(ue, matieres))
+                result.append(ue_to_dict(ue, matieres, teacher_map))
             return Response(result)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -135,7 +149,14 @@ class UEViewSet(viewsets.ViewSet):
         try:
             s_val = int(semestre)
             ues = self.ue_repo.get_by_semestre(s_val)
-            result = [ue_to_dict(ue, self.matiere_repo.get_by_ue(ue.id)) for ue in ues]
+            
+            try:
+                all_enseignants = self.enseignant_repo.list_all()
+                teacher_map = {e.id: f"{e.prenom} {e.nom}" for e in all_enseignants}
+            except:
+                teacher_map = {}
+
+            result = [ue_to_dict(ue, self.matiere_repo.get_by_ue(ue.id), teacher_map) for ue in ues]
             return Response(result)
         except ValueError:
             return Response({"error": "Semestre invalide"}, status=status.HTTP_400_BAD_REQUEST)
@@ -154,10 +175,12 @@ class MatiereViewSet(viewsets.ViewSet):
     @inject
     def __init__(self, 
                  matiere_repo=Provide[Container.matiere_repo], 
+                 enseignant_repo=Provide[Container.enseignant_repo],
                  audit_service=Provide[Container.audit_service],
                  **kwargs):
         super().__init__(**kwargs)
         self.matiere_repo = matiere_repo
+        self.enseignant_repo = enseignant_repo
         self.audit_service = audit_service
 
     def list(self, request):
@@ -165,22 +188,35 @@ class MatiereViewSet(viewsets.ViewSet):
             is_staff = getattr(request.user, 'is_staff', False)
             role = getattr(request.user, 'role', 'etudiant')
             
-            # Si c'est un enseignant, on ne renvoie que ses matières
             if role == 'enseignant' and not is_staff:
                 matieres = self.matiere_repo.get_by_enseignant(request.user.username)
             else:
                 matieres = self.matiere_repo.list_all()
                 
-            return Response([matiere_to_dict(m) for m in matieres])
+            # Mapping des enseignants
+            try:
+                all_enseignants = self.enseignant_repo.list_all()
+                teacher_map = {e.id: f"{e.prenom} {e.nom}" for e in all_enseignants}
+            except:
+                teacher_map = {}
+
+            return Response([matiere_to_dict(m, teacher_map) for m in matieres])
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk=None):
         try:
             matiere = self.matiere_repo.get_by_id(pk)
-            if not matiere:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-            return Response(matiere_to_dict(matiere))
+            teacher_name = None
+            if matiere.enseignant_id:
+                try:
+                    ens = Container.enseignant_repo().get_by_id(matiere.enseignant_id)
+                    if ens: teacher_name = f"{ens.prenom} {ens.nom}"
+                except: pass
+            
+            data = matiere_to_dict(matiere)
+            data['enseignant_nom'] = teacher_name
+            return Response(data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -237,7 +273,15 @@ class MatiereViewSet(viewsets.ViewSet):
     def ue(self, request, ue_id=None):
         """Filtre les matières par UE."""
         matieres = self.matiere_repo.get_by_ue(ue_id)
-        return Response([matiere_to_dict(m) for m in matieres])
+        
+        try:
+            enseignant_repo = Container.enseignant_repo()
+            all_enseignants = enseignant_repo.list_all()
+            teacher_map = {e.id: f"{e.prenom} {e.nom}" for e in all_enseignants}
+        except:
+            teacher_map = {}
+            
+        return Response([matiere_to_dict(m, teacher_map) for m in matieres])
 
     @action(detail=False, methods=['get'], url_path='enseignant/(?P<teacher_id>[^/.]+)')
     def enseignant(self, request, teacher_id=None):

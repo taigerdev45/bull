@@ -82,98 +82,96 @@ classDiagram
     Enseignant "1" -- "*" Evaluation : consigne la note
 ```
 
-## 2. Schéma Firestore (Collections)
+## 2. Schéma Relationnel (Django / PostgreSQL)
 
-### Collection `etudiants`
-
-- **ID Document :** UID Firebase
-- **Champs :**
-  - `matricule`: string
-  - `nom`: string
-  - `prenom`: string
-  - `email`: string
-  - `date_naissance`: string (ISO)
-  - `lieu_naissance`: string
-  - `bac`: string
-  - `provenance`: string
-  - `filiere`: string
-  - `niveau`: string
-  - `role`: "etudiant" (Custom Claim)
-
-### Collection `utilisateurs` (Personnel et Enseignants)
-
-- **ID Document :** UID Firebase
+### Table `PersonnelModel` (Utilisateurs Staff)
+- **Email (PK)** : Identifiant unique Supabase Auth.
 - **Champs :**
   - `nom`: string
   - `prenom`: string
-  - `email`: string
+  - `role`: "admin" | "secretariat" | "enseignant"
   - `numero_telephone`: string
-  - `role`: "enseignant" | "admin" | "secretariat"
-  - `derniere_connexion`: timestamp
 
-### Collection `ues`
+### Table `EtudiantModel`
+- **UID (PK)** : UID Supabase Auth.
+- **Champs :**
+  - `matricule`: string (Unique)
+  - `nom`: string
+  - `prenom`: string
+  - `date_naissance`: date
+  - `filiere`: "ASUR"
 
-- **ID Document :** ID UE (ex: "ASUR-UE1")
+### Table `UEModel`
+- **Code (PK)** : ex: "UE5-1"
 - **Champs :**
   - `libelle`: string
-  - `code`: string
-  - `semestre_id`: integer (5 ou 6)
   - `credits`: integer
+  - `semestre_id`: integer (ForeignKey vers SemestreModel)
 
-### Collection `matieres`
-
-- **ID Document :** ID Matiere
+### Table `MatiereModel`
+- **ID (PK)** : UUID
 - **Champs :**
   - `libelle`: string
-  - `code`: string
   - `coefficient`: float
-  - `ue_id`: string (Référence à `ues`)
-  - `enseignant_id`: string (Référence à `utilisateurs`)
+  - `credits`: integer
+  - `ue`: ForeignKey(UEModel)
+  - `enseignant_id`: UUID (Référence optionnelle vers PersonnelModel)
 
-### Collection `evaluations`
-
-- **ID Document :** Auto-généré
+### Table `EvaluationModel`
+- **ID (PK)** : UUID
 - **Champs :**
-  - `etudiant_id`: string
-  - `matiere_id`: string
-  - `enseignant_id`: string (Référence à `utilisateurs`)
+  - `etudiant`: ForeignKey(EtudiantModel)
+  - `matiere`: ForeignKey(MatiereModel)
+  - `note`: float (0-20)
   - `type`: "CC" | "EXAMEN" | "RATTRAPAGE"
-  - `note`: float [0-20]
-  - `date_evaluation`: timestamp
+  - `saisie_par`: string (UID)
 
-### Collection `absences`
-
-- **ID Document :** Auto-généré
+### Table `PersonnelAuditModel` (Journal d'Audit)
+- **ID (PK)** : UUID
+- **Index :** `created_at` (DESC) pour optimisation des performances.
 - **Champs :**
-  - `etudiant_id`: string
-  - `matiere_id`: string
-  - `nombre_heures`: integer
-  - `date_absence`: timestamp
+  - `action_type`: string (ex: "EVAL_CREATE")
+  - `user_id`: string
+  - `user_email`: string
+  - `ip_address`: string
+  - `user_agent`: string
+  - `details`: text (JSON stringified)
 
-### Collection `resultats_acad`
-
-- **ID Document :** `{etudiant_id}_{type}_{ref_id}`
+### Table `ResultatModel`
+- **ID (PK)** : UUID
 - **Champs :**
-  - `etudiant_id`: string
+  - `etudiant`: ForeignKey(EtudiantModel)
   - `type_calcul`: "UE" | "SEMESTRE" | "ANNUEL"
-  - `reference_id`: string (ID UE, ID Semestre ou "ANNUEL")
   - `moyenne`: float
-  - `credits_obtenus`: float
-  - `status`: string
-  - `updated_at`: timestamp
+  - `status`: string (VALIDE, COMPENSE, etc.)
+  - `updated_at`: timestamp (auto_now)
 
-## 3. Logique de Calcul (Règles Académiques)
+### 3. Infrastructure
+Implémente les détails techniques et les API tierces.
+- **Persistence** : Implémentation PostgreSQL (Supabase) via Django ORM. Utilisation de l'indexation temporelle sur les logs d'audit.
+- **Auth** : Supabase Auth Integration avec Custom Claims pour les rôles (Admin, Secretariat, Enseignant, Etudiant).
+- **Config** : Dependency Injection (Pattern Declarative Container via `dependency-injector`).
 
-1. **Moyenne UE :** Moyenne des matières pondérée par leurs coefficients respectifs.
-2. **Moyenne Semestre :** Moyenne des UEs pondérée par leurs crédits.
-3. **Moyenne Annuelle :** Moyenne arithmétique de S5 et S6.
-4. **Compensation :**
-   - Une UE est compensée si la moyenne du semestre est >= 10/20.
-   - Les notes < 10 ne bloquent pas le passage si la moyenne générale compense.
-   - Exception : Absence injustifiée (0.0) peut être non compensable selon règles spécifiques.
+### 4. Interfaces
+Points d'entrée du système.
+- **REST API** : Django Rest Framework (ViewSets, Serializers) avec documentation OpenAPI/Swagger.
+- **Security** : Middlewares de protection par rôle (Admin-Only, Secretariat-Only).
 
-## 4. Sécurité des Données
+---
 
-- **Propriétaire :** Un étudiant ne peut lire que ses propres données (règles de sécurité Firestore).
-- **Saisie :** Seuls les comptes ayant le rôle `admin` ou `secretariat` peuvent modifier les notes et absences.
-- **Audit :** Toutes les modifications sensibles sont enregistrées dans la collection `audits` (logs).
+## Patterns POO Utilisés
+
+### Repository Pattern
+L'accès aux données est abstrait. La migration vers **PostgreSQL (Supabase)** a été réalisée en isolant les implémentations Django sans modifier la logique métier du Domaine.
+
+### Observer & Events
+Le système utilise un Dispatcher d'événements interne :
+1. Une note est créée (`EvaluationCreee`).
+2. L'`AuditLogHandler` (abonné) capture l'événement.
+3. L'action est persistée dans `PersonnelAuditModel` avec les métadonnées (IP, User-Agent).
+
+### Flow de Données - Recalcul Automatique
+1. **API** : Valide le JWT Supabase et le rôle.
+2. **Command Handler** : Enregistre la Note via le Repository.
+3. **Orchestrateur** : Déclenche le recalcul immédiat en cascade (Moyenne Matière -> UE -> Semestre).
+4. **Post-Process** : Journalisation d'audit via le service d'audit.

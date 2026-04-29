@@ -52,12 +52,21 @@
             </thead>
             <tbody>
               <tr v-for="mat in (ue.matieres || [])" :key="mat.id">
-                <td class="m-name">{{ mat.libelle }}</td>
+                <td class="m-name">
+                  {{ mat.libelle }}
+                  <div class="m-teacher" v-if="mat.enseignant_nom">
+                    👨‍🏫 {{ mat.enseignant_nom }}
+                  </div>
+                </td>
                 <td class="m-val center">{{ mat.coefficient }}</td>
                 <td class="m-val center">{{ mat.credits }}</td>
                 <td class="m-actions">
-                  <button title="Modifier" @click="openMatiereModal('edit', mat, ue)">✏️</button>
-                  <button title="Supprimer" @click="confirmDeleteMatiere(mat)">🗑️</button>
+                  <button class="action-btn edit" title="Modifier" @click.stop="openMatiereModal('edit', mat, ue)">
+                    <span class="icon">✏️</span>
+                  </button>
+                  <button class="action-btn delete" title="Supprimer" @click.stop="confirmDeleteMatiere(mat)">
+                    <span class="icon">🗑️</span>
+                  </button>
                 </td>
               </tr>
               <tr v-if="!(ue.matieres?.length)">
@@ -151,6 +160,15 @@
                   <option v-for="ue in ues" :key="ue.id" :value="ue.code">{{ ue.code }} — {{ ue.libelle }}</option>
                 </select>
               </div>
+              <div class="form-group full-width">
+                <label>Enseignant Responsable</label>
+                <select v-model="matiereForm.enseignant_id">
+                  <option :value="null">-- Non assigné --</option>
+                  <option v-for="ens in enseignants" :key="ens.id" :value="ens.id">
+                    {{ ens.prenom }} {{ ens.nom }}
+                  </option>
+                </select>
+              </div>
             </div>
             <div v-if="matiereModal.error" class="form-error">⚠️ {{ matiereModal.error }}</div>
             <div class="modal-footer">
@@ -174,6 +192,7 @@ useHead({ title: 'Référentiels | Bull ASUR' })
 
 const { fetchApi } = useApi()
 const ues = ref([])
+const enseignants = ref([])
 const pending = ref(true)
 
 // ─── State Modals ─────────────────────────────────────────────────
@@ -190,8 +209,12 @@ const matiereForm = reactive({ ...defaultMatiereForm })
 const fetchReferentiel = async () => {
   pending.value = true
   try {
-    const data = await fetchApi('/ues/')
-    ues.value = Array.isArray(data) ? data : []
+    const [ueData, ensData] = await Promise.all([
+      fetchApi('/ues/'),
+      fetchApi('/enseignants/')
+    ])
+    ues.value = Array.isArray(ueData) ? ueData : []
+    enseignants.value = Array.isArray(ensData) ? ensData : []
   } catch (e) {
     console.error('Fetch referentiel error', e)
     ues.value = []
@@ -261,7 +284,13 @@ const openMatiereModal = (mode, mat = null, ue = null) => {
   matiereModal.error = ''
   matiereModal.editId = mat?.id || null
   if (mode === 'edit' && mat) {
-    Object.assign(matiereForm, { libelle: mat.libelle, coefficient: mat.coefficient, credits: mat.credits, ue_id: mat.ue_id })
+    Object.assign(matiereForm, { 
+      libelle: mat.libelle, 
+      coefficient: mat.coefficient, 
+      credits: mat.credits, 
+      ue_id: mat.ue_id,
+      enseignant_id: mat.enseignant_id
+    })
   } else {
     Object.assign(matiereForm, { ...defaultMatiereForm, ue_id: ue?.code || '' })
   }
@@ -327,10 +356,14 @@ const confirmDeleteMatiere = async (mat) => {
 .matiere-list tr:last-child td { border-bottom: none; }
 .center { text-align: center !important; }
 .m-name { font-weight: 600; color: #334155; }
+.m-teacher { font-size: 0.75rem; color: #94a3b8; font-weight: 500; margin-top: 2px; }
 .m-val { font-weight: 700; color: #0f172a; }
-.m-actions { text-align: right; display: flex; gap: 0.25rem; justify-content: flex-end; }
-.m-actions button { background: none; border: none; cursor: pointer; padding: 0.25rem; opacity: 0.3; transition: opacity 0.2s; font-size: 0.9rem; }
-.m-actions button:hover { opacity: 1; }
+.m-actions { text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center; }
+.action-btn { background: #f8fafc; border: 1px solid #e2e8f0; cursor: pointer; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; color: #64748b; }
+.action-btn:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-color: #cbd5e1; color: #1e293b; }
+.action-btn.edit:hover { color: #6366f1; border-color: #6366f1; background: #eef2ff; }
+.action-btn.delete:hover { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+.action-btn .icon { font-size: 1rem; }
 .empty-m { text-align: center; color: #94a3b8; padding: 2rem; font-style: italic; }
 
 .add-m-btn { width: 100%; margin-top: 1.5rem; padding: 0.75rem; border: 1px dashed var(--border-light); background: #fdfdfd; color: #64748b; font-weight: 600; border-radius: var(--radius-md, 10px); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }

@@ -18,21 +18,32 @@ class IsEnseignantMatiere(permissions.BasePermission):
         if role != 'enseignant':
             return False
             
-        # Pour les actions de création (POST), on vérifie dans la BDD
-        if request.method == 'POST' and not view.action == 'bulk_creer':
+        # Pour les actions de création (POST)
+        if request.method == 'POST':
             matiere_id = request.data.get('matiere_id')
+            
+            # Si c'est un bulk, on peut avoir la matiere_id à la racine ou dans chaque item
+            # Pour la permission globale has_permission, on vérifie au moins la matiere_id racine si présente
+            if not matiere_id and view.action == 'bulk_creer':
+                evals = request.data.get('evaluations', [])
+                if evals and isinstance(evals, list):
+                    matiere_id = evals[0].get('matiere_id')
+
             if not matiere_id:
-                return False
+                return view.action == 'bulk_creer' # Autorise si bulk sans matiere racine (le handler filtrera si besoin)
                 
             try:
                 from infrastructure.persistence.django_models.models import MatiereModel
-                m_model = MatiereModel.objects.get(id=matiere_id)
-                if m_model.enseignant and str(m_model.enseignant.user_id) == str(request.user.uid):
+                # On cherche la matière par ID ou Code
+                m_query = MatiereModel.objects.filter(id=matiere_id) | MatiereModel.objects.filter(code=matiere_id)
+                m_model = m_query.first()
+                
+                if m_model and m_model.enseignant and str(m_model.enseignant.user_id) == str(request.user.uid):
                     return True
             except Exception as e:
                 print(f"Erreur vérification permission matiere: {e}")
                 
-            # Fallback sur les claims au cas où
+            # Fallback sur les claims
             matieres_autorisees = request.user.firebase_claims.get('matieres', [])
             return str(matiere_id) in [str(m) for m in matieres_autorisees]
             
