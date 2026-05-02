@@ -8,13 +8,13 @@
 
 ## 1. Analyse Backend (Architecture DDD & Firestore)
 
-### ✅ Points Forts
+###  Points Forts
 
 - **Respect du DDD :** Séparation claire entre `domain`, `application`, `infrastructure` et `interfaces`.
 - **Injection de Dépendances :** Utilisation cohérente de `dependency-injector`.
 - **Validation :** Les Value Objects (`Note`, `Moyenne`, `Coefficient`) valident correctement les invariants métier.
 
-### ✅ Points Résolus (Correctifs Appliqués)
+###  Points Résolus (Correctifs Appliqués)
 
 1. **Normalisation du Schéma Firestore :**
    - **RÉSOLU :** Le champ `semestre_id` est désormais uniformisé sur des entiers (5, 6) dans tout le système (Initialisation, Repositories, Domain).
@@ -37,12 +37,12 @@
 
 ## 2. Analyse Frontend (Nuxt 3 & Auth)
 
-### ✅ Points Forts
+###  Points Forts
 
 - **Aesthétique Premium :** UI très soignée, thèmes cohérents, micro-animations présentes.
 - **Organisation :** Composables (`useApi`) et stores (Pinia) bien structurés.
 
-### ❌ Problèmes Critiques
+###  Problèmes Critiques
 
 1. **Authentification Simulée (Mock) :** Le fichier `login.vue` utilise toujours un `setTimeout` et ne contacte pas le backend. Le token Firebase n'est pas récupéré réellement.
 2. **Gestion des Erreurs :** `useApi.ts` manque de gestion pour les codes d'erreur 401/403 (redirection vers login) et n'injecte pas dynamiquement le token JWT dans les headers.
@@ -51,12 +51,12 @@
 
 ## 3. Sécurité & Infrastructure
 
-### 🛡️ Sécurisation des Clés
+###  Sécurisation des Clés
 
 - Les clés Firebase sont correctement ignorées par Git.
 - Une procédure de déploiement via variables d'environnement (`FIREBASE_SERVICE_ACCOUNT_JSON`) a été ajoutée dans `docs/securite_firebase.md`.
 
-### 🚀 Déploiement
+###  Déploiement
 
 - **Python 3.13 :** Le projet a été testé et corrigé pour être compatible (fix de `dependency-injector`).
 - **Scripts CLI :** Les commandes de management Django sont maintenant intégrées à `manage.py`.
